@@ -1,0 +1,5 @@
+[AbandonQuest]
+description = 'Abandons the quest specified by [SetAbandonQuest](https://wow.gamepedia.com/API_SetAbandonQuest).'
+
+[UnitGUID]
+description = 'Returns the GUID of the specified unit.'

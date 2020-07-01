@@ -1,0 +1,47 @@
+<default>
+web = '[View documents](https://wow.gamepedia.com/API_{})'
+
+[C_AccountInfo]
+type = 'table'
+[[.source]]
+type = 'global'
+``````````
+type = 'library'
+name = 'C_AccountInfo'
+
+<default>
+type = 'function'
+parent = {
+    1 = {
+        type = 'global',
+        name = 'C_AccountInfo',
+    },
+    2 = {
+        type = 'library',
+        name = 'C_AccountInfo',
+    }
+}
+
+[GetIDFromBattleNetAccountGUID]
+[[.args]]
+name = 'battleNetAccountGUID'
+type = 'string'
+[[.returns]]
+name = 'battleNetAccountID'
+type = 'number'
+
+[IsGUIDBattleNetAccountType]
+[[.args]]
+name = 'guid'
+type = 'string'
+[[.returns]]
+name = 'isBNet'
+type = 'bool'
+
+[IsGUIDRelatedToLocalAccount]
+[[.args]]
+name = 'guid'
+type = 'string'
+[[.returns]]
+name = 'isLocalUser'
+type = 'bool'
