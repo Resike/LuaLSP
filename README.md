@@ -1,6 +1,7 @@
-### Sublime Text
-Requires: https://github.com/sublimelsp/LSP
-#### Settings
+## Sublime Text
+ - Requires: https://github.com/sublimelsp/LSP
+
+### Settings
 c:\Users\User\AppData\Roaming\Sublime Text 3\Packages\User\LSP.sublime-settings
 ```
 {
