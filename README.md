@@ -1,3 +1,4 @@
+"c:\Users\<User>\AppData\Roaming\Sublime Text 3\Packages\User\LSP.sublime-settings"
 ```
 {
 	"auto_show_diagnostics_panel": "never",
