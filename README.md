@@ -1,6 +1,6 @@
 Requires: https://github.com/sublimelsp/LSP
 
-Sublime Text settings:
+# Sublime Text
 c:\Users\User\AppData\Roaming\Sublime Text 3\Packages\User\LSP.sublime-settings
 ```
 {
