@@ -13,9 +13,9 @@ c:\Users\User\AppData\Roaming\Sublime Text 3\Packages\User\LSP.sublime-settings
 		{
 			"command":
 			[
-				"c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/bin/Windows/lua-language-server",
+				"c:/Users/User/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/bin/Windows/lua-language-server",
 				"-E",
-				"c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/main.lua"
+				"c:/Users/User/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/main.lua"
 			],
 			"enabled": true,
 			"languages": [{"languageId": "lua"}],
