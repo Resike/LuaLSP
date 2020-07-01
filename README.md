@@ -1,3 +1,5 @@
+Requires: https://github.com/sublimelsp/LSP
+
 c:\Users\User\AppData\Roaming\Sublime Text 3\Packages\User\LSP.sublime-settings
 ```
 {
