@@ -4,6 +4,7 @@ local buildReturn = require 'core.hover.return'
 local buildTable  = require 'core.hover.table'
 local vm          = require 'vm'
 local util        = require 'utility'
+local guide       = require 'parser.guide'
 
 local function asFunction(source, oop)
     local name = buildName(source, oop)
@@ -16,28 +17,26 @@ local function asFunction(source, oop)
 end
 
 local function asValue(source, title)
-    local name = buildName(source)
-    local class, type, literal, cont
-    vm.eachDef(source, function (src)
-        class   = vm.mergeViews(class, vm.getClass(src))
-        type    = vm.mergeViews(type, vm.getType(src))
-        local sl = vm.getLiteral(src)
-        if sl then
-            literal = vm.mergeViews(literal, util.viewLiteral(sl))
-        end
-        if type == 'table' then
-            cont = buildTable(src)
-        end
-    end)
+    local name    = buildName(source)
+    local infers  = vm.getInfers(source)
+    local type    = vm.getInferType(source)
+    local class   = vm.getClass(source)
+    local literal = vm.getInferLiteral(source)
+    local cont
+    if vm.hasInferType(source, 'table') then
+        cont = buildTable(source)
+    end
     local pack = {}
     pack[#pack+1] = title
     pack[#pack+1] = name .. ':'
     if cont then
         type = nil
-    else
-        type = type or 'any'
     end
-    pack[#pack+1] = class or type
+    if class then
+        pack[#pack+1] = class
+    else
+        pack[#pack+1] = type
+    end
     if literal then
         pack[#pack+1] = '='
         pack[#pack+1] = literal

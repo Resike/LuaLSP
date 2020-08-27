@@ -1,48 +1,61 @@
 local guide = require 'parser.guide'
 local vm    = require 'vm.vm'
+local files = require 'files'
 
-local function getLinks(root)
-    local cache = {}
-    local ok
-    guide.eachSpecialOf(root, 'require', function (source)
+local function getFileLinks(uri)
+    local ws    = require 'workspace'
+    local links = {}
+    local ast = files.getAst(uri)
+    if not ast then
+        return links
+    end
+    guide.eachSpecialOf(ast.ast, 'require', function (source)
         local call = source.parent
-        if call.type == 'call' then
-            local uris = vm.getLinkUris(call)
-            if uris then
-                ok = true
-                for i = 1, #uris do
-                    local uri = uris[i]
-                    if not cache[uri] then
-                        cache[uri] = {}
-                    end
-                    cache[uri][#cache[uri]+1] = call
-                end
+        if not call or call.type ~= 'call' then
+            return
+        end
+        local args = call.args
+        if not args[1] or args[1].type ~= 'string' then
+            return
+        end
+        local uris = ws.findUrisByRequirePath(args[1][1], true)
+        for _, u in ipairs(uris) do
+            u = files.asKey(u)
+            if not links[u] then
+                links[u] = {}
             end
+            links[u][#links[u]+1] = call
         end
     end)
-    if not ok then
-        return nil
-    end
-    return cache
+    return links
 end
 
-function vm.getLinks(source)
-    source = guide.getRoot(source)
-    local cache = vm.cache.getLinks[source]
+local function getLinksTo(uri)
+    uri = files.asKey(uri)
+    local links = {}
+    for u in files.eachFile() do
+        local ls = vm.getFileLinks(u)
+        if ls[uri] then
+            for _, l in ipairs(ls[uri]) do
+                links[#links+1] = l
+            end
+        end
+    end
+    return links
+end
+
+function vm.getLinksTo(uri)
+    local cache = vm.getCache('getLinksTo')[uri]
     if cache ~= nil then
         return cache
     end
-    local unlock = vm.lock('getLinks', source)
-    if not unlock then
-        return nil
-    end
-    local clock = os.clock()
-    cache = getLinks(source) or false
-    local passed = os.clock() - clock
-    if passed > 0.1 then
-        log.warn(('getLinks takes [%.3f] sec!'):format(passed))
-    end
-    vm.cache.getLinks[source] = cache
-    unlock()
+    cache = getLinksTo(uri)
+    vm.getCache('getLinksTo')[uri] = cache
     return cache
+end
+
+function vm.getFileLinks(uri)
+    local cache = files.getCache(uri)
+    cache.links = cache.links or getFileLinks(uri)
+    return cache.links
 end

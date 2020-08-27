@@ -1,6 +1,7 @@
 local workspace = require 'workspace'
 local nonil = require 'without-check-nil'
 local client = require 'client'
+local json = require 'json'
 
 local function allWords()
     local str = [[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.:('"[,#*@| ]]
@@ -20,11 +21,11 @@ return function (lsp, params)
     client.init(params)
     log.info(table.dump(params))
 
-    if params.workspaceFolders then
+    if params.workspaceFolders and params.workspaceFolders ~= json.null then
         for _, folder in ipairs(params.workspaceFolders) do
             lsp:addWorkspace(folder.name, folder.uri)
         end
-    elseif params.rootUri then
+    elseif params.rootUri and params.rootUri ~= json.null then
         lsp:addWorkspace('root', params.rootUri)
     end
 
@@ -38,6 +39,7 @@ return function (lsp, params)
             documentHighlightProvider = true,
             codeActionProvider = true,
             foldingRangeProvider = true,
+            workspaceSymbolProvider = true,
             signatureHelpProvider = {
                 triggerCharacters = { '(', ',' },
             },
@@ -52,16 +54,15 @@ return function (lsp, params)
                 workspaceFolders = {
                     supported = true,
                     changeNotifications = true,
-                }
+                },
             },
             documentOnTypeFormattingProvider = {
                 firstTriggerCharacter = '}',
             },
             executeCommandProvider = {
                 commands = {
-                    'config',
-                    'removeSpace',
-                    'solve',
+                    'lua.removeSpace',
+                    'lua.solve',
                 },
             },
         }

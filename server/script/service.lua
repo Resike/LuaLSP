@@ -21,7 +21,9 @@ local files      = require 'files'
 local uric       = require 'uri'
 local capability = require 'capability'
 local plugin     = require 'plugin'
-local workspace = require 'workspace'
+local workspace  = require 'workspace'
+local fn         = require 'filename'
+local json       = require 'json'
 
 local ErrorCodes = {
     -- Defined by JSON RPC
@@ -90,13 +92,10 @@ function mt:_callMethod(name, params)
 end
 
 function mt:responseProto(id, response, err)
-    local container = table.container()
-    if err then
-        container.error = err
-    else
-        container.result = response
-    end
-    rpc:response(id, container)
+    rpc:response(id, {
+        error  = err and err or nil,
+        result = response and response or json.null,
+    })
 end
 
 function mt:_doProto(proto)
@@ -209,6 +208,9 @@ end
 ---@param uri uri
 ---@return Workspace
 function mt:findWorkspaceFor(uri)
+    if #self.workspaces == 0 then
+        return nil
+    end
     local path = uric.decode(uri)
     if not path then
         return nil
@@ -225,15 +227,7 @@ end
 ---@param uri uri
 ---@return boolean
 function mt:isLua(uri)
-    local ws = self:findWorkspaceFor(uri)
-    if not ws then
-        return false
-    end
-    local path = ws:absolutePathByUri(uri)
-    if not path then
-        return false
-    end
-    if ws:isLuaFile(path) then
+    if fn.isLuaFile(uric.decode(uri)) then
         return true
     end
     return false
@@ -283,6 +277,14 @@ end
 ---@return boolean
 function mt:isOpen(uri)
     return self._files:isOpen(uri)
+end
+
+function mt:eachOpened()
+    return self._files:eachOpened()
+end
+
+function mt:eachFile()
+    return self._files:eachFile()
 end
 
 ---@param uri uri
@@ -348,9 +350,6 @@ end
 ---@param buf string
 ---@param compiled table
 function mt:readLibrary(ws, uri, path, buf, compiled)
-    if self:findWorkspaceFor(uri) ~= ws then
-        return
-    end
     if not self:isLua(uri) then
         return
     end
@@ -398,7 +397,9 @@ function mt:reCompile()
     self.chain  = chainMgr()
     self.emmy   = emmyMgr()
     self.globalValue = nil
-    self._compileTask:remove()
+    if self._compileTask then
+        self._compileTask:remove()
+    end
     self._needCompile = {}
     local n = 0
     for uri in self._files:eachFile() do
@@ -778,8 +779,12 @@ end
 
 function mt:_loadProto()
     while true do
-        local ok, proto = self._proto:pop()
+        local ok, protoStream = self._proto:pop()
         if not ok then
+            break
+        end
+        local suc, proto = xpcall(json.decode, log.error, protoStream)
+        if not suc then
             break
         end
         if proto.method then
@@ -812,6 +817,9 @@ function mt:reScanFiles()
     self:clearAllFiles()
     for _, ws in ipairs(self.workspaces) do
         ws:scanFiles()
+    end
+    for uri, text in self:eachOpened() do
+        self:open(uri, 0, text)
     end
 end
 

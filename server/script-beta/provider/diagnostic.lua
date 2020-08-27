@@ -10,7 +10,6 @@ local util   = require 'utility'
 local m = {}
 m._start = false
 m.cache = {}
-m.lastSynaxErrors = {}
 
 local function concat(t, sep)
     if type(t) ~= 'table' then
@@ -106,7 +105,6 @@ local function merge(a, b)
 end
 
 function m.clear(uri)
-    m.lastSynaxErrors[uri] = nil
     if not m.cache[uri] then
         return
     end
@@ -131,8 +129,8 @@ function m.syntaxErrors(uri, ast)
     return results
 end
 
-function m.diagnostics(uri, syntaxOnly)
-    if syntaxOnly or not m._start then
+function m.diagnostics(uri)
+    if not m._start then
         return m.cache[uri]
     end
 
@@ -149,7 +147,7 @@ function m.diagnostics(uri, syntaxOnly)
     return results
 end
 
-function m.doDiagnostic(uri, main, syntaxOnly)
+function m.doDiagnostic(uri)
     local ast = files.getAst(uri)
     if not ast then
         m.clear(uri)
@@ -157,7 +155,7 @@ function m.doDiagnostic(uri, main, syntaxOnly)
     end
 
     local syntax = m.syntaxErrors(uri, ast)
-    local diagnostics = m.diagnostics(uri, syntaxOnly)
+    local diagnostics = m.diagnostics(uri)
     local full = merge(syntax, diagnostics)
     if not full then
         m.clear(uri)
@@ -168,14 +166,6 @@ function m.doDiagnostic(uri, main, syntaxOnly)
         return
     end
     m.cache[uri] = full
-    if main
-    and syntaxOnly
-    and (syntax and #syntax or 0) > (m.lastSynaxErrors[uri] or 0) then
-        await.sleep(2, function ()
-            return files.globalVersion
-        end)
-    end
-    m.lastSynaxErrors[uri] = syntax and #syntax or 0
 
     proto.notify('textDocument/publishDiagnostics', {
         uri = uri,
@@ -189,7 +179,7 @@ function m.refresh(uri)
             return files.globalVersion
         end)
         if uri then
-            m.doDiagnostic(uri, true, true)
+            m.doDiagnostic(uri)
         end
         if not m._start then
             return
@@ -199,7 +189,7 @@ function m.refresh(uri)
         end)
         local clock = os.clock()
         if uri then
-            m.doDiagnostic(uri, true, false)
+            m.doDiagnostic(uri)
         end
         for destUri in files.eachFile() do
             if destUri ~= uri then
@@ -214,9 +204,32 @@ function m.refresh(uri)
     end)
 end
 
+function m.diagnosticsAll()
+    local clock = os.clock()
+    for uri in files.eachFile() do
+        m.doDiagnostic(uri)
+    end
+    log.debug('全文诊断耗时：', os.clock() - clock)
+end
+
 function m.start()
     m._start = true
-    m.refresh()
+    m.diagnosticsAll()
 end
+
+files.watch(function (env, uri)
+    if env == 'remove' then
+        m.clear(uri)
+    elseif env == 'update' then
+        await.create(function ()
+            -- 一旦文件的版本发生变化，就放弃这次诊断
+            await.setDelayer(function ()
+                return files.getVersion(uri)
+            end)
+            await.delay()
+            m.doDiagnostic(uri)
+        end)
+    end
+end)
 
 return m

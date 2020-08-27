@@ -1,6 +1,7 @@
 local vm      = require 'vm.vm'
 local guide   = require 'parser.guide'
 local library = require 'library'
+local await   = require 'await'
 
 local function eachFieldInLibrary(source, lib, results)
     if not lib or not lib.child then
@@ -21,7 +22,9 @@ local function eachField(source)
     while source.type == 'paren' do
         source = source.exp
     end
-    local results = guide.requestFields(source)
+
+    await.delay()
+    local results = guide.requestFields(source, vm.interface)
     local lib = vm.getLibrary(source)
     if lib then
         eachFieldInLibrary(source, lib, results)
@@ -36,7 +39,7 @@ local function eachField(source)
 end
 
 function vm.eachField(source, callback)
-    local cache = vm.cache.eachField[source]
+    local cache = vm.getCache('eachField')[source]
     if cache ~= nil then
         for i = 1, #cache do
             callback(cache[i])
@@ -47,8 +50,8 @@ function vm.eachField(source, callback)
     if not unlock then
         return
     end
-    cache = eachField(source) or false
-    vm.cache.eachField[source] = cache
+    cache = eachField(source)
+    vm.getCache('eachField')[source] = cache
     unlock()
     for i = 1, #cache do
         callback(cache[i])

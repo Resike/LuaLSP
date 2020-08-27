@@ -1,5 +1,6 @@
 local vm       = require 'vm'
 local util     = require 'utility'
+local guide    = require 'parser.guide'
 
 local function getKey(src)
     local key = vm.getKeyName(src)
@@ -11,7 +12,7 @@ local function getKey(src)
         if class then
             return ('[%s]'):format(class)
         end
-        local tp = vm.getType(src.index)
+        local tp = vm.getInferType(src.index)
         if tp then
             return ('[%s]'):format(tp)
         end
@@ -35,33 +36,14 @@ local function getField(src)
     or src.parent.type == 'getindex' then
         src = src.parent
     end
-    local tp = vm.getType(src)
+    local tp = vm.getInferType(src)
     local class = vm.getClass(src)
-    local literal = vm.getLiteral(src)
+    local literal = vm.getInferLiteral(src)
     local key = getKey(src)
     if type(literal) == 'string' and #literal >= 50 then
         literal = literal:sub(1, 47) .. '...'
     end
     return key, class or tp, literal
-end
-
-local function mergeLiteral(a, b)
-    if not a then
-        return b
-    end
-    local view = util.viewLiteral(a)
-    if not view then
-        return b
-    end
-    if not b then
-        return { view, [view] = true }
-    end
-    if b[view] then
-        return b
-    end
-    b[view] = true
-    b[#b+1] = view
-    return b
 end
 
 local function buildAsHash(classes, literals)
@@ -76,9 +58,7 @@ local function buildAsHash(classes, literals)
         local class   = classes[key]
         local literal = literals[key]
         if literal then
-            table.sort(literal)
-            local view = table.concat(literal, '|')
-            lines[#lines+1] = ('    %s: %s = %s,'):format(key, class, view)
+            lines[#lines+1] = ('    %s: %s = %s,'):format(key, class, literal)
         else
             lines[#lines+1] = ('    %s: %s,'):format(key, class)
         end
@@ -93,7 +73,7 @@ local function buildAsConst(classes, literals)
         keys[#keys+1] = k
     end
     table.sort(keys, function (a, b)
-        return tonumber(literals[a][1]) < tonumber(literals[b][1])
+        return tonumber(literals[a]) < tonumber(literals[b])
     end)
     local lines = {}
     lines[#lines+1] = '{'
@@ -101,9 +81,7 @@ local function buildAsConst(classes, literals)
         local class   = classes[key]
         local literal = literals[key]
         if literal then
-            table.sort(literal)
-            local view = table.concat(literal, '|')
-            lines[#lines+1] = ('    %s: %s = %s,'):format(key, class, view)
+            lines[#lines+1] = ('    %s: %s = %s,'):format(key, class, literal)
         else
             lines[#lines+1] = ('    %s: %s,'):format(key, class)
         end
@@ -112,20 +90,46 @@ local function buildAsConst(classes, literals)
     return table.concat(lines, '\n')
 end
 
+local function mergeLiteral(literals)
+    local results = {}
+    local mark = {}
+    for _, value in ipairs(literals) do
+        if not mark[value] then
+            mark[value] = true
+            results[#results+1] = value
+        end
+    end
+    if #results == 0 then
+        return nil
+    end
+    table.sort(results)
+    return table.concat(results, '|')
+end
+
 return function (source)
     local literals = {}
     local classes = {}
     local intValue = true
     vm.eachField(source, function (src)
         local key, class, literal = getField(src)
-        classes[key] = vm.mergeViews(class, classes[key])
-        literals[key] = mergeLiteral(literal, literals[key])
+        if not classes[key] then
+            classes[key] = {}
+        end
+        if not literals[key] then
+            literals[key] = {}
+        end
+        classes[key][#classes[key]+1] = class
+        literals[key][#literals[key]+1] = literal
         if class ~= 'integer'
         or not literals[key]
         or #literals[key] ~= 1 then
             intValue = false
         end
     end)
+    for key, class in pairs(classes) do
+        classes[key] = guide.mergeTypes(class)
+        literals[key] = mergeLiteral(literals[key])
+    end
     if classes['[any]'] == 'any' then
         classes['[any]'] = nil
     end

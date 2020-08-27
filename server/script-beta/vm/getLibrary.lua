@@ -6,6 +6,10 @@ local function checkStdLibrary(source)
     if source.library then
         return source
     end
+    local value = guide.getObjectValue(source)
+    if value and value.type == 'select' then
+        source = value
+    end
     if source.type == 'getglobal'
     or source.type == 'setglobal' then
         local name = guide.getName(source)
@@ -49,7 +53,7 @@ end
 
 local function getNodeAsObject(source)
     local node = source.node
-    local values = vm.getValue(node)
+    local values = vm.getInfers(node)
     if not values then
         return nil
     end
@@ -79,8 +83,8 @@ local function checkNode(source)
     end
 end
 
-local function checkRef(source)
-    local results = guide.requestReference(source)
+local function checkDef(source)
+    local results = guide.requestDefinition(source)
     for _, src in ipairs(results) do
         local lib = checkStdLibrary(src) or checkNode(src)
         if lib then
@@ -93,11 +97,11 @@ end
 local function getLibrary(source)
     return checkNode(source)
         or checkStdLibrary(source)
-        or checkRef(source)
+        or checkDef(source)
 end
 
 function vm.getLibrary(source)
-    local cache = vm.cache.getLibrary[source]
+    local cache = vm.getCache('getLibrary')[source]
     if cache ~= nil then
         return cache
     end
@@ -106,7 +110,7 @@ function vm.getLibrary(source)
         return
     end
     cache = getLibrary(source) or false
-    vm.cache.getLibrary[source] = cache
+    vm.getCache('getLibrary')[source] = cache
     unlock()
     return cache
 end

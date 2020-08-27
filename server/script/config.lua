@@ -123,9 +123,16 @@ local ConfigTemplate = {
         enable          = {true,      Boolean},
         callSnippet     = {'Disable', String},
         keywordSnippet  = {'Replace', String},
+        displayContext  = {6,         Integer},
     },
     signatureHelp = {
         enable          = {true,      Boolean},
+    },
+    hover = {
+        enable          = {true,      Boolean},
+        viewString      = {true,      Boolean},
+        viewStringMax   = {1000,      Integer},
+        viewNumber      = {true,      Boolean},
     },
     color = {
         mode            = {'Semantic', String},

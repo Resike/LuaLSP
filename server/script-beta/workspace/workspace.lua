@@ -134,9 +134,7 @@ function m.awaitPreload()
         if read >= max then
             break
         end
-        await.sleep(0.1, function ()
-            return m.preloadVersion
-        end)
+        await.sleep(0.1)
     end
 
     log.info('Preload finish.')
@@ -178,6 +176,7 @@ function m.findUrisByRequirePath(path, whole)
     local results = {}
     local mark = {}
     local input = path:gsub('%.', '/')
+                      :gsub('%%', '%%%%')
     for _, luapath in ipairs(config.config.runtime.path) do
         local part = luapath:gsub('%?', input)
         local uris = m.findUrisByFilePath(part, whole)
@@ -200,6 +199,9 @@ function m.reload()
     m.preloadVersion = m.preloadVersion + 1
     files.removeAll()
     await.create(function ()
+        await.setDelayer(function ()
+            return m.preloadVersion
+        end)
         m.awaitPreload()
     end)
 end

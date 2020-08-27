@@ -4,8 +4,9 @@ local timer  = require 'timer'
 local m = {}
 m.type = 'await'
 
-m.coTracker = setmetatable({}, { __mode = 'k' })
+m.coTracker  = setmetatable({}, { __mode = 'k' })
 m.coPriority = setmetatable({}, { __mode = 'k' })
+m.coDelayer  = setmetatable({}, { __mode = 'k' })
 m.delayQueue = {}
 m.delayQueueIndex = 1
 
@@ -30,6 +31,12 @@ function m.create(callback, ...)
     return m.checkResult(co, coroutine.resume(co, ...))
 end
 
+--- 对当前任务设置一个延迟检查器，当延迟前后检查器的返回值不同时，放弃此任务
+function m.setDelayer(callback)
+    local co = coroutine.running()
+    m.coDelayer[co] = callback
+end
+
 --- 休眠一段时间
 ---@param time number
 function m.sleep(time, getVersion)
@@ -41,8 +48,11 @@ function m.sleep(time, getVersion)
     end
     local version = getVersion and getVersion()
     local co = coroutine.running()
+    local delayer = m.coDelayer[co]
+    local dVersion = delayer and delayer()
     timer.wait(time, function ()
-        if version == (getVersion and getVersion()) then
+        if  version == (getVersion and getVersion())
+        and dVersion == (delayer and delayer()) then
             return m.checkResult(co, coroutine.resume(co))
         else
             coroutine.close(co)
@@ -75,8 +85,11 @@ function m.delay(getVersion)
         return
     end
     local version = getVersion and getVersion()
+    local delayer = m.coDelayer[co]
+    local dVersion = delayer and delayer()
     m.delayQueue[#m.delayQueue+1] = function ()
-        if version == (getVersion and getVersion()) then
+        if  version == (getVersion and getVersion())
+        and dVersion == (delayer and delayer()) then
             return m.checkResult(co, coroutine.resume(co))
         else
             coroutine.close(co)
@@ -110,7 +123,7 @@ function m.step()
         waker()
         local passed = os.clock() - clock
         if passed > 0.1 then
-            log.debug(('Await step takes [%.3f] sec.'):format(passed))
+            log.warn(('Await step takes [%.3f] sec.'):format(passed))
         end
         return true
     else

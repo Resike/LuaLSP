@@ -3,8 +3,6 @@ local config   = require 'config'
 local glob     = require 'glob'
 local furi     = require 'file-uri'
 local parser   = require 'parser'
-local vm       = require 'vm.vm'
-local guide    = require 'parser.guide'
 local proto    = require 'proto'
 local lang     = require 'language'
 
@@ -12,6 +10,7 @@ local m = {}
 
 m.openMap = {}
 m.fileMap = {}
+m.watchList = {}
 m.notifyCache = {}
 m.assocVersion = -1
 m.assocMatcher = nil
@@ -20,19 +19,23 @@ m.globalVersion = 0
 --- 打开文件
 ---@param uri string
 function m.open(uri)
+    local originUri = uri
     if platform.OS == 'Windows' then
         uri = uri:lower()
     end
     m.openMap[uri] = true
+    m.onWatch('open', originUri)
 end
 
 --- 关闭文件
 ---@param uri string
 function m.close(uri)
+    local originUri = uri
     if platform.OS == 'Windows' then
         uri = uri:lower()
     end
     m.openMap[uri] = nil
+    m.onWatch('close', originUri)
 end
 
 --- 是否打开
@@ -54,6 +57,13 @@ function m.exists(uri)
     return m.fileMap[uri] ~= nil
 end
 
+function m.asKey(uri)
+    if platform.OS == 'Windows' then
+        uri = uri:lower()
+    end
+    return uri
+end
+
 --- 设置文件文本
 ---@param uri string
 ---@param text string
@@ -65,59 +75,32 @@ function m.setText(uri, text)
     if not m.fileMap[uri] then
         m.fileMap[uri] = {
             uri = originUri,
+            version = 0,
         }
     end
     local file = m.fileMap[uri]
     if file.text == text then
         return
     end
-    file.text = text
+    file.text  = text
+    file.ast   = nil
     file.lines = nil
+    file.cache = {}
+    file.version = file.version + 1
     m.globalVersion = m.globalVersion + 1
-    if not m.needRefreshUri then
-        m.needRefreshUri = {}
-    end
-    m.needRefreshUri[file] = true
+    m.onWatch('update', originUri)
 end
 
---- 刷新缓存
----|必须在自动完成请求后执行，否则会影响自动完成的响应速度
-function m.refresh()
-    local refreshed = m.needRefreshUri
-    if not refreshed then
-        return
-    end
-
-    local diagnostic = require 'provider.diagnostic'
-    log.debug('Refresh cache.')
-    m.needRefreshUri = nil
-    local lastFile
-    for file in pairs(refreshed) do
-        lastFile = file
-        file.vm = nil
-        file.ast = nil
-        file.globals = nil
-        file.links = nil
-    end
-    vm.refreshCache()
-
-    diagnostic.refresh(lastFile.uri)
-    return true
-end
-
---- 监听编译完成
-function m.onCompiled(uri, callback)
+--- 获取文件版本
+function m.getVersion(uri)
     if platform.OS == 'Windows' then
         uri = uri:lower()
     end
     local file = m.fileMap[uri]
     if not file then
-        return
+        return nil
     end
-    if not file.onCompiledList then
-        file.onCompiledList = {}
-    end
-    file.onCompiledList[#file.onCompiledList+1] = callback
+    return file.version
 end
 
 --- 获取文件文本
@@ -137,6 +120,7 @@ end
 --- 移除文件
 ---@param uri string
 function m.remove(uri)
+    local originUri = uri
     if platform.OS == 'Windows' then
         uri = uri:lower()
     end
@@ -147,21 +131,17 @@ function m.remove(uri)
     m.fileMap[uri] = nil
 
     m.globalVersion = m.globalVersion + 1
-    vm.refreshCache()
-
-    local diagnostic = require 'provider.diagnostic'
-    diagnostic.refresh(file.uri)
-    diagnostic.clear(file.uri)
+    m.onWatch('remove', originUri)
 end
 
 --- 移除所有文件
 function m.removeAll()
+    m.globalVersion = m.globalVersion + 1
     for uri in pairs(m.fileMap) do
         m.fileMap[uri] = nil
+        m.onWatch('remove', uri)
     end
-    m.globalVersion = m.globalVersion + 1
     m.notifyCache = {}
-    vm.refreshCache()
 end
 
 --- 遍历文件
@@ -249,53 +229,23 @@ function m.getOriginUri(uri)
     return file.uri
 end
 
---- 寻找全局变量
-function m.findGlobals(name)
-    local uris = {}
-    for uri, file in pairs(m.fileMap) do
-        if not file.globals then
-            file.globals = {}
-            local ast = m.getAst(uri)
-            if ast then
-                local globals = vm.getGlobals(ast.ast)
-                if globals then
-                    for name in pairs(globals) do
-                        file.globals[name] = true
-                    end
-                end
-            end
-        end
-        if file.globals[name] then
-            uris[#uris+1] = file.uri
-        end
-    end
-    return uris
-end
-
---- 寻找link自己的其他文件
-function m.findLinkTo(uri)
+function m.getUri(uri)
     if platform.OS == 'Windows' then
         uri = uri:lower()
     end
-    local result = {}
-    for _, file in pairs(m.fileMap) do
-        if file.links == nil then
-            local ast = m.getAst(file.uri)
-            if ast then
-                file.links = vm.getLinks(ast.ast)
-            else
-                file.links = false
-            end
-        end
-        if file.links then
-            for linkUri in pairs(file.links) do
-                if m.eq(uri, linkUri) then
-                    result[#result+1] = file.uri
-                end
-            end
-        end
+    return uri
+end
+
+--- 获取文件的自定义缓存信息（在文件内容更新后自动失效）
+function m.getCache(uri)
+    if platform.OS == 'Windows' then
+        uri = uri:lower()
     end
-    return result
+    local file = m.fileMap[uri]
+    if not file then
+        return nil
+    end
+    return file.cache
 end
 
 --- 判断文件名相等
@@ -340,6 +290,17 @@ function m.isLua(uri)
     local matcher = m.getAssoc()
     local path = furi.decode(uri)
     return matcher(path)
+end
+
+--- 注册事件
+function m.watch(callback)
+    m.watchList[#m.watchList+1] = callback
+end
+
+function m.onWatch(ev, ...)
+    for _, callback in ipairs(m.watchList) do
+        callback(ev, ...)
+    end
 end
 
 return m

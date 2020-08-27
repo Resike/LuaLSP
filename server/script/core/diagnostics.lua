@@ -420,9 +420,9 @@ function mt:searchDuplicateIndex(callback)
             if obj.type == 'pair' then
                 local key = obj[1]
                 local name
-                if key.index then
-                    if key.type == 'string' then
-                        name = key[1]
+                if key.type == 'index' then
+                    if key[1].type == 'string' then
+                        name = key[1][1]
                     end
                 elseif key.type == 'name' then
                     name = key[1]
@@ -855,6 +855,27 @@ function mt:searchSetConstLocal(callback)
     end)
 end
 
+function mt:searchSetForState(callback)
+    local locs = {}
+    self.vm:eachSource(function (source)
+        if source.type == 'loop' then
+            locs[#locs+1] = source.arg:bindLocal()
+        elseif source.type == 'in' then
+            --self.vm:forList(source.arg, function (arg)
+            --    locs[#locs+1] = arg:bindLocal()
+            --end)
+        end
+    end)
+    for i = 1, #locs do
+        local loc = locs[i]
+        loc:eachInfo(function (info, src)
+            if info.type == 'set' then
+                callback(src.start, src.finish)
+            end
+        end)
+    end
+end
+
 function mt:doDiagnostics(func, code, callback)
     if config.config.diagnostics.disable[code] then
         return
@@ -1049,6 +1070,12 @@ return function (vm, lines, uri)
     session:doDiagnostics(session.searchSetConstLocal, 'set-const', function ()
         return {
             message = lang.script.DIAG_SET_CONST
+        }
+    end)
+    -- 检查修改for的内置变量
+    session:doDiagnostics(session.searchSetForState, 'set-for-state', function ()
+        return {
+            message = lang.script.DIAG_SET_FOR_STATE,
         }
     end)
     return session.datas

@@ -1,10 +1,37 @@
 local guide      = require 'parser.guide'
 local files      = require 'files'
+local vm         = require 'vm'
 local findSource = require 'core.find-source'
 
 local function isValidFunction(source, offset)
     -- 必须点在 `function` 这个单词上才能查找函数引用
     return offset >= source.start and offset < source.start + #'function'
+end
+
+local function sortResults(results)
+    -- 先按照顺序排序
+    table.sort(results, function (a, b)
+        local u1 = guide.getRoot(a).uri
+        local u2 = guide.getRoot(b).uri
+        if u1 == u2 then
+            return a.target.start < b.target.start
+        else
+            return u1 < u2
+        end
+    end)
+    -- 如果2个结果处于嵌套状态，则取范围小的那个
+    local lf, lu
+    for i = #results, 1, -1 do
+        local res = results[i].target
+        local f   = res.finish
+        local uri = guide.getRoot(res).uri
+        if lf and f > lf and uri == lu then
+            table.remove(results, i)
+        else
+            lu = uri
+            lf = f
+        end
+    end
 end
 
 local accept = {
@@ -38,8 +65,8 @@ return function (uri, offset)
     end
 
     local results = {}
-    local refs = guide.requestReference(source)
-    for _, src in ipairs(refs) do
+    vm.setSearchLevel(10)
+    vm.eachRef(source, function (src)
         local root = guide.getRoot(src)
         if     src.type == 'setfield'
         or     src.type == 'getfield'
@@ -52,15 +79,20 @@ return function (uri, offset)
         elseif src.type == 'getmethod'
         or     src.type == 'setmethod' then
             src = src.method
+        elseif src.type == 'table' and src.parent.type ~= 'return' then
+            return
         end
         results[#results+1] = {
             target = src,
             uri    = files.getOriginUri(root.uri),
         }
-    end
+    end)
 
     if #results == 0 then
         return nil
     end
+
+    sortResults(results)
+
     return results
 end

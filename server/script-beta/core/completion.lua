@@ -13,8 +13,10 @@ local config     = require 'config'
 local util       = require 'utility'
 local markdown   = require 'provider.markdown'
 local findSource = require 'core.find-source'
+local await      = require 'await'
 
 local stackID = 0
+local resolveID = 0
 local stacks = {}
 local function stack(callback)
     stackID = stackID + 1
@@ -31,6 +33,11 @@ local function resolveStack(id)
     if not callback then
         return nil
     end
+    -- 当进行新的 resolve 时，放弃当前的 resolve
+    resolveID = resolveID + 1
+    await.setDelayer(function ()
+        return resolveID
+    end)
     return callback()
 end
 
@@ -145,7 +152,7 @@ local function buildFunctionSnip(source)
 end
 
 local function buildDetail(source)
-    local types = vm.getType(source)
+    local types = vm.getInferType(source)
     return types
 end
 
@@ -179,6 +186,10 @@ local function buildFunction(results, source, oop, data)
 end
 
 local function isSameSource(source, pos)
+    if source.type == 'field'
+    or source.type == 'method' then
+        source = source.parent
+    end
     return source.start <= pos and source.finish >= pos
 end
 
@@ -218,7 +229,7 @@ local function checkLocal(ast, word, offset, results)
     end
 end
 
-local function checkFieldThen(src, used, word, start, parent, oop, results)
+local function checkFieldThen(src, word, start, parent, oop, results, used)
     local key = vm.getKeyName(src)
     if not key or key:sub(1, 1) ~= 's' then
         return
@@ -226,22 +237,22 @@ local function checkFieldThen(src, used, word, start, parent, oop, results)
     if isSameSource(src, start) then
         return
     end
+    if used[key] then
+        return
+    end
+    used[key] = true
     local name = key:sub(3)
-    if used[name] then
-        return
-    end
     if not matchKey(word, name) then
-        used[name] = true
         return
     end
+    local value = guide.getObjectValue(src) or src
     local kind = ckind.Field
-    if vm.hasType(src, 'function') then
+    if value.type == 'function' then
         if oop then
             kind = ckind.Method
         else
             kind = ckind.Function
         end
-        used[name] = true
         buildFunction(results, src, oop, {
             label = name,
             kind  = kind,
@@ -252,39 +263,32 @@ local function checkFieldThen(src, used, word, start, parent, oop, results)
                 }
             end),
         })
-    else
-        if oop then
-            return
-        end
-        used[name] = true
-        local literal = vm.getLiteral(src)
-        if literal ~= nil then
-            kind = ckind.Enum
-        end
-        results[#results+1] = {
-            label = name,
-            kind  = kind,
-            id    = stack(function ()
-                return {
-                    detail      = buildDetail(src),
-                    description = buildDesc(src),
-                }
-            end)
-        }
+        return
     end
+    if oop then
+        return
+    end
+    local literal = guide.getLiteral(value)
+    if literal ~= nil then
+        kind = ckind.Enum
+    end
+    results[#results+1] = {
+        label = name,
+        kind  = kind,
+        id    = stack(function ()
+            return {
+                detail      = buildDetail(src),
+                description = buildDesc(src),
+            }
+        end)
+    }
 end
 
 local function checkField(word, start, parent, oop, results)
     local used = {}
-    if parent.ref then
-        for _, src in ipairs(parent.ref) do
-            checkFieldThen(src, used, word, start, parent, oop, results)
-        end
-    end
     vm.eachField(parent, function (src)
-        checkFieldThen(src, used, word, start, parent, oop, results)
+        checkFieldThen(src, word, start, parent, oop, results, used)
     end)
-    return used
 end
 
 local function checkTableField(ast, word, start, results)
@@ -680,6 +684,10 @@ local function isAfterLocal(text, start)
     return word == 'local'
 end
 
+local function checkUri(word, text, results)
+    
+end
+
 local function tryWord(ast, text, offset, results)
     local finish = skipSpace(text, offset)
     local word, start = findWord(text, finish)
@@ -687,7 +695,11 @@ local function tryWord(ast, text, offset, results)
         return nil
     end
     local hasSpace = finish ~= offset
-    if not isInString(ast, offset) then
+    if isInString(ast, offset) then
+        if not hasSpace then
+            checkUri(word, text, results)
+        end
+    else
         local parent, oop = findParent(ast, text, start - 1)
         if parent then
             if not hasSpace then
@@ -710,9 +722,9 @@ local function tryWord(ast, text, offset, results)
                 end
             end
         end
-    end
-    if not hasSpace then
-        checkCommon(word, text, results)
+        if not hasSpace then
+            checkCommon(word, text, results)
+        end
     end
 end
 
@@ -733,14 +745,21 @@ local function trySymbol(ast, text, offset, results)
     end
 end
 
+local function tryCallArg(ast, text, offset, results)
+    local parent, oop = findParent(ast, text, offset)
+
+end
+
 local function completion(uri, offset)
     local ast = files.getAst(uri)
     local text = files.getText(uri)
     local results = {}
     clearStack()
+    vm.setSearchLevel(3)
     if ast then
         tryWord(ast, text, offset, results)
         trySymbol(ast, text, offset, results)
+        tryCallArg(ast, text, offset, results)
     else
         local word = findWord(text, offset)
         if word then

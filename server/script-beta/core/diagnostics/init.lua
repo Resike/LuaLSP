@@ -18,11 +18,11 @@ local function check(uri, name, level, results)
     local passed = os.clock() - clock
     if passed >= 0.5 then
         log.warn(('Diagnostics [%s] @ [%s] takes [%.3f] sec!'):format(name, uri, passed))
-        await.delay()
     end
 end
 
 return function (uri)
+    local vm  = require 'vm'
     local ast = files.getAst(uri)
     if not ast then
         return nil
@@ -30,6 +30,8 @@ return function (uri)
     local results = {}
 
     for name, level in pairs(define.DiagnosticDefaultSeverity) do
+        await.delay()
+        vm.setSearchLevel(0)
         check(uri, name, level, results)
     end
 
