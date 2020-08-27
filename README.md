@@ -31,8 +31,8 @@ c:\Users\User\AppData\Roaming\Sublime Text 3\Packages\User\LSP.sublime-settings
 						"version": "Lua 5.1",
 					},
 					"workspace": {
-						"maxPreload": 1500,
-						"preloadFileSize": 3000,
+						"maxPreload": 1000,
+						"preloadFileSize": 1000,
 					},
 				},
 			},
