@@ -9,6 +9,8 @@ local findSource = require 'core.find-source'
 local Forcing
 
 local function askForcing(str)
+    -- TODO 总是可以替换
+    do return true end
     if TEST then
         return true
     end
@@ -51,6 +53,8 @@ local function askForcing(str)
 end
 
 local function askForMultiChange(results, newname)
+    -- TODO 总是可以替换
+    do return true end
     if TEST then
         return true
     end
@@ -174,7 +178,7 @@ local function renameField(source, newname, callback)
         end
         callback(source, source.start, source.finish, newname)
     elseif parent.type == 'setmethod' then
-        local uri = guide.getRoot(source).uri
+        local uri = guide.getUri(source)
         local text = files.getText(uri)
         local func = parent.value
         -- function mt:name () end --> mt['newname'] = function (self) end
@@ -219,17 +223,19 @@ local function renameGlobal(source, newname, callback)
 end
 
 local function ofLocal(source, newname, callback)
-    local results = guide.requestReference(source)
-    for i = 1, #results do
-        renameLocal(results[i], newname, callback)
+    renameLocal(source, newname, callback)
+    if source.ref then
+        for _, ref in ipairs(source.ref) do
+            renameLocal(ref, newname, callback)
+        end
     end
 end
 
 local function ofField(source, newname, callback)
     local key = guide.getKeyName(source)
-    vm.eachRef(source, function (src)
+    for _, src in ipairs(vm.getRefs(source, 'deep')) do
         if vm.getKeyName(src) ~= key then
-            return
+            goto CONTINUE
         end
         if     src.type == 'tablefield'
         or     src.type == 'getfield'
@@ -247,30 +253,31 @@ local function ofField(source, newname, callback)
             local quo = src[2]
             local text = util.viewString(newname, quo)
             callback(src, src.start, src.finish, text)
-            return
+            goto CONTINUE
         elseif src.type == 'field'
         or     src.type == 'method' then
             local suc = renameField(src, newname, callback)
             if not suc then
-                return false
+                goto CONTINUE
             end
         elseif src.type == 'setglobal'
         or     src.type == 'getglobal' then
             local suc = renameGlobal(src, newname, callback)
             if not suc then
-                return false
+                goto CONTINUE
             end
         end
-    end)
+        ::CONTINUE::
+    end
 end
 
 local function ofLabel(source, newname, callback)
     if not isValidName(newname) and not askForcing(newname)then
         return false
     end
-    vm.eachRef(source, function (src)
+    for _, src in ipairs(vm.getRefs(source, 'deep')) do
         callback(src, src.start, src.finish, newname)
-    end)
+    end
 end
 
 local function rename(source, newname, callback)
@@ -281,7 +288,7 @@ local function rename(source, newname, callback)
         return ofLocal(source, newname, callback)
     elseif source.type == 'setlocal'
     or     source.type == 'getlocal' then
-        return ofLocal(source, newname, callback)
+        return ofLocal(source.node, newname, callback)
     elseif source.type == 'field'
     or     source.type == 'method'
     or     source.type == 'index' then
@@ -375,7 +382,7 @@ function m.rename(uri, pos, newname)
             start  = start,
             finish = finish,
             text   = text,
-            uri    = guide.getRoot(target).uri,
+            uri    = files.getOriginUri(guide.getUri(target)),
         }
     end)
 

@@ -1,0 +1,521 @@
+[2020-11-01 15:42:51.000][info][main:14]: Lua Lsp startup, root: 	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server
+[2020-11-01 15:42:51.000][debug][main:15]: ROOT:	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server
+[2020-11-01 15:42:51.042][info][script.language:125]: VSC language: en-us
+[2020-11-01 15:42:51.042][info][script.language:126]: LS  language: en-us
+[2020-11-01 15:42:51.205][debug][script.async.async:55]: Create thread, id: 	1	task: 	proto
+[2020-11-01 15:42:51.220][debug][script.service:871]: collectgarbage: 	0.015
+[2020-11-01 15:42:51.221][debug][script.service:942]: 
+State
+Main Mem:  [14003.216]kb
+#001 Mem:  <Unknown>
+-------------------
+CachedVM:  [0]
+AlivedVM:  [0]
+DeadVM:    [0]
+-------------------
+CachedSrc: [0]
+AlivedSrc: [1]
+DeadSrc:   [0]
+-------------------
+CachedFunc:[0]
+AlivedFunc:[0]
+DeadFunc:  [0]
+-------------------
+TotalVal:  [0]
+DeadVal:   [0]
+-------------------
+TotalLoc:  [0]
+TotalEmmy: [10]
+
+[2020-11-01 15:42:51.221][debug][script.service:984]: test memory: 	0.000
+[2020-11-01 15:42:51.223][info][script.method.initialize:23]: {
+	capabilities = {
+		experimental = {
+		},
+		textDocument = {
+			codeAction = {
+				codeActionLiteralSupport = {
+					codeActionKind = {
+						valueSet = {
+							[1] = "quickfix",
+							[2] = "refactor",
+							[3] = "refactor.extract",
+							[4] = "refactor.inline",
+							[5] = "refactor.rewrite",
+							[6] = "source.organizeImports",
+						},
+					},
+				},
+				dynamicRegistration = true,
+			},
+			colorProvider = {
+				dynamicRegistration = true,
+			},
+			completion = {
+				completionItem = {
+					deprecatedSupport = true,
+					documentationFormat = {
+						[1] = "markdown",
+						[2] = "plaintext",
+					},
+					snippetSupport = true,
+					tagSupport = {
+						valueSet = {
+							[1] = 1,
+						},
+					},
+				},
+				completionItemKind = {
+					valueSet = {
+						[01] = 1,
+						[02] = 2,
+						[03] = 3,
+						[04] = 4,
+						[05] = 5,
+						[06] = 6,
+						[07] = 7,
+						[08] = 8,
+						[09] = 9,
+						[10] = 10,
+						[11] = 11,
+						[12] = 12,
+						[13] = 13,
+						[14] = 14,
+						[15] = 15,
+						[16] = 16,
+						[17] = 17,
+						[18] = 18,
+						[19] = 19,
+						[20] = 20,
+						[21] = 21,
+						[22] = 22,
+						[23] = 23,
+						[24] = 24,
+						[25] = 25,
+					},
+				},
+				dynamicRegistration = true,
+			},
+			declaration = {
+				dynamicRegistration = true,
+				linkSupport = true,
+			},
+			definition = {
+				dynamicRegistration = true,
+				linkSupport = true,
+			},
+			documentHighlight = {
+				dynamicRegistration = true,
+			},
+			documentSymbol = {
+				["hierarchicalDocumentSymbolSupport"] = true,
+				dynamicRegistration = true,
+				symbolKind = {
+					valueSet = {
+						[01] = 1,
+						[02] = 2,
+						[03] = 3,
+						[04] = 4,
+						[05] = 5,
+						[06] = 6,
+						[07] = 7,
+						[08] = 8,
+						[09] = 9,
+						[10] = 10,
+						[11] = 11,
+						[12] = 12,
+						[13] = 13,
+						[14] = 14,
+						[15] = 15,
+						[16] = 16,
+						[17] = 17,
+						[18] = 18,
+						[19] = 19,
+						[20] = 20,
+						[21] = 21,
+						[22] = 22,
+						[23] = 23,
+						[24] = 24,
+						[25] = 25,
+						[26] = 26,
+					},
+				},
+			},
+			formatting = {
+				dynamicRegistration = true,
+			},
+			hover = {
+				contentFormat = {
+					[1] = "markdown",
+					[2] = "plaintext",
+				},
+				dynamicRegistration = true,
+			},
+			implementation = {
+				dynamicRegistration = true,
+				linkSupport = true,
+			},
+			publishDiagnostics = {
+				relatedInformation = true,
+			},
+			rangeFormatting = {
+				dynamicRegistration = true,
+			},
+			references = {
+				dynamicRegistration = true,
+			},
+			rename = {
+				dynamicRegistration = true,
+				prepareSupport = true,
+			},
+			selectionRange = {
+				dynamicRegistration = true,
+			},
+			signatureHelp = {
+				dynamicRegistration = true,
+				signatureInformation = {
+					documentationFormat = {
+						[1] = "markdown",
+						[2] = "plaintext",
+					},
+					parameterInformation = {
+						labelOffsetSupport = true,
+					},
+				},
+			},
+			synchronization = {
+				didSave = true,
+				dynamicRegistration = true,
+				willSave = true,
+				willSaveWaitUntil = true,
+			},
+			typeDefinition = {
+				dynamicRegistration = true,
+				linkSupport = true,
+			},
+		},
+		window = {
+			workDoneProgress = true,
+		},
+		workspace = {
+			applyEdit = true,
+			configuration = true,
+			didChangeConfiguration = {
+				dynamicRegistration = true,
+			},
+			executeCommand = {
+			},
+			symbol = {
+				dynamicRegistration = true,
+				symbolKind = {
+					valueSet = {
+						[01] = 1,
+						[02] = 2,
+						[03] = 3,
+						[04] = 4,
+						[05] = 5,
+						[06] = 6,
+						[07] = 7,
+						[08] = 8,
+						[09] = 9,
+						[10] = 10,
+						[11] = 11,
+						[12] = 12,
+						[13] = 13,
+						[14] = 14,
+						[15] = 15,
+						[16] = 16,
+						[17] = 17,
+						[18] = 18,
+						[19] = 19,
+						[20] = 20,
+						[21] = 21,
+						[22] = 22,
+						[23] = 23,
+						[24] = 24,
+						[25] = 25,
+						[26] = 26,
+					},
+				},
+			},
+			workspaceEdit = {
+				documentChanges = true,
+				failureHandling = "abort",
+			},
+			workspaceFolders = true,
+		},
+	},
+	clientInfo = {
+		name = "Sublime Text LSP",
+		version = "1.0.18",
+	},
+	initializationOptions = {
+	},
+	processId = 11940,
+	rootPath = "C:\\World of Warcraft\\_retail_\\Interface\\AddOns\\TradeSkillMaster",
+	rootUri = "file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster",
+	workspaceFolders = {
+		[1] = {
+			name = "TradeSkillMaster",
+			uri = "file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster",
+		},
+	},
+}
+[2020-11-01 15:42:51.223][debug][script.method.initialize:24]: ProcessID	6596
+[2020-11-01 15:42:51.223][info][script.service:180]: Add workspace	root	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
+[2020-11-01 15:42:51.223][debug][script.async.async:55]: Create thread, id: 	2	task: 	loadfile
+[2020-11-01 15:42:51.223][info][script.workspace:151]: Workspace inited, root: 	c:/World of Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
+[2020-11-01 15:42:51.223][info][script.workspace:152]: Workspace inited, uri: 	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
+[2020-11-01 15:42:51.223][info][script.workspace:154]: Log path: 	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/log/file_C_World%20of%20Warcraft__retail__Interface_AddOns_TradeSkillMaster.log
+[2020-11-01 15:42:51.226][debug][script.service:124]: clearDiagnostics	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Core/UI/MainUI/Core.lua
+[2020-11-01 15:42:51.258][debug][script.config:198]: Config update: 	{
+	color = {
+		mode = "Semantic",
+	},
+	completion = {
+		callSnippet = "Disable",
+		displayContext = 6,
+		enable = false,
+		keywordSnippet = "Replace",
+	},
+	diagnostics = {
+		disable = {
+		},
+		enable = false,
+		globals = {
+		},
+		severity = {
+			["ambiguity-1"] = "Warning",
+			["duplicate-index"] = "Warning",
+			["duplicate-method"] = "Warning",
+			["emmy-lua"] = "Warning",
+			["empty-block"] = "Hint",
+			["global-in-nil-env"] = "Warning",
+			["lowercase-global"] = "Information",
+			["newfield-call"] = "Warning",
+			["newline-call"] = "Information",
+			["redefined-local"] = "Hint",
+			["redundant-parameter"] = "Hint",
+			["redundant-value"] = "Hint",
+			["set-const"] = "Error",
+			["set-for-state"] = "Warning",
+			["trailing-space"] = "Hint",
+			["undefined-env-child"] = "Information",
+			["undefined-global"] = "Warning",
+			["unused-function"] = "Hint",
+			["unused-label"] = "Hint",
+			["unused-local"] = "Hint",
+			["unused-vararg"] = "Hint",
+		},
+	},
+	hover = {
+		enable = true,
+		viewNumber = true,
+		viewString = true,
+		viewStringMax = 1000,
+	},
+	plugin = {
+		enable = false,
+		path = ".vscode/lua-plugin/*.lua",
+	},
+	runtime = {
+		library = {
+		},
+		path = {
+			[1] = "?.lua",
+			[2] = "?/init.lua",
+			[3] = "?/?.lua",
+		},
+		special = {
+		},
+		version = "Lua 5.1",
+	},
+	signatureHelp = {
+		enable = true,
+	},
+	workspace = {
+		ignoreDir = {
+		},
+		ignoreSubmodules = true,
+		library = {
+		},
+		maxPreload = 500,
+		preloadFileSize = 500,
+		useGitIgnore = true,
+	},
+}	{
+	associations = {
+	},
+	exclude = {
+	},
+}
+[2020-11-01 15:42:51.418][debug][script.service:409]: reCompile:	1	1
+[2020-11-01 15:42:51.445][debug][script.service:871]: collectgarbage: 	0.027
+[2020-11-01 15:42:51.446][debug][script.service:942]: 
+State
+Main Mem:  [22572.827]kb
+#001 Mem:  [78.088]kb
+#002 Mem:  <Unknown>
+-------------------
+CachedVM:  [0]
+AlivedVM:  [0]
+DeadVM:    [0]
+-------------------
+CachedSrc: [0]
+AlivedSrc: [1]
+DeadSrc:   [1]
+-------------------
+CachedFunc:[0]
+AlivedFunc:[0]
+DeadFunc:  [0]
+-------------------
+TotalVal:  [3079]
+DeadVal:   [3079]
+-------------------
+TotalLoc:  [0]
+TotalEmmy: [10]
+
+[2020-11-01 15:42:51.446][debug][script.service:984]: test memory: 	0.001
+[2020-11-01 15:42:51.446][debug][script.service:841]: reDiagnostic
+[2020-11-01 15:42:51.446][debug][script.service:124]: clearDiagnostics	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Core/UI/MainUI/Core.lua
+[2020-11-01 15:42:51.446][debug][script.service:819]: reScanFiles
+[2020-11-01 15:42:51.446][debug][script.service:124]: clearDiagnostics	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Core/UI/MainUI/Core.lua
+[2020-11-01 15:42:51.446][info][script.workspace:48]: 忽略子模块：	External/LibTSMClass
+[2020-11-01 15:42:51.446][info][script.workspace:48]: 忽略子模块：	External/AccurateTime
+[2020-11-01 15:42:51.446][debug][script.async.async:55]: Create thread, id: 	3	task: 	scanfiles
+[2020-11-01 15:42:51.446][debug][script.method.initialized:77]: client/registerCapability Success!
+[2020-11-01 15:42:51.447][debug][script.config:198]: Config update: 	{
+	color = {
+		mode = "Semantic",
+	},
+	completion = {
+		callSnippet = "Disable",
+		displayContext = 6,
+		enable = false,
+		keywordSnippet = "Replace",
+	},
+	diagnostics = {
+		disable = {
+		},
+		enable = false,
+		globals = {
+		},
+		severity = {
+			["ambiguity-1"] = "Warning",
+			["duplicate-index"] = "Warning",
+			["duplicate-method"] = "Warning",
+			["emmy-lua"] = "Warning",
+			["empty-block"] = "Hint",
+			["global-in-nil-env"] = "Warning",
+			["lowercase-global"] = "Information",
+			["newfield-call"] = "Warning",
+			["newline-call"] = "Information",
+			["redefined-local"] = "Hint",
+			["redundant-parameter"] = "Hint",
+			["redundant-value"] = "Hint",
+			["set-const"] = "Error",
+			["set-for-state"] = "Warning",
+			["trailing-space"] = "Hint",
+			["undefined-env-child"] = "Information",
+			["undefined-global"] = "Warning",
+			["unused-function"] = "Hint",
+			["unused-label"] = "Hint",
+			["unused-local"] = "Hint",
+			["unused-vararg"] = "Hint",
+		},
+	},
+	hover = {
+		enable = true,
+		viewNumber = true,
+		viewString = true,
+		viewStringMax = 1000,
+	},
+	plugin = {
+		enable = false,
+		path = ".vscode/lua-plugin/*.lua",
+	},
+	runtime = {
+		library = {
+		},
+		path = {
+			[1] = "?.lua",
+			[2] = "?/init.lua",
+			[3] = "?/?.lua",
+		},
+		special = {
+		},
+		version = "Lua 5.1",
+	},
+	signatureHelp = {
+		enable = true,
+	},
+	workspace = {
+		ignoreDir = {
+		},
+		ignoreSubmodules = true,
+		library = {
+		},
+		maxPreload = 500,
+		preloadFileSize = 500,
+		useGitIgnore = true,
+	},
+}	{
+	associations = {
+	},
+	exclude = {
+	},
+}
+[2020-11-01 15:42:51.473][debug][script.workspace:123]: Scanning:	c:/World of Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
+[2020-11-01 15:42:51.473][debug][script.workspace:123]: Scan pattern:	{
+	[1] = "External/LibTSMClass",
+	[2] = "External/AccurateTime",
+	[3] = "External/EmbeddedLibs",
+	[4] = "# git ls-files --others --exclude-from=.git/info/exclude",
+	[5] = "# Lines that start with '#' are comments.",
+	[6] = "# For a project mostly in C, the following would be a good set of",
+	[7] = "# exclude patterns (uncomment them if you want to use them):",
+	[8] = "# *.[oa]",
+	[9] = "# *~",
+}
+[2020-11-01 15:42:51.473][debug][script.workspace:123]: Scan options:	{
+	ignoreCase = true,
+}
+[2020-11-01 15:42:51.495][info][script.service:300]: Skip large file, size: 2402.604 KB: file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Tests/Globals/wow_globals.lua
+[2020-11-01 15:42:51.495][debug][script.service:340]: Read failed due to check failed:	file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Tests/Globals/wow_globals.lua
+[2020-11-01 15:42:51.537][info][script.service:300]: Skip large file, size: 2502.709 KB: file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Tests/Emulator/Assets/ItemInfoDB.lua
+[2020-11-01 15:42:51.537][debug][script.service:340]: Read failed due to check failed:	file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Tests/Emulator/Assets/ItemInfoDB.lua
+[2020-11-01 15:42:51.538][info][script.service:300]: Skip large file, size: 820.463 KB: file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Tests/Emulator/Assets/GlobalStrings.lua
+[2020-11-01 15:42:51.538][debug][script.service:340]: Read failed due to check failed:	file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Tests/Emulator/Assets/GlobalStrings.lua
+[2020-11-01 15:42:51.539][info][script.service:300]: Skip large file, size: 912.365 KB: file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Tests/Emulator/Assets/AppData.lua
+[2020-11-01 15:42:51.539][debug][script.service:340]: Read failed due to check failed:	file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Tests/Emulator/Assets/AppData.lua
+[2020-11-01 15:42:52.060][info][script.workspace:117]: Scan finish, got	378	files.
+[2020-11-01 15:42:52.072][debug][script.service:409]: reCompile:	375	375
+[2020-11-01 15:42:52.098][debug][script.service:871]: collectgarbage: 	0.026
+[2020-11-01 15:42:52.100][debug][script.service:942]: 
+State
+Main Mem:  [22657.572]kb
+#001 Mem:  [67.105]kb
+#002 Mem:  [2637.148]kb
+#003 Mem:  <Unknown>
+-------------------
+CachedVM:  [0]
+AlivedVM:  [0]
+DeadVM:    [0]
+-------------------
+CachedSrc: [0]
+AlivedSrc: [1]
+DeadSrc:   [1]
+-------------------
+CachedFunc:[0]
+AlivedFunc:[0]
+DeadFunc:  [0]
+-------------------
+TotalVal:  [3226]
+DeadVal:   [3226]
+-------------------
+TotalLoc:  [0]
+TotalEmmy: [10]
+
+[2020-11-01 15:42:52.100][debug][script.service:984]: test memory: 	0.001
+[2020-11-01 15:42:53.044][warn][script.service:556]: Compile Ast[file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Core/UI/MainUI/Groups.lua] takes [0.133] sec, size [68.264]kb
+[2020-11-01 15:42:54.375][debug][script.service:594]: Compile VM[file:///c%3A/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster/Core/Service/Shopping/FilterSearch.lua] takes: 0.243 sec

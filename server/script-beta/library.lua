@@ -92,7 +92,13 @@ local function insertGlobal(tbl, key, value)
     if not value.doc then
         value.doc = key
     end
-    tbl[key] = value
+    tbl[key] = {
+        type  = 'library',
+        name  = key,
+        child = {},
+        value = value,
+    }
+    value.library = tbl[key]
     return true
 end
 
@@ -184,12 +190,17 @@ local function insertChild(tbl, name, key, value)
     end
     if not tbl[name] then
         tbl[name] = {
-            type = name,
+            type = 'library',
             name = name,
             child = {},
         }
     end
-    tbl[name].child[key] = copy(value)
+    tbl[name].child[key] = {
+        type  = 'library',
+        name  = key,
+        value = value,
+    }
+    value.library = tbl[name].child[key]
 end
 
 local function mergeParent(alllibs, name, lib, libName)
@@ -233,7 +244,6 @@ end
 local function fix(libs)
     for name, lib in pairs(libs) do
         lib.name = lib.name or name
-        lib.child = {}
     end
 end
 
@@ -257,11 +267,12 @@ end
 
 local function markLibrary(library)
     for _, lib in pairs(library) do
-        lib.library = true
-        lib.start = 0
-        lib.finish = 0
+        lib.fields  = {}
         if lib.child then
-            markLibrary(lib.child)
+            for _, child in util.sortPairs(lib.child) do
+                table.insert(lib.fields, child)
+                child.parent = library
+            end
         end
     end
 end

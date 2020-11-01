@@ -1,8 +1,9 @@
-local vm    = require 'vm.vm'
-local files = require 'files'
-local ws    = require 'workspace'
-local guide = require 'parser.guide'
-local await = require 'await'
+local vm      = require 'vm.vm'
+local files   = require 'files'
+local ws      = require 'workspace'
+local guide   = require 'parser.guide'
+local await   = require 'await'
+local library = require 'library'
 
 local m = {}
 
@@ -25,8 +26,8 @@ function m.require(args, index)
         return nil
     end
     local results = {}
-    local myUri = guide.getRoot(args[1]).uri
-    local uris = ws.findUrisByRequirePath(reqName, true)
+    local myUri = guide.getUri(args[1])
+    local uris = ws.findUrisByRequirePath(reqName)
     for _, uri in ipairs(uris) do
         if not files.eq(myUri, uri) then
             local ast = files.getAst(uri)
@@ -35,6 +36,10 @@ function m.require(args, index)
             end
         end
     end
+
+    local lib = library.library[reqName]
+    results[#results+1] = lib
+
     return results
 end
 
@@ -44,8 +49,8 @@ function m.dofile(args, index)
         return
     end
     local results = {}
-    local myUri = guide.getRoot(args[1]).uri
-    local uris = ws.findUrisByFilePath(reqName, true)
+    local myUri = guide.getUri(args[1])
+    local uris = ws.findUrisByFilePath(reqName)
     for _, uri in ipairs(uris) do
         if not files.eq(myUri, uri) then
             local ast = files.getAst(uri)
@@ -65,11 +70,12 @@ vm.interface = {}
 vm.interface.searchLevel = 0
 
 function vm.interface.call(func, args, index)
-    await.delay()
     if func.special == 'require' and index == 1 then
+        await.delay()
         return m.require(args, index)
     end
     if func.special == 'dofile' then
+        await.delay()
         return m.dofile(args, index)
     end
 end
@@ -79,33 +85,40 @@ function vm.interface.global(name)
     return vm.getGlobals(name)
 end
 
+function vm.interface.docType(name)
+    await.delay()
+    return vm.getDocTypes(name)
+end
+
 function vm.interface.link(uri)
     await.delay()
     return vm.getLinksTo(uri)
 end
 
-function vm.interface.cache(source, mode)
-    await.delay()
-    local cache = vm.getCache('cache')
-    if not cache[mode] then
-        cache[mode] = {}
+function vm.interface.index(obj)
+    if obj.type == 'library' then
+        return obj.fields
     end
-    local sourceCache = cache[mode][source]
-    if sourceCache then
-        return sourceCache
-    end
-    sourceCache = {}
-    cache[mode][source] = sourceCache
-    return nil, function (results)
-        for i = 1, #results do
-            sourceCache[i] = results[i]
+
+    local tp = obj.type
+    if tp == 'getglobal' and obj.node.special == '_G' then
+        local lib = library.global[obj[1]]
+        if not lib then
+            return nil
         end
+        tp = lib.value.type
     end
+    local lib = library.object[tp]
+    if lib then
+        return lib.fields
+    end
+
+    return nil
 end
 
-function vm.interface.library(source)
+function vm.interface.cache()
     await.delay()
-    return vm.getLibrary(source)
+    return vm.getCache('cache')
 end
 
 function vm.setSearchLevel(n)

@@ -34,8 +34,8 @@ local function enable(lsp)
                         tokenTypes = toArray(TokenTypes),
                         tokenModifiers = toArray(TokenModifiers),
                     },
-                    rangeProvider = false,
-                    documentProvider = false,
+                    range = false,
+                    full = true,
                 },
             },
         }

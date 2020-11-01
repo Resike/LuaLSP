@@ -56,7 +56,7 @@ function m.reportTask()
     local normal    = 0
     local dead      = 0
 
-    for co in pairs(await.coTracker) do
+    for co in pairs(await.coMap) do
         total = total + 1
         local status = coroutine.status(co)
         if status == 'running' then
@@ -98,6 +98,24 @@ function m.reportCache()
     return table.concat(lines, '\n')
 end
 
+function m.reportProto()
+    local holdon  = 0
+    local waiting = 0
+
+    for _ in pairs(proto.holdon) do
+        holdon = holdon + 1
+    end
+    for _ in pairs(proto.waiting) do
+        waiting = waiting + 1
+    end
+
+    local lines = {}
+    lines[#lines+1] = '    --------------- Proto ---------------'
+    lines[#lines+1] = ('        Holdon:   %d'):format(holdon)
+    lines[#lines+1] = ('        Waiting:  %d'):format(waiting)
+    return table.concat(lines, '\n')
+end
+
 function m.report()
     local t = timer.loop(60.0, function ()
         local lines = {}
@@ -106,6 +124,7 @@ function m.report()
         lines[#lines+1] = m.reportMemory()
         lines[#lines+1] = m.reportTask()
         lines[#lines+1] = m.reportCache()
+        lines[#lines+1] = m.reportProto()
         lines[#lines+1] = '=============================================='
 
         log.debug(table.concat(lines, '\n'))

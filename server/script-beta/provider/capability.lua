@@ -1,3 +1,5 @@
+local sp = require 'bee.subprocess'
+
 local m = {}
 
 m.initer = {
@@ -15,27 +17,21 @@ m.initer = {
     renameProvider = {
         prepareProvider = true,
     },
-    --documentSymbolProvider = true,
+    documentSymbolProvider = true,
+    workspaceSymbolProvider = true,
     documentHighlightProvider = true,
-    --codeActionProvider = true,
-    --signatureHelpProvider = {
-    --    triggerCharacters = { '(', ',' },
-    --},
-    --workspace = {
-    --    workspaceFolders = {
-    --        supported = true,
-    --        changeNotifications = true,
-    --    }
-    --},
+    codeActionProvider = true,
+    signatureHelpProvider = {
+        triggerCharacters = { '(', ',' },
+    },
+    executeCommandProvider = {
+        commands = {
+            'lua.removeSpace:' .. sp:get_id(),
+            'lua.solve:' .. sp:get_id(),
+        },
+    },
     --documentOnTypeFormattingProvider = {
     --    firstTriggerCharacter = '}',
-    --},
-    --executeCommandProvider = {
-    --    commands = {
-    --        'config',
-    --        'removeSpace',
-    --        'solve',
-    --    },
     --},
 }
 

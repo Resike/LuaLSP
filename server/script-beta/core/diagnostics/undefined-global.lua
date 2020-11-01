@@ -11,25 +11,19 @@ return function (uri, callback)
         return
     end
 
-    local globalCache = {}
     -- 遍历全局变量，检查所有没有 set 模式的全局变量
     guide.eachSourceType(ast.ast, 'getglobal', function (src)
         local key = guide.getName(src)
         if not key then
             return
         end
-        if globalCache[key] == nil then
-            local defs = vm.getDefs(src)
-            -- 这里要处理跨文件的情况
-            globalCache[key] = #defs > 0
-        end
-        if globalCache[key] then
+        if config.config.diagnostics.globals[key] then
             return
         end
         if library.global[key] then
             return
         end
-        if config.config.diagnostics.globals[key] then
+        if #vm.getGlobalSets(guide.getKeyName(src)) > 0 then
             return
         end
         local message = lang.script('DIAG_UNDEF_GLOBAL', key)

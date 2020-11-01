@@ -6,6 +6,7 @@ local files  = require 'files'
 local config = require 'config'
 local core   = require 'core.diagnostics'
 local util   = require 'utility'
+local ws     = require 'workspace'
 
 local m = {}
 m._start = false
@@ -50,6 +51,7 @@ local function buildSyntaxError(uri, err)
     end
 
     return {
+        code     = err.type:lower():gsub('_', '-'),
         range    = define.range(lines, text, err.start, err.finish),
         severity = define.DiagnosticSeverity.Error,
         source   = lang.script.DIAG_SYNTAX_CHECK,
@@ -105,12 +107,13 @@ local function merge(a, b)
 end
 
 function m.clear(uri)
-    if not m.cache[uri] then
+    local luri = uri:lower()
+    if not m.cache[luri] then
         return
     end
-    m.cache[uri] = nil
+    m.cache[luri] = nil
     proto.notify('textDocument/publishDiagnostics', {
-        uri = uri,
+        uri = files.getOriginUri(luri) or uri,
         diagnostics = {},
     })
 end
@@ -148,6 +151,10 @@ function m.diagnostics(uri)
 end
 
 function m.doDiagnostic(uri)
+    uri = uri:lower()
+    if files.isLibrary(uri) then
+        return
+    end
     local ast = files.getAst(uri)
     if not ast then
         m.clear(uri)
@@ -168,48 +175,38 @@ function m.doDiagnostic(uri)
     m.cache[uri] = full
 
     proto.notify('textDocument/publishDiagnostics', {
-        uri = uri,
+        uri = files.getOriginUri(uri),
         diagnostics = full,
     })
 end
 
 function m.refresh(uri)
-    await.create(function ()
-        await.delay(function ()
-            return files.globalVersion
-        end)
+    if not m._start then
+        return
+    end
+    await.call(function ()
+        -- 一旦文件的版本发生变化，就放弃这次诊断
+        await.delay()
         if uri then
             m.doDiagnostic(uri)
         end
-        if not m._start then
-            return
-        end
-        await.delay(function ()
-            return files.globalVersion
-        end)
-        local clock = os.clock()
-        if uri then
-            m.doDiagnostic(uri)
-        end
-        for destUri in files.eachFile() do
-            if destUri ~= uri then
-                m.doDiagnostic(files.getOriginUri(destUri))
-                await.delay(function ()
-                    return files.globalVersion
-                end)
-            end
-        end
-        local passed = os.clock() - clock
-        log.info(('Finish diagnostics, takes [%.3f] sec.'):format(passed))
-    end)
+        m.diagnosticsAll()
+    end, 'files.version')
 end
 
 function m.diagnosticsAll()
-    local clock = os.clock()
-    for uri in files.eachFile() do
-        m.doDiagnostic(uri)
+    if not m._start then
+        return
     end
-    log.debug('全文诊断耗时：', os.clock() - clock)
+    await.close 'diagnosticsAll'
+    await.call(function ()
+        local clock = os.clock()
+        for uri in files.eachFile() do
+            await.delay()
+            m.doDiagnostic(uri)
+        end
+        log.debug('全文诊断耗时：', os.clock() - clock)
+    end, 'files.version', 'diagnosticsAll')
 end
 
 function m.start()
@@ -217,18 +214,11 @@ function m.start()
     m.diagnosticsAll()
 end
 
-files.watch(function (env, uri)
-    if env == 'remove' then
+files.watch(function (ev, uri)
+    if ev == 'remove' then
         m.clear(uri)
-    elseif env == 'update' then
-        await.create(function ()
-            -- 一旦文件的版本发生变化，就放弃这次诊断
-            await.setDelayer(function ()
-                return files.getVersion(uri)
-            end)
-            await.delay()
-            m.doDiagnostic(uri)
-        end)
+    elseif ev == 'update' then
+        m.refresh(uri)
     end
 end)
 

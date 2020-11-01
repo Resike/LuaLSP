@@ -6,10 +6,11 @@ local define = require 'proto.define'
 local await  = require 'await'
 
 local function countLibraryArgs(source)
-    local func = vm.getLibrary(source)
-    if not func then
+    local lib = vm.getLibrary(source)
+    if not lib then
         return nil
     end
+    local func = lib.value
     local result = 0
     if not func.args then
         return result
@@ -35,14 +36,14 @@ end
 
 local function countFuncArgs(source)
     local result = 0
+    if source.parent and source.parent.type == 'setmethod' then
+        result = result + 1
+    end
     if not source.args then
         return result
     end
     if source.args[#source.args].type == '...' then
         return math.maxinteger
-    end
-    if source.parent and source.parent.type == 'setmethod' then
-        result = result + 1
     end
     result = result + #source.args
     return result
@@ -62,14 +63,10 @@ return function (uri, callback)
 
         local func = source.node
         local funcArgs
-        if not vm.hasType(func, 'function') then
-            return
-        end
         local defs = vm.getDefs(func)
         for _, def in ipairs(defs) do
-            local value = guide.getObjectValue(def) or def
-            if value.type == 'function' then
-                local args = countFuncArgs(value)
+            if def.type == 'function' then
+                local args = countFuncArgs(def)
                 if not funcArgs or args > funcArgs then
                     funcArgs = args
                 end

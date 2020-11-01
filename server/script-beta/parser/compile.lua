@@ -16,7 +16,7 @@ local specials = {
 _ENV = nil
 
 local LocalLimit = 200
-local pushError, Compile, CompileBlock, Block, GoToTag, ENVMode, Compiled, LocalCount, Version, Root
+local pushError, Compile, CompileBlock, Block, GoToTag, ENVMode, Compiled, LocalCount, Version, Root, Options
 
 local function addRef(node, obj)
     if not node.ref then
@@ -49,15 +49,18 @@ local vmMap = {
             end
         else
             obj.type = 'getglobal'
-            if ENVMode == '_ENV' then
-                local node = guide.getLocal(obj, '_ENV', obj.start)
-                if node then
-                    addRef(node, obj)
-                end
+            local node = guide.getLocal(obj, ENVMode, obj.start)
+            if node then
+                addRef(node, obj)
             end
             local name = obj[1]
             if specials[name] then
                 addSpecial(name, obj)
+            elseif Options and Options.special then
+                local asName = Options.special[name]
+                if specials[asName] then
+                    addSpecial(asName, obj)
+                end
             end
         end
         return obj
@@ -205,11 +208,9 @@ local vmMap = {
             end
         else
             obj.type = 'setglobal'
-            if ENVMode == '_ENV' then
-                local node = guide.getLocal(obj, '_ENV', obj.start)
-                if node then
-                    addRef(node, obj)
-                end
+            local node = guide.getLocal(obj, ENVMode, obj.start)
+            if node then
+                addRef(node, obj)
             end
         end
     end,
@@ -400,17 +401,15 @@ local vmMap = {
     end,
     ['main'] = function (obj)
         Block = obj
-        if ENVMode == '_ENV' then
-            Compile({
-                type   = 'local',
-                start  = 0,
-                finish = 0,
-                effect = 0,
-                tag    = '_ENV',
-                special= '_G',
-                [1]    = '_ENV',
-            }, obj)
-        end
+        Compile({
+            type   = 'local',
+            start  = 0,
+            finish = 0,
+            effect = 0,
+            tag    = '_ENV',
+            special= '_G',
+            [1]    = ENVMode,
+        }, obj)
         --- _ENV 是上值，不计入局部变量计数
         LocalCount = 0
         CompileBlock(obj, obj)
@@ -524,14 +523,14 @@ local function PostCompile()
     end
 end
 
-return function (self, lua, mode, version)
+return function (self, lua, mode, version, options)
     local state, err = self:parse(lua, mode, version)
     if not state then
         return nil, err
     end
     pushError = state.pushError
     if version == 'Lua 5.1' or version == 'LuaJIT' then
-        ENVMode = 'fenv'
+        ENVMode = '@fenv'
     else
         ENVMode = '_ENV'
     end
@@ -540,6 +539,8 @@ return function (self, lua, mode, version)
     LocalCount = 0
     Version = version
     Root = state.ast
+    Options = options
+    state.ENVMode = ENVMode
     if type(state.ast) == 'table' then
         Compile(state.ast)
     end

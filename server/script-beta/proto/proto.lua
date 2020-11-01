@@ -3,8 +3,9 @@ local util       = require 'utility'
 local await      = require 'await'
 local pub        = require 'pub'
 local jsonrpc    = require 'jsonrpc'
-local ErrorCodes = require 'define.ErrorCodes'
+local define     = require 'proto.define'
 local timer      = require 'timer'
+local json       = require 'json'
 
 local reqCounter = util.counter()
 
@@ -12,6 +13,7 @@ local m = {}
 
 m.ability = {}
 m.waiting = {}
+m.holdon  = {}
 
 function m.getMethodName(proto)
     if proto.method:sub(1, 2) == '$/' then
@@ -30,10 +32,11 @@ function m.response(id, res)
         log.error('Response id is nil!', util.dump(res))
         return
     end
-    -- res 可能是nil，为了转成json时保留nil，使用 container 容器
-    local data = util.container()
+    assert(m.holdon[id])
+    m.holdon[id] = nil
+    local data  = {}
     data.id     = id
-    data.result = res
+    data.result = res == nil and json.null or res
     local buf = jsonrpc.encode(data)
     --log.debug('Response', id, #buf)
     io.stdout:write(buf)
@@ -86,11 +89,14 @@ function m.doMethod(proto)
             log.warn('Recieved unknown proto: ' .. method)
         end
         if proto.id then
-            m.responseErr(proto.id, ErrorCodes.MethodNotFound, method)
+            m.responseErr(proto.id, define.ErrorCodes.MethodNotFound, method)
         end
         return
     end
-    await.create(function ()
+    if proto.id then
+        m.holdon[proto.id] = method
+    end
+    await.call(function ()
         --log.debug('Start method:', method)
         local clock = os.clock()
         local ok = true
@@ -108,7 +114,7 @@ function m.doMethod(proto)
             if ok then
                 m.response(proto.id, res)
             else
-                m.responseErr(proto.id, ErrorCodes.InternalError, res)
+                m.responseErr(proto.id, define.ErrorCodes.InternalError, res)
             end
         end)
         ok, res = xpcall(abil, log.error, proto.params)

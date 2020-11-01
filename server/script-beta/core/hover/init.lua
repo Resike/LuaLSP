@@ -5,9 +5,10 @@ local getLabel   = require 'core.hover.label'
 local getDesc    = require 'core.hover.description'
 local util       = require 'utility'
 local findSource = require 'core.find-source'
+local lang       = require 'language'
 
 local function getHoverAsFunction(source)
-    local values = vm.getInfers(source)
+    local values = vm.getInfers(source, 'deep')
     local desc   = getDesc(source)
     local labels = {}
     local defs = 0
@@ -19,12 +20,17 @@ local function getHoverAsFunction(source)
     for _, value in ipairs(values) do
         if value.type == 'function' then
             local label = getLabel(value.source, oop)
-            defs = defs + 1
-            labels[label] = (labels[label] or 0) + 1
-            if labels[label] == 1 then
-                protos = protos + 1
+            if label then
+                defs = defs + 1
+                labels[label] = (labels[label] or 0) + 1
+                if labels[label] == 1 then
+                    protos = protos + 1
+                end
             end
-        else
+        elseif value.type == 'table'
+        or     value.type == 'boolean'
+        or     value.type == 'string'
+        or     value.type == 'number' then
             other = other + 1
         end
     end
@@ -37,13 +43,12 @@ local function getHoverAsFunction(source)
         }
     end
 
-    -- TODO 翻译
     local lines = {}
     if defs > 1 then
-        lines[#lines+1] = ('(%d 个定义，%d 个原型)'):format(defs, protos)
+        lines[#lines+1] = lang.script('HOVER_MULTI_DEF_PROTO', defs, protos)
     end
     if other > 0 then
-        lines[#lines+1] = ('(%d 个非函数定义)'):format(other)
+        lines[#lines+1] = lang.script('HOVER_MULTI_PROTO_NOT_FUNC', other)
     end
     if defs > 1 then
         for label, count in util.sortPairs(labels) do
@@ -75,7 +80,7 @@ end
 
 local function getHover(source)
     vm.setSearchLevel(5)
-    local isFunction = vm.hasInferType(source, 'function')
+    local isFunction = vm.hasInferType(source, 'function', 'deep')
     if isFunction then
         return getHoverAsFunction(source)
     else
@@ -92,6 +97,7 @@ local accept = {
     ['field']     = true,
     ['method']    = true,
     ['string']    = true,
+    ['number']    = true,
 }
 
 local function getHoverByUri(uri, offset)

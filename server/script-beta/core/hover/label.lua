@@ -5,6 +5,9 @@ local buildTable  = require 'core.hover.table'
 local vm          = require 'vm'
 local util        = require 'utility'
 local guide       = require 'parser.guide'
+local lang        = require 'language'
+local config      = require 'config'
+local files       = require 'files'
 
 local function asFunction(source, oop)
     local name = buildName(source, oop)
@@ -16,14 +19,24 @@ local function asFunction(source, oop)
     return table.concat(lines, '\n')
 end
 
+local function asDocFunction(source)
+    local name = buildName(source)
+    local arg  = buildArg(source)
+    local rtn  = buildReturn(source)
+    local lines = {}
+    lines[1] = ('function %s(%s)'):format(name, arg)
+    lines[2] = rtn
+    return table.concat(lines, '\n')
+end
+
 local function asValue(source, title)
     local name    = buildName(source)
-    local infers  = vm.getInfers(source)
-    local type    = vm.getInferType(source)
-    local class   = vm.getClass(source)
-    local literal = vm.getInferLiteral(source)
+    local infers  = vm.getInfers(source, 'deep')
+    local type    = vm.getInferType(source, 'deep')
+    local class   = vm.getClass(source, 'deep')
+    local literal = vm.getInferLiteral(source, 'deep')
     local cont
-    if vm.hasInferType(source, 'table') then
+    if vm.hasInferType(source, 'table', 'deep') then
         cont = buildTable(source)
     end
     local pack = {}
@@ -52,6 +65,10 @@ local function asLocal(source)
 end
 
 local function asGlobal(source)
+    return asValue(source, 'global')
+end
+
+local function asLibrary(source)
     return asValue(source, 'global')
 end
 
@@ -89,26 +106,44 @@ local function asField(source)
     return asValue(source, 'field')
 end
 
-local function asLibrary(source)
-    local lib = source.library
-    if lib.type == 'function' then
-        return asFunction(source)
-    end
-end
-
 local function asString(source)
     local str = source[1]
     if type(str) ~= 'string' then
         return ''
     end
     local len = #str
-    local charLen = utf8.len(str, 1, -1, true)
-    -- TODO 翻译
+    local charLen = util.utf8Len(str, 1, -1)
     if len == charLen then
-        return ('%d 个字节'):format(len)
+        return lang.script('HOVER_STRING_BYTES', len)
     else
-        return ('%d 个字节，%d 个字符'):format(len, charLen)
+        return lang.script('HOVER_STRING_CHARACTERS', len, charLen)
     end
+end
+
+local function formatNumber(n)
+    local str = ('%.10f'):format(n)
+    str = str:gsub('%.?0*$', '')
+    return str
+end
+
+local function asNumber(source)
+    if not config.config.hover.viewNumber then
+        return nil
+    end
+    local num = source[1]
+    if type(num) ~= 'number' then
+        return nil
+    end
+    local uri  = guide.getUri(source)
+    local text = files.getText(uri)
+    if not text then
+        return nil
+    end
+    local raw = text:sub(source.start, source.finish)
+    if not raw or not raw:find '[^%-%d%.]' then
+        return nil
+    end
+    return formatNumber(num)
 end
 
 return function (source, oop)
@@ -131,5 +166,11 @@ return function (source, oop)
         return asField(source)
     elseif source.type == 'string' then
         return asString(source)
+    elseif source.type == 'number' then
+        return asNumber(source)
+    elseif source.type == 'library' then
+        return asLibrary(source)
+    elseif source.type == 'doc.type.function' then
+        return asDocFunction(source)
     end
 end

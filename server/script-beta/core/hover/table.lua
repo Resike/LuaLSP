@@ -1,8 +1,14 @@
 local vm       = require 'vm'
 local util     = require 'utility'
 local guide    = require 'parser.guide'
+local config   = require 'config'
 
 local function getKey(src)
+    if src.type == 'library' then
+        if src.name:sub(1, 1) == '@' then
+            return
+        end
+    end
     local key = vm.getKeyName(src)
     if not key or #key <= 2 then
         if not src.index then
@@ -30,20 +36,78 @@ local function getKey(src)
     return ('[%s]'):format(key)
 end
 
-local function getField(src)
-    if src.parent.type == 'tableindex'
-    or src.parent.type == 'setindex'
-    or src.parent.type == 'getindex' then
-        src = src.parent
+local function getFieldFast(src)
+    local value = guide.getObjectValue(src) or src
+    if not value then
+        return 'any'
     end
-    local tp = vm.getInferType(src)
-    local class = vm.getClass(src)
+    if value.library then
+        return value.type, util.viewLiteral(value.value)
+    end
+    if value.type == 'boolean' then
+        return value.type, util.viewLiteral(value[1])
+    end
+    if value.type == 'number'
+    or value.type == 'integer' then
+        if math.tointeger(value[1]) then
+            if config.config.runtime.version == 'Lua 5.3'
+            or config.config.runtime.version == 'Lua 5.4' then
+                return 'integer', util.viewLiteral(value[1])
+            end
+        end
+        return value.type, util.viewLiteral(value[1])
+    end
+    if value.type == 'table'
+    or value.type == 'function' then
+        return value.type
+    end
+    if value.type == 'string' then
+        local literal = value[1]
+        if type(literal) == 'string' and #literal >= 50 then
+            literal = literal:sub(1, 47) .. '...'
+        end
+        return value.type, util.viewLiteral(literal)
+    end
+end
+
+local function getFieldFull(src)
+    local tp      = vm.getInferType(src)
+    local class   = vm.getClass(src)
     local literal = vm.getInferLiteral(src)
-    local key = getKey(src)
     if type(literal) == 'string' and #literal >= 50 then
         literal = literal:sub(1, 47) .. '...'
     end
-    return key, class or tp, literal
+    return class or tp, literal
+end
+
+local function getField(src, timeUp, mark, key)
+    if src.type == 'table'
+    or src.type == 'function' then
+        return nil
+    end
+    if src.parent then
+        if src.parent.type == 'tableindex'
+        or src.parent.type == 'setindex'
+        or src.parent.type == 'getindex' then
+            if src.parent.index == src then
+                src = src.parent
+            end
+        end
+    end
+    local tp, literal
+    tp, literal = getFieldFast(src)
+    if tp then
+        return tp, literal
+    end
+    if timeUp or mark[key] then
+        return nil
+    end
+    mark[key] = true
+    tp, literal = getFieldFull(src)
+    if tp then
+        return tp, literal
+    end
+    return nil
 end
 
 local function buildAsHash(classes, literals)
@@ -106,39 +170,114 @@ local function mergeLiteral(literals)
     return table.concat(results, '|')
 end
 
+local function mergeTypes(types)
+    local results = {}
+    local mark = {
+        -- 讲道理table的keyvalue不会是nil
+        ['nil'] = true,
+    }
+    for _, tv in ipairs(types) do
+        for tp in tv:gmatch '[^|]+' do
+            if not mark[tp] then
+                mark[tp] = true
+                results[#results+1] = tp
+            end
+        end
+    end
+    return guide.mergeTypes(results)
+end
+
+local function clearClasses(classes)
+    local knownClasses = {
+        ['any'] = true,
+        ['nil'] = true,
+    }
+    local anyClasses = {}
+    local strClasses = {}
+    for key, class in pairs(classes) do
+        if key == '[any]' then
+            util.array2hash(class, anyClasses)
+            goto CONTINUE
+        elseif key == '[string]' then
+            util.array2hash(class, strClasses)
+            goto CONTINUE
+        end
+        util.array2hash(class, knownClasses)
+        ::CONTINUE::
+    end
+    for c in pairs(knownClasses) do
+        anyClasses[c] = nil
+        strClasses[c] = nil
+    end
+    if next(anyClasses) then
+        classes['[any]'] = util.hash2array(anyClasses)
+    else
+        classes['[any]'] = nil
+    end
+    if next(strClasses) then
+        classes['[string]'] = util.hash2array(strClasses)
+    else
+        classes['[string]'] = nil
+    end
+end
+
 return function (source)
     local literals = {}
     local classes = {}
-    local intValue = true
-    vm.eachField(source, function (src)
-        local key, class, literal = getField(src)
+    local clock = os.clock()
+    local timeUp
+    local mark = {}
+    local fields = vm.getFields(source, 'deep')
+    for _, src in ipairs(fields) do
+        local key = getKey(src)
+        if not key then
+            goto CONTINUE
+        end
         if not classes[key] then
             classes[key] = {}
         end
         if not literals[key] then
             literals[key] = {}
         end
+        if not TEST and os.clock() - clock > 3 then
+            timeUp = true
+        end
+        local class, literal = getField(src, timeUp, mark, key)
+        if literal == 'nil' then
+            literal = nil
+        end
         classes[key][#classes[key]+1] = class
         literals[key][#literals[key]+1] = literal
-        if class ~= 'integer'
-        or not literals[key]
-        or #literals[key] ~= 1 then
-            intValue = false
-        end
-    end)
+        ::CONTINUE::
+    end
+
+    clearClasses(classes)
+
     for key, class in pairs(classes) do
-        classes[key] = guide.mergeTypes(class)
         literals[key] = mergeLiteral(literals[key])
+        classes[key] = mergeTypes(class)
     end
-    if classes['[any]'] == 'any' then
-        classes['[any]'] = nil
-    end
+
     if not next(classes) then
         return '{}'
     end
-    if intValue then
-        return buildAsConst(classes, literals)
-    else
-        return buildAsHash(classes, literals)
+
+    local intValue = true
+    for key, class in pairs(classes) do
+        if class ~= 'integer' or not tonumber(literals[key]) then
+            intValue = false
+            break
+        end
     end
+    local result
+    if intValue then
+        result = buildAsConst(classes, literals)
+    else
+        result = buildAsHash(classes, literals)
+    end
+    -- TODO
+    if timeUp then
+        result = '\n--出于性能考虑，已禁用了部分类型推断。\n' .. result
+    end
+    return result
 end

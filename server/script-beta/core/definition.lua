@@ -7,8 +7,8 @@ local findSource = require 'core.find-source'
 local function sortResults(results)
     -- 先按照顺序排序
     table.sort(results, function (a, b)
-        local u1 = guide.getRoot(a).uri
-        local u2 = guide.getRoot(b).uri
+        local u1 = guide.getUri(a.target)
+        local u2 = guide.getUri(b.target)
         if u1 == u2 then
             return a.target.start < b.target.start
         else
@@ -18,9 +18,9 @@ local function sortResults(results)
     -- 如果2个结果处于嵌套状态，则取范围小的那个
     local lf, lu
     for i = #results, 1, -1 do
-        local res = results[i].target
-        local f   = res.finish
-        local uri = guide.getRoot(res).uri
+        local res  = results[i].target
+        local f    = res.finish
+        local uri = guide.getUri(res)
         if lf and f > lf and uri == lu then
             table.remove(results, i)
         else
@@ -43,6 +43,11 @@ local accept = {
     ['string']      = true,
     ['boolean']     = true,
     ['number']      = true,
+
+    ['doc.type.name']    = true,
+    ['doc.class.name']   = true,
+    ['doc.extends.name'] = true,
+    ['doc.alias.name']   = true,
 }
 
 local function checkRequire(source, offset)
@@ -64,10 +69,10 @@ local function checkRequire(source, offset)
         return nil
     end
     if     lib.name == 'require' then
-        return workspace.findUrisByRequirePath(literal, true)
+        return workspace.findUrisByRequirePath(literal)
     elseif lib.name == 'dofile'
     or     lib.name == 'loadfile' then
-        return workspace.findUrisByFilePath(literal, true)
+        return workspace.findUrisByFilePath(literal)
     end
     return nil
 end
@@ -80,6 +85,9 @@ local function convertIndex(source)
     or source.type == 'boolean'
     or source.type == 'number' then
         local parent = source.parent
+        if not parent then
+            return
+        end
         if parent.type == 'setindex'
         or parent.type == 'getindex'
         or parent.type == 'tableindex' then
@@ -110,23 +118,29 @@ return function (uri, offset)
                 target = {
                     start  = 0,
                     finish = 0,
+                    uri    = uri,
                 }
             }
         end
     end
 
     vm.setSearchLevel(10)
-    vm.eachDef(source, function (src)
+    for _, src in ipairs(vm.getDefs(source, 'deep')) do
+        local root = guide.getRoot(src)
+        if not root then
+            goto CONTINUE
+        end
         src = src.field or src.method or src.index or src
         if src.type == 'table' and src.parent.type ~= 'return' then
-            return
+            goto CONTINUE
         end
         results[#results+1] = {
             target = src,
-            uri    = guide.getRoot(src).uri,
+            uri    = files.getOriginUri(root.uri),
             source = source,
         }
-    end)
+        ::CONTINUE::
+    end
 
     if #results == 0 then
         return nil

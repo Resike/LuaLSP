@@ -11,8 +11,8 @@ end
 local function sortResults(results)
     -- 先按照顺序排序
     table.sort(results, function (a, b)
-        local u1 = guide.getRoot(a).uri
-        local u2 = guide.getRoot(b).uri
+        local u1 = guide.getUri(a.target)
+        local u2 = guide.getUri(b.target)
         if u1 == u2 then
             return a.target.start < b.target.start
         else
@@ -24,7 +24,7 @@ local function sortResults(results)
     for i = #results, 1, -1 do
         local res = results[i].target
         local f   = res.finish
-        local uri = guide.getRoot(res).uri
+        local uri = guide.getUri(res)
         if lf and f > lf and uri == lu then
             table.remove(results, i)
         else
@@ -48,6 +48,11 @@ local accept = {
     ['setglobal']   = true,
     ['getglobal']   = true,
     ['function']    = true,
+
+    ['doc.type.name']    = true,
+    ['doc.class.name']   = true,
+    ['doc.extends.name'] = true,
+    ['doc.alias.name']   = true,
 }
 
 return function (uri, offset)
@@ -66,8 +71,11 @@ return function (uri, offset)
 
     local results = {}
     vm.setSearchLevel(10)
-    vm.eachRef(source, function (src)
+    for _, src in ipairs(vm.getRefs(source, 'deep')) do
         local root = guide.getRoot(src)
+        if not root then
+            goto CONTINUE
+        end
         if     src.type == 'setfield'
         or     src.type == 'getfield'
         or     src.type == 'tablefield' then
@@ -80,13 +88,14 @@ return function (uri, offset)
         or     src.type == 'setmethod' then
             src = src.method
         elseif src.type == 'table' and src.parent.type ~= 'return' then
-            return
+            goto CONTINUE
         end
         results[#results+1] = {
             target = src,
             uri    = files.getOriginUri(root.uri),
         }
-    end)
+        ::CONTINUE::
+    end
 
     if #results == 0 then
         return nil

@@ -1,116 +1,56 @@
 local vm      = require 'vm.vm'
-local library = require 'library'
 local guide   = require 'parser.guide'
+local library = require 'library'
 
-local function checkStdLibrary(source)
-    if source.library then
+local function getLibrary(source, deep)
+    if source.type == 'library' then
         return source
     end
-    local value = guide.getObjectValue(source)
-    if value and value.type == 'select' then
-        source = value
+    if source.library then
+        return source.library
     end
     if source.type == 'getglobal'
     or source.type == 'setglobal' then
-        local name = guide.getName(source)
-        return library.global[name]
-    elseif source.type == 'select' then
-        local call = source.vararg
-        if call.type ~= 'call' then
-            goto CONTINUE
-        end
-        local func = call.node
-        local lib = vm.getLibrary(func)
-        if not lib then
-            goto CONTINUE
-        end
-        if lib.name == 'require' then
-            local modName = call.args[1]
-            if modName and modName.type == 'string' then
-                return library.library[modName[1]]
+        if source.node and source.node.type == 'local' then
+            local lib = library.global[guide.getName(source)]
+            if lib then
+                return lib
             end
         end
-        ::CONTINUE::
     end
-end
 
-local function getLibInNode(source, nodeLib)
-    if not nodeLib then
-        return nil
-    end
-    if not nodeLib.child then
-        return nil
-    end
-    local key = guide.getName(source)
-    local defLib = nodeLib.child[key]
-    return defLib
-end
-
-local function getNodeAsTable(source)
-    local nodeLib = checkStdLibrary(source.node)
-    return getLibInNode(source, nodeLib)
-end
-
-local function getNodeAsObject(source)
-    local node = source.node
-    local values = vm.getInfers(node)
-    if not values then
-        return nil
-    end
-    for i = 1, #values do
-        local value = values[i]
-        local type = value.type
-        local nodeLib = library.object[type]
-        local lib = getLibInNode(source, nodeLib)
-        if lib then
-            return lib
-        end
-    end
-    return nil
-end
-
-local function checkNode(source)
-    if source.type == 'method' then
-        source = source.parent
-    elseif source.type == 'field' then
-        source = source.parent
-    end
-    if source.type == 'getfield'
-    or source.type == 'getmethod'
-    or source.type == 'getindex' then
-        return getNodeAsTable(source)
-            or getNodeAsObject(source)
-    end
-end
-
-local function checkDef(source)
-    local results = guide.requestDefinition(source)
-    for _, src in ipairs(results) do
-        local lib = checkStdLibrary(src) or checkNode(src)
-        if lib then
-            return lib
-        end
-    end
-    return nil
-end
-
-local function getLibrary(source)
-    return checkNode(source)
-        or checkStdLibrary(source)
-        or checkDef(source)
-end
-
-function vm.getLibrary(source)
-    local cache = vm.getCache('getLibrary')[source]
-    if cache ~= nil then
-        return cache
-    end
     local unlock = vm.lock('getLibrary', source)
     if not unlock then
         return
     end
-    cache = getLibrary(source) or false
-    vm.getCache('getLibrary')[source] = cache
+
+    local defs = vm.getDefs(source, deep)
     unlock()
-    return cache
+
+    for _, def in ipairs(defs) do
+        if def.type == 'library' then
+            return def
+        end
+    end
+
+    return nil
+end
+
+function vm.getLibrary(source, deep)
+    if guide.isGlobal(source) then
+        local name = guide.getKeyName(source)
+        local cache =  vm.getCache('getLibraryOfGlobal')[name]
+                    or vm.getCache('getLibrary')[source]
+                    or getLibrary(source, 'deep')
+        vm.getCache('getLibraryOfGlobal')[name] = cache
+        vm.getCache('getLibrary')[source] = cache
+        return cache
+    else
+        local cache =  vm.getCache('getLibrary')[source]
+                    or getLibrary(source, deep)
+        if deep then
+            vm.getCache('getLibrary')[source] = cache
+        end
+        return cache
+    end
 end

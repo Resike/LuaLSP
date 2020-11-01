@@ -8,7 +8,9 @@ local function eachFieldInLibrary(source, lib, results)
         return
     end
     for _, value in pairs(lib.child) do
-        results[#results+1] = value
+        if value.name:sub(1, 1) ~= '@' then
+            results[#results+1] = value
+        end
     end
 end
 
@@ -18,42 +20,47 @@ local function eachFieldOfLibrary(results)
     end
 end
 
-local function eachField(source)
+local function eachField(source, deep)
+    local unlock = vm.lock('eachField', source)
+    if not unlock then
+        return
+    end
+
     while source.type == 'paren' do
         source = source.exp
+        if not source then
+            return
+        end
     end
 
     await.delay()
-    local results = guide.requestFields(source, vm.interface)
-    local lib = vm.getLibrary(source)
-    if lib then
-        eachFieldInLibrary(source, lib, results)
-    end
+    local results = guide.requestFields(source, vm.interface, deep)
     if source.special == '_G' then
         eachFieldOfLibrary(results)
     end
     if library.object[source.type] then
         eachFieldInLibrary(source, library.object[source.type], results)
     end
+
+    unlock()
     return results
 end
 
-function vm.eachField(source, callback)
-    local cache = vm.getCache('eachField')[source]
-    if cache ~= nil then
-        for i = 1, #cache do
-            callback(cache[i])
+function vm.getFields(source, deep)
+    if guide.isGlobal(source) then
+        local name = guide.getKeyName(source)
+        local cache =  vm.getCache('eachFieldOfGlobal')[name]
+                    or vm.getCache('eachField')[source]
+                    or eachField(source, 'deep')
+        vm.getCache('eachFieldOfGlobal')[name] = cache
+        vm.getCache('eachField')[source] = cache
+        return cache
+    else
+        local cache =  vm.getCache('eachField')[source]
+                    or eachField(source, deep)
+        if deep then
+            vm.getCache('eachField')[source] = cache
         end
-        return
-    end
-    local unlock = vm.lock('eachField', source)
-    if not unlock then
-        return
-    end
-    cache = eachField(source)
-    vm.getCache('eachField')[source] = cache
-    unlock()
-    for i = 1, #cache do
-        callback(cache[i])
+        return cache
     end
 end

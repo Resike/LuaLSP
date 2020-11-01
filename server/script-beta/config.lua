@@ -1,5 +1,5 @@
-local util = require 'utility'
-local DiagnosticDefaultSeverity = require 'define.DiagnosticDefaultSeverity'
+local util   = require 'utility'
+local define = require 'proto.define'
 
 local m = {}
 m.version = 0
@@ -95,20 +95,21 @@ end
 
 local ConfigTemplate = {
     runtime = {
-        version         = {'Lua 5.3', String},
+        version         = {'Lua 5.4', String},
         library         = {{},        Str2Hash ';'},
         path            = {{
                                 "?.lua",
                                 "?/init.lua",
                                 "?/?.lua"
                             },        Array(String)},
+        special         = {{},        Hash(String, String)},
     },
     diagnostics = {
         enable          = {true, Boolean},
         globals         = {{},   Str2Hash ';'},
         disable         = {{},   Str2Hash ';'},
         severity        = {
-            util.deepCopy(DiagnosticDefaultSeverity),
+            util.deepCopy(define.DiagnosticDefaultSeverity),
             Hash(String, String),
         },
     },
@@ -140,6 +141,9 @@ local ConfigTemplate = {
     },
     color = {
         mode            = {'Semantic', String},
+    },
+    luadoc = {
+        enable          = {true, Boolean},
     },
     plugin = {
         enable          = {false, Boolean},

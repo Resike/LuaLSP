@@ -5,10 +5,13 @@ local furi     = require 'file-uri'
 local parser   = require 'parser'
 local proto    = require 'proto'
 local lang     = require 'language'
+local await    = require 'await'
+local timer    = require 'timer'
 
 local m = {}
 
 m.openMap = {}
+m.libraryMap = {}
 m.fileMap = {}
 m.watchList = {}
 m.notifyCache = {}
@@ -48,6 +51,30 @@ function m.isOpen(uri)
     return m.openMap[uri] == true
 end
 
+--- 标记为库文件
+function m.setLibraryPath(uri, libraryPath)
+    if platform.OS == 'Windows' then
+        uri = uri:lower()
+    end
+    m.libraryMap[uri] = libraryPath
+end
+
+--- 是否是库文件
+function m.isLibrary(uri)
+    if platform.OS == 'Windows' then
+        uri = uri:lower()
+    end
+    return m.libraryMap[uri] ~= nil
+end
+
+--- 获取库文件的根目录
+function m.getLibraryPath(uri)
+    if platform.OS == 'Windows' then
+        uri = uri:lower()
+    end
+    return m.libraryMap[uri]
+end
+
 --- 是否存在
 ---@return boolean
 function m.exists(uri)
@@ -68,6 +95,9 @@ end
 ---@param uri string
 ---@param text string
 function m.setText(uri, text)
+    if not text then
+        return
+    end
     local originUri = uri
     if platform.OS == 'Windows' then
         uri = uri:lower()
@@ -86,8 +116,10 @@ function m.setText(uri, text)
     file.ast   = nil
     file.lines = nil
     file.cache = {}
+    file.cacheActiveTime = math.huge
     file.version = file.version + 1
     m.globalVersion = m.globalVersion + 1
+    await.close('files.version')
     m.onWatch('update', originUri)
 end
 
@@ -131,17 +163,19 @@ function m.remove(uri)
     m.fileMap[uri] = nil
 
     m.globalVersion = m.globalVersion + 1
+    await.close('files.version')
     m.onWatch('remove', originUri)
 end
 
 --- 移除所有文件
 function m.removeAll()
     m.globalVersion = m.globalVersion + 1
+    await.close('files.version')
     for uri in pairs(m.fileMap) do
         m.fileMap[uri] = nil
         m.onWatch('remove', uri)
     end
-    m.notifyCache = {}
+    --m.notifyCache = {}
 end
 
 --- 遍历文件
@@ -156,47 +190,63 @@ function m.getAst(uri)
     if platform.OS == 'Windows' then
         uri = uri:lower()
     end
+    if uri ~= '' and not m.isLua(uri) then
+        return nil
+    end
     local file = m.fileMap[uri]
     if not file then
         return nil
     end
-    if #file.text >= config.config.workspace.maxPreload * 1000 then
-        if not m.notifyCache['maxPreload'] then
-            m.notifyCache['maxPreload'] = {}
+    if #file.text >= config.config.workspace.preloadFileSize * 1000 then
+        if not m.notifyCache['preloadFileSize'] then
+            m.notifyCache['preloadFileSize'] = {}
+            m.notifyCache['skipLargeFileCount'] = 0
         end
-        if not m.notifyCache['maxPreload'][uri] then
-            m.notifyCache['maxPreload'][uri] = true
-            local ws = require 'workspace'
-            proto.notify('window/showMessage', {
-                type = 3,
-                -- TODO 翻译
-                message = lang.script('已跳过过大的文件：{}。当前设置的大小限制为：{} KB，该文件大小为：{} KB'
-                    , ws.getRelativePath(file.uri)
-                    , config.config.workspace.maxPreload
-                    , #file.text / 1000
-                ),
-            })
+        if not m.notifyCache['preloadFileSize'][uri] then
+            m.notifyCache['preloadFileSize'][uri] = true
+            m.notifyCache['skipLargeFileCount'] = m.notifyCache['skipLargeFileCount'] + 1
+            if m.notifyCache['skipLargeFileCount'] <= 3 then
+                local ws = require 'workspace'
+                proto.notify('window/showMessage', {
+                    type = 3,
+                    message = lang.script('WORKSPACE_SKIP_LARGE_FILE'
+                        , ws.getRelativePath(file.uri)
+                        , config.config.workspace.preloadFileSize
+                        , #file.text / 1000
+                    ),
+                })
+            end
         end
         file.ast = nil
         return nil
     end
     if file.ast == nil then
         local clock = os.clock()
-        local state, err = parser:compile(file.text, 'lua', config.config.runtime.version)
+        local state, err = parser:compile(file.text
+            , 'lua'
+            , config.config.runtime.version
+            , {
+                special = config.config.runtime.special,
+            }
+        )
         local passed = os.clock() - clock
-        if passed > 0.01 then
+        if passed > 0.1 then
             log.warn(('Compile [%s] takes [%.3f] sec, size [%.3f] kb.'):format(uri, passed, #file.text / 1000))
         end
         if state then
             state.uri = file.uri
             state.ast.uri = file.uri
             file.ast = state
+            if config.config.luadoc.enable then
+                parser:luadoc(state)
+            end
         else
             log.error(err)
             file.ast = false
             return nil
         end
     end
+    file.cacheActiveTime = timer.clock()
     return file.ast
 end
 
@@ -245,6 +295,7 @@ function m.getCache(uri)
     if not file then
         return nil
     end
+    file.cacheActiveTime = timer.clock()
     return file.cache
 end
 
@@ -302,5 +353,34 @@ function m.onWatch(ev, ...)
         callback(ev, ...)
     end
 end
+
+function m.flushCache()
+    for _, file in pairs(m.fileMap) do
+        file.cacheActiveTime = math.huge
+        file.ast = nil
+        file.cache = {}
+    end
+end
+
+local function init()
+    --TODO 可以清空文件缓存，之后看要不要启用吧
+    --timer.loop(10, function ()
+    --    local list = {}
+    --    for _, file in pairs(m.fileMap) do
+    --        if timer.clock() - file.cacheActiveTime > 10.0 then
+    --            file.cacheActiveTime = math.huge
+    --            file.ast = nil
+    --            file.cache = {}
+    --            list[#list+1] = file.uri
+    --        end
+    --    end
+    --    if #list > 0 then
+    --        log.info('Flush file caches:', #list, '\n', table.concat(list, '\n'))
+    --        collectgarbage()
+    --    end
+    --end)
+end
+
+xpcall(init, log.error)
 
 return m
