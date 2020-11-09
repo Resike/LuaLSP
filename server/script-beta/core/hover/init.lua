@@ -8,7 +8,7 @@ local findSource = require 'core.find-source'
 local lang       = require 'language'
 
 local function getHoverAsFunction(source)
-    local values = vm.getInfers(source, 'deep')
+    local values = vm.getDefs(source, 'deep')
     local desc   = getDesc(source)
     local labels = {}
     local defs = 0
@@ -18,8 +18,9 @@ local function getHoverAsFunction(source)
              or source.type == 'getmethod'
              or source.type == 'setmethod'
     for _, value in ipairs(values) do
-        if value.type == 'function' then
-            local label = getLabel(value.source, oop)
+        if value.type == 'function'
+        or value.type == 'doc.type.function' then
+            local label = getLabel(value, oop)
             if label then
                 defs = defs + 1
                 labels[label] = (labels[label] or 0) + 1
@@ -78,8 +79,20 @@ local function getHoverAsValue(source)
     }
 end
 
+local function getHoverAsDocName(source)
+    local label = getLabel(source)
+    local desc  = getDesc(source)
+    return {
+        label       = label,
+        source      = source,
+        description = desc,
+    }
+end
+
 local function getHover(source)
-    vm.setSearchLevel(5)
+    if source.type == 'doc.type.name' then
+        return getHoverAsDocName(source)
+    end
     local isFunction = vm.hasInferType(source, 'function', 'deep')
     if isFunction then
         return getHoverAsFunction(source)
@@ -89,15 +102,16 @@ local function getHover(source)
 end
 
 local accept = {
-    ['local']     = true,
-    ['setlocal']  = true,
-    ['getlocal']  = true,
-    ['setglobal'] = true,
-    ['getglobal'] = true,
-    ['field']     = true,
-    ['method']    = true,
-    ['string']    = true,
-    ['number']    = true,
+    ['local']         = true,
+    ['setlocal']      = true,
+    ['getlocal']      = true,
+    ['setglobal']     = true,
+    ['getglobal']     = true,
+    ['field']         = true,
+    ['method']        = true,
+    ['string']        = true,
+    ['number']        = true,
+    ['doc.type.name'] = true,
 }
 
 local function getHoverByUri(uri, offset)

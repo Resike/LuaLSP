@@ -108,12 +108,14 @@ local ConfigTemplate = {
             table.deepCopy(DiagnosticDefaultSeverity),
             Hash(String, String),
         },
+        workspaceDelay  = {0,    Integer},
+        workspaceRate   = {100,  Integer},
     },
     workspace = {
         ignoreDir       = {{},      Str2Hash ';'},
         ignoreSubmodules= {true,    Boolean},
         useGitIgnore    = {true,    Boolean},
-        maxPreload      = {300,     Integer},
+        maxPreload      = {1000,    Integer},
         preloadFileSize = {100,     Integer},
         library         = {{},      Hash(
                                         String,
@@ -134,13 +136,21 @@ local ConfigTemplate = {
         viewString      = {true,      Boolean},
         viewStringMax   = {1000,      Integer},
         viewNumber      = {true,      Boolean},
+        fieldInfer      = {3000,      Integer},
     },
     color = {
         mode            = {'Semantic', String},
     },
+    luadoc = {
+        enable          = {true, Boolean},
+    },
     plugin = {
         enable          = {false, Boolean},
         path            = {'.vscode/lua-plugin/*.lua', String},
+    },
+    intelliSense = {
+        searchDepth     = {0,         Integer},
+        fastGlobal      = {true,      Boolean},
     },
 }
 

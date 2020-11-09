@@ -29,6 +29,18 @@ local function asDocFunction(source)
     return table.concat(lines, '\n')
 end
 
+local function asDocTypeName(source)
+    for _, doc in ipairs(vm.getDocTypes(source[1])) do
+        if doc.type == 'doc.class.name' then
+            return 'class ' .. source[1]
+        end
+        if doc.type == 'doc.alias.name' then
+            local extends = doc.parent.extends
+            return lang.script('HOVER_EXTENDS', vm.getInferType(extends))
+        end
+    end
+end
+
 local function asValue(source, title)
     local name    = buildName(source)
     local infers  = vm.getInfers(source, 'deep')
@@ -36,13 +48,16 @@ local function asValue(source, title)
     local class   = vm.getClass(source, 'deep')
     local literal = vm.getInferLiteral(source, 'deep')
     local cont
-    if vm.hasInferType(source, 'table', 'deep') then
-        cont = buildTable(source)
+    if type ~= 'string' then
+        if #vm.getFields(source, 'deep') > 0
+        or vm.hasInferType(source, 'table', 'deep') then
+            cont = buildTable(source)
+        end
     end
     local pack = {}
     pack[#pack+1] = title
     pack[#pack+1] = name .. ':'
-    if cont then
+    if cont and type == 'table' then
         type = nil
     end
     if class then
@@ -172,5 +187,7 @@ return function (source, oop)
         return asLibrary(source)
     elseif source.type == 'doc.type.function' then
         return asDocFunction(source)
+    elseif source.type == 'doc.type.name' then
+        return asDocTypeName(source)
     end
 end

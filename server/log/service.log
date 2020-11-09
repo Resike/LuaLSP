@@ -1,12 +1,12 @@
-[2020-11-01 15:42:51.000][info][main:14]: Lua Lsp startup, root: 	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server
-[2020-11-01 15:42:51.000][debug][main:15]: ROOT:	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server
-[2020-11-01 15:42:51.042][info][script.language:125]: VSC language: en-us
-[2020-11-01 15:42:51.042][info][script.language:126]: LS  language: en-us
-[2020-11-01 15:42:51.205][debug][script.async.async:55]: Create thread, id: 	1	task: 	proto
-[2020-11-01 15:42:51.220][debug][script.service:871]: collectgarbage: 	0.015
-[2020-11-01 15:42:51.221][debug][script.service:942]: 
+[2020-11-09 17:14:52.001][info][main:14]: Lua Lsp startup, root: 	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server
+[2020-11-09 17:14:52.001][debug][main:15]: ROOT:	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server
+[2020-11-09 17:14:52.038][info][script.language:125]: VSC language: en-us
+[2020-11-09 17:14:52.038][info][script.language:126]: LS  language: en-us
+[2020-11-09 17:14:52.200][debug][script.async.async:55]: Create thread, id: 	1	task: 	proto
+[2020-11-09 17:14:52.213][debug][script.service:871]: collectgarbage: 	0.013
+[2020-11-09 17:14:52.213][debug][script.service:942]: 
 State
-Main Mem:  [14003.216]kb
+Main Mem:  [14005.086]kb
 #001 Mem:  <Unknown>
 -------------------
 CachedVM:  [0]
@@ -27,8 +27,8 @@ DeadVal:   [0]
 TotalLoc:  [0]
 TotalEmmy: [10]
 
-[2020-11-01 15:42:51.221][debug][script.service:984]: test memory: 	0.000
-[2020-11-01 15:42:51.223][info][script.method.initialize:23]: {
+[2020-11-09 17:14:52.214][debug][script.service:984]: test memory: 	0.001
+[2020-11-09 17:14:52.216][info][script.method.initialize:23]: {
 	capabilities = {
 		experimental = {
 		},
@@ -251,7 +251,7 @@ TotalEmmy: [10]
 	},
 	initializationOptions = {
 	},
-	processId = 11940,
+	processId = 8780,
 	rootPath = "C:\\World of Warcraft\\_retail_\\Interface\\AddOns\\TradeSkillMaster",
 	rootUri = "file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster",
 	workspaceFolders = {
@@ -261,9 +261,9 @@ TotalEmmy: [10]
 		},
 	},
 }
-[2020-11-01 15:42:51.223][debug][script.method.initialize:24]: ProcessID	6596
-[2020-11-01 15:42:51.223][info][script.service:180]: Add workspace	root	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
-[2020-11-01 15:42:51.223][debug][script.async.async:55]: Create thread, id: 	2	task: 	loadfile
-[2020-11-01 15:42:51.223][info][script.workspace:151]: Workspace inited, root: 	c:/World of Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
-[2020-11-01 15:42:51.223][info][script.workspace:152]: Workspace inited, uri: 	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
-[2020-11-01 15:42:51.223][info][script.workspace:154]: Log path: 	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/log/file_C_World%20of%20Warcraft__retail__Interface_AddOns_TradeSkillMaster.log
+[2020-11-09 17:14:52.216][debug][script.method.initialize:24]: ProcessID	176
+[2020-11-09 17:14:52.216][info][script.service:180]: Add workspace	root	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
+[2020-11-09 17:14:52.216][debug][script.async.async:55]: Create thread, id: 	2	task: 	loadfile
+[2020-11-09 17:14:52.216][info][script.workspace:151]: Workspace inited, root: 	c:/World of Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
+[2020-11-09 17:14:52.216][info][script.workspace:152]: Workspace inited, uri: 	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
+[2020-11-09 17:14:52.216][info][script.workspace:154]: Log path: 	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/log/file_C_World%20of%20Warcraft__retail__Interface_AddOns_TradeSkillMaster.log

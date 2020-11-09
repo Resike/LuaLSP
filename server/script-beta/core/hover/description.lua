@@ -180,9 +180,52 @@ local function tryLibrary(source)
     return md:string()
 end
 
+local function tryDocComment(source)
+    if source.type == 'field'
+    or source.type == 'method' then
+        source = source.parent
+    end
+    if not source.bindDocs then
+        return
+    end
+    local lines = {}
+    for _, doc in ipairs(source.bindDocs) do
+        if doc.type == 'doc.comment' then
+            lines[#lines+1] = doc.comment.text:sub(2)
+        elseif #lines > 0 then
+            break
+        end
+    end
+    if #lines == 0 then
+        return
+    end
+    local md = markdown()
+    md:add('md', table.concat(lines, '\n'))
+    return md:string()
+end
+
+local function tryDocOverloadToComment(source)
+    if source.type ~= 'doc.type.function' then
+        return
+    end
+    local doc = source.parent
+    if doc.type ~= 'doc.overload'
+    or not doc.bindSources then
+        return
+    end
+    for _, src in ipairs(doc.bindSources) do
+        local md = tryDocComment(src)
+        if md then
+            return md
+        end
+    end
+end
+
 return function (source)
     if source.type == 'string' then
         return asString(source)
     end
     return tryLibrary(source)
+        or tryDocOverloadToComment(source)
+        or tryDocComment(source)
 end

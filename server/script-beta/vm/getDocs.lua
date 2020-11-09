@@ -3,6 +3,30 @@ local util    = require 'utility'
 local guide   = require 'parser.guide'
 local vm      = require 'vm.vm'
 
+local builtin = {}
+for _, name in ipairs {
+    'any'          ,
+    'nil'          ,
+    'void'         ,
+    'boolean'      ,
+    'number'       ,
+    'integer'      ,
+    'thread'       ,
+    'table'        ,
+    'file'         ,
+    'string'       ,
+    'userdata'     ,
+    'lightuserdata',
+    'function'     ,
+} do
+    builtin[#builtin+1] = {
+        type   = 'doc.class.name',
+        start  = 0,
+        finish = 0,
+        [1]    = name,
+    }
+end
+
 local function getTypesOfFile(uri)
     local types = {}
     local ast = files.getAst(uri)
@@ -41,6 +65,33 @@ local function getDocTypes(name)
             if cache.classes[name] then
                 for _, source in ipairs(cache.classes[name]) do
                     results[#results+1] = source
+                end
+            end
+        end
+    end
+    for _, source in ipairs(builtin) do
+        if name == '*' or name == source[1] then
+            results[#results+1] = source
+        end
+    end
+    return results
+end
+
+function vm.getDocEnums(doc, mark, results)
+    mark = mark or {}
+    if mark[doc] then
+        return nil
+    end
+    mark[doc] = true
+    results = results or {}
+    for _, enum in ipairs(doc.enums) do
+        results[#results+1] = enum
+    end
+    for _, unit in ipairs(doc.types) do
+        if unit.type == 'doc.type.name' then
+            for _, other in ipairs(vm.getDocTypes(unit[1])) do
+                if other.type == 'doc.alias.name' then
+                    vm.getDocEnums(other.parent.extends, mark, results)
                 end
             end
         end

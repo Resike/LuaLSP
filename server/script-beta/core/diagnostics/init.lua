@@ -3,11 +3,28 @@ local define = require 'proto.define'
 local config = require 'config'
 local await  = require 'await'
 
-local function check(uri, name, level, results)
+-- 把耗时最长的诊断放到最后面
+local diagLevel = {
+    ['redundant-parameter'] = 100,
+}
+
+local diagList = {}
+for k in pairs(define.DiagnosticDefaultSeverity) do
+    diagList[#diagList+1] = k
+end
+table.sort(diagList, function (a, b)
+    return (diagLevel[a] or 0) < (diagLevel[b] or 0)
+end)
+
+local function check(uri, name, results)
     if config.config.diagnostics.disable[name] then
         return
     end
-    level = config.config.diagnostics.severity[name] or level
+    local level =  config.config.diagnostics.severity[name]
+                or define.DiagnosticDefaultSeverity[name]
+    if level == 'Hint' and not files.isOpen(uri) then
+        return
+    end
     local severity = define.DiagnosticSeverity[level]
     local clock = os.clock()
     require('core.diagnostics.' .. name)(uri, function (result)
@@ -21,23 +38,19 @@ local function check(uri, name, level, results)
     end
 end
 
-return function (uri)
+return function (uri, response)
     local vm  = require 'vm'
     local ast = files.getAst(uri)
     if not ast then
         return nil
     end
-    local results = {}
 
-    for name, level in pairs(define.DiagnosticDefaultSeverity) do
+    local isOpen = files.isOpen(uri)
+
+    for _, name in ipairs(diagList) do
         await.delay()
-        vm.setSearchLevel(0)
-        check(uri, name, level, results)
+        local results = {}
+        check(uri, name, results)
+        response(results)
     end
-
-    if #results == 0 then
-        return nil
-    end
-
-    return results
 end

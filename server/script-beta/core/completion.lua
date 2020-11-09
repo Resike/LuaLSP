@@ -87,7 +87,8 @@ local function findSymbol(text, offset)
             goto CONTINUE
         end
         if char == '.'
-        or char == ':' then
+        or char == ':'
+        or char == '(' then
             return char, i
         else
             return nil
@@ -114,6 +115,10 @@ local function findParent(ast, text, offset)
         end
         local oop
         if char == '.' then
+            -- `..` 的情况
+            if text:sub(i-1, i-1) == '.' then
+                return nil, nil
+            end
             oop = false
         elseif char == ':' then
             oop = true
@@ -401,9 +406,9 @@ local function checkFieldThen(name, src, word, start, offset, parent, oop, resul
     }
 end
 
-local function checkField(ast, word, start, offset, parent, oop, results)
+local function checkFieldOfRefs(refs, ast, word, start, offset, parent, oop, results, locals)
     local fields = {}
-    for _, src in ipairs(vm.getFields(parent, 'deep')) do
+    for _, src in ipairs(refs) do
         if src.type == 'library' then
             if src.name:sub(1, 1) == '@' then
                 goto CONTINUE
@@ -417,6 +422,9 @@ local function checkField(ast, word, start, offset, parent, oop, results)
             goto CONTINUE
         end
         local name = key:sub(3)
+        if locals and locals[name] then
+            goto CONTINUE
+        end
         if not matchKey(word, name) then
             goto CONTINUE
         end
@@ -438,6 +446,17 @@ local function checkField(ast, word, start, offset, parent, oop, results)
     for name, src in util.sortPairs(fields) do
         checkFieldThen(name, src, word, start, offset, parent, oop, results)
     end
+end
+
+local function checkField(ast, word, start, offset, parent, oop, results)
+    local refs = vm.getFields(parent, 'deep')
+    checkFieldOfRefs(refs, ast, word, start, offset, parent, oop, results)
+end
+
+local function checkGlobal(ast, word, start, offset, parent, oop, results)
+    local locals = guide.getVisibleLocals(ast.ast, offset)
+    local refs = vm.getFields(parent, 'deep')
+    checkFieldOfRefs(refs, ast, word, start, offset, parent, oop, results, locals)
 end
 
 local function checkTableField(ast, word, start, results)
@@ -582,6 +601,50 @@ local function checkProvideLocal(ast, word, start, results)
             }
         end
     end)
+end
+
+local function checkFunctionArgByDocParam(ast, word, start, results)
+    local func = guide.eachSourceContain(ast.ast, start, function (source)
+        if source.type == 'function' then
+            return source
+        end
+    end)
+    if not func then
+        return
+    end
+    local docs = func.bindDocs
+    if not docs then
+        return
+    end
+    local params = {}
+    for _, doc in ipairs(docs) do
+        if doc.type == 'doc.param' then
+            params[#params+1] = doc
+        end
+    end
+    local firstArg = func.args and func.args[1]
+    if not firstArg
+    or firstArg.start <= start and firstArg.finish >= start then
+        local firstParam = params[1]
+        if firstParam and matchKey(word, firstParam.param[1]) then
+            local label = {}
+            for _, param in ipairs(params) do
+                label[#label+1] = param.param[1]
+            end
+            results[#results+1] = {
+                label = table.concat(label, ', '),
+                kind  = define.CompletionItemKind.Snippet,
+            }
+        end
+    end
+    for _, doc in ipairs(params) do
+        if matchKey(word, doc.param[1]) then
+            results[#results+1] = {
+                label = doc.param[1],
+                kind  = define.CompletionItemKind.Interface,
+            }
+        end
+    end
 end
 
 local function isAfterLocal(text, start)
@@ -772,6 +835,7 @@ local function tryWord(ast, text, offset, results)
             end
         elseif isFuncArg(ast, offset) then
             checkProvideLocal(ast, word, start, results)
+            checkFunctionArgByDocParam(ast, word, start, results)
         else
             local afterLocal = isAfterLocal(text, start)
             local stop = checkKeyWord(ast, text, start, word, hasSpace, afterLocal, results)
@@ -785,7 +849,7 @@ local function tryWord(ast, text, offset, results)
                     checkLocal(ast, word, start, results)
                     checkTableField(ast, word, start, results)
                     local env = guide.getENV(ast.ast, start)
-                    checkField(ast, word, start, offset, env, false, results)
+                    checkGlobal(ast, word, start, offset, env, false, results)
                 end
             end
         end
@@ -809,6 +873,9 @@ local function trySymbol(ast, text, offset, results)
         if parent then
             checkField(ast, '', start, offset, parent, oop, results)
         end
+    end
+    if symbol == '(' then
+        checkFunctionArgByDocParam(ast, '', start, results)
     end
 end
 
@@ -843,6 +910,26 @@ local function getCallEnums(source, index)
             end
         end
         return enums
+    end
+    if source.type == 'function' and source.bindDocs then
+        local arg = source.args and source.args[index]
+        if not arg then
+            return
+        end
+        for _, doc in ipairs(source.bindDocs) do
+            if  doc.type == 'doc.param'
+            and doc.param[1] == arg[1] then
+                local enums = {}
+                for _, enum in ipairs(vm.getDocEnums(doc.extends)) do
+                    enums[#enums+1] = {
+                        label       = enum[1],
+                        description = nil,
+                        kind        = define.CompletionItemKind.EnumMember,
+                    }
+                end
+                return enums
+            end
+        end
     end
 end
 
@@ -915,6 +1002,9 @@ local function tryCallArg(ast, text, offset, results)
     end
     local myResults = {}
     local argIndex, arg = getCallArgInfo(call, text, offset)
+    if arg and arg.type == 'function' then
+        return
+    end
     local defs = vm.getDefs(call.node, 'deep')
     for _, def in ipairs(defs) do
         local enums = getCallEnums(def, argIndex)
@@ -927,18 +1017,217 @@ local function tryCallArg(ast, text, offset, results)
     end
 end
 
+local function getComment(ast, offset)
+    for _, comm in ipairs(ast.comms) do
+        if offset >= comm.start and offset <= comm.finish then
+            return comm
+        end
+    end
+    return nil
+end
+
+local function tryLuaDocCate(line, results)
+    local word = line:sub(3)
+    for _, docType in ipairs {'class', 'type', 'alias', 'param', 'return', 'field', 'generic', 'vararg', 'overload'} do
+        if matchKey(word, docType) then
+            results[#results+1] = {
+                label       = docType,
+                kind        = define.CompletionItemKind.Event,
+            }
+        end
+    end
+end
+
+local function getLuaDocByContain(ast, offset)
+    local result
+    local range = math.huge
+    guide.eachSourceContain(ast.ast.docs, offset, function (src)
+        if not src.start then
+            return
+        end
+        if  range  >= offset - src.start
+        and offset <= src.finish then
+            range = offset - src.start
+            result = src
+        end
+    end)
+    return result
+end
+
+local function getLuaDocByErr(ast, text, start, offset)
+    local targetError
+    for _, err in ipairs(ast.errs) do
+        if  err.finish <= offset
+        and err.start >= start  then
+            if not text:sub(err.finish + 1, offset):find '%S' then
+                targetError = err
+                break
+            end
+        end
+    end
+    if not targetError then
+        return nil
+    end
+    local targetDoc
+    for i = #ast.ast.docs, 1, -1 do
+        local doc = ast.ast.docs[i]
+        if doc.finish <= targetError.start then
+            targetDoc = doc
+            break
+        end
+    end
+    return targetError, targetDoc
+end
+
+local function tryLuaDocBySource(ast, offset, source, results)
+    if source.type == 'doc.extends.name' then
+        if source.parent.type == 'doc.class' then
+            for _, doc in ipairs(vm.getDocTypes '*') do
+                if  doc.type == 'doc.class.name'
+                and doc.parent ~= source.parent
+                and matchKey(source[1], doc[1]) then
+                    results[#results+1] = {
+                        label       = doc[1],
+                        kind        = define.CompletionItemKind.Class,
+                    }
+                end
+            end
+        end
+    elseif source.type == 'doc.type.name' then
+        for _, doc in ipairs(vm.getDocTypes '*') do
+            if  (doc.type == 'doc.class.name' or doc.type == 'doc.alias.name')
+            and doc.parent ~= source.parent
+            and matchKey(source[1], doc[1]) then
+                results[#results+1] = {
+                    label       = doc[1],
+                    kind        = define.CompletionItemKind.Class,
+                }
+            end
+        end
+    elseif source.type == 'doc.param.name' then
+        local func = guide.eachSourceBetween(ast.ast, offset, math.huge, function (src)
+            if src.type == 'function' and src.start > offset then
+                return src
+            end
+        end)
+        if not func or not func.args then
+            return
+        end
+        for i, arg in ipairs(func.args) do
+            if matchKey(source[1], arg[1]) then
+                results[#results+1] = {
+                    label  = arg[1],
+                    kind   = define.CompletionItemKind.Interface,
+                }
+            end
+        end
+    end
+end
+
+local function tryLuaDocByErr(ast, offset, err, docState, results)
+    if err.type == 'LUADOC_MISS_CLASS_EXTENDS_NAME' then
+        for _, doc in ipairs(vm.getDocTypes '*') do
+            if  doc.type == 'doc.class.name'
+            and doc.parent ~= docState then
+                results[#results+1] = {
+                    label       = doc[1],
+                    kind        = define.CompletionItemKind.Class,
+                }
+            end
+        end
+    elseif err.type == 'LUADOC_MISS_TYPE_NAME' then
+        for _, doc in ipairs(vm.getDocTypes '*') do
+            if  (doc.type == 'doc.class.name' or doc.type == 'doc.alias.name') then
+                results[#results+1] = {
+                    label       = doc[1],
+                    kind        = define.CompletionItemKind.Class,
+                }
+            end
+        end
+    elseif err.type == 'LUADOC_MISS_PARAM_NAME' then
+        local func = guide.eachSourceBetween(ast.ast, offset, math.huge, function (src)
+            if src.type == 'function' and src.start > offset then
+                return src
+            end
+        end)
+        if not func or not func.args then
+            return
+        end
+        local label = {}
+        local insertText = {}
+        for i, arg in ipairs(func.args) do
+            label[i] = arg[1]
+            if i == 1 then
+                insertText[i] = ('%s any'):format(arg[1])
+            else
+                insertText[i] = ('---@param %s any'):format(arg[1])
+            end
+        end
+        results[#results+1] = {
+            label      = table.concat(label, ', '),
+            kind       = define.CompletionItemKind.Snippet,
+            insertText = table.concat(insertText, '\n'),
+        }
+        for i, arg in ipairs(func.args) do
+            results[#results+1] = {
+                label  = arg[1],
+                kind   = define.CompletionItemKind.Interface,
+            }
+        end
+    end
+end
+
+local function tryLuaDocFeatures(line, ast, comm, offset, results)
+end
+
+local function tryLuaDoc(ast, text, offset, results)
+    local comm = getComment(ast, offset)
+    local line = text:sub(comm.start, offset)
+    if not line then
+        return
+    end
+    if line:sub(1, 2) ~= '-@' then
+        return
+    end
+    -- 尝试 ---@$
+    local cate = line:match('%a*', 3)
+    if #cate + 2 >= #line then
+        tryLuaDocCate(line, results)
+        return
+    end
+    -- 尝试一些其他特征
+    if tryLuaDocFeatures(line, ast, comm, offset, results) then
+        return
+    end
+    -- 根据输入中的source来补全
+    local source = getLuaDocByContain(ast, offset)
+    if source then
+        tryLuaDocBySource(ast, offset, source, results)
+        return
+    end
+    -- 根据附近的错误消息来补全
+    local err, doc = getLuaDocByErr(ast, text, comm.start, offset)
+    if err then
+        tryLuaDocByErr(ast, offset, err, doc, results)
+        return
+    end
+end
+
 local function completion(uri, offset)
     local ast = files.getAst(uri)
     local text = files.getText(uri)
     local results = {}
     clearStack()
-    vm.setSearchLevel(3)
     if ast then
-        trySpecial(ast, text, offset, results)
-        tryWord(ast, text, offset, results)
-        tryIndex(ast, text, offset, results)
-        trySymbol(ast, text, offset, results)
-        tryCallArg(ast, text, offset, results)
+        if getComment(ast, offset) then
+            tryLuaDoc(ast, text, offset, results)
+        else
+            trySpecial(ast, text, offset, results)
+            tryWord(ast, text, offset, results)
+            tryIndex(ast, text, offset, results)
+            trySymbol(ast, text, offset, results)
+            tryCallArg(ast, text, offset, results)
+        end
     else
         local word = findWord(text, offset)
         if word then

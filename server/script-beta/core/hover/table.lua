@@ -2,6 +2,7 @@ local vm       = require 'vm'
 local util     = require 'utility'
 local guide    = require 'parser.guide'
 local config   = require 'config'
+local lang     = require 'language'
 
 local function getKey(src)
     if src.type == 'library' then
@@ -72,12 +73,12 @@ end
 
 local function getFieldFull(src)
     local tp      = vm.getInferType(src)
-    local class   = vm.getClass(src)
+    --local class   = vm.getClass(src)
     local literal = vm.getInferLiteral(src)
     if type(literal) == 'string' and #literal >= 50 then
         literal = literal:sub(1, 47) .. '...'
     end
-    return class or tp, literal
+    return tp, literal
 end
 
 local function getField(src, timeUp, mark, key)
@@ -228,6 +229,7 @@ return function (source)
     local timeUp
     local mark = {}
     local fields = vm.getFields(source, 'deep')
+    local keyCount = 0
     for _, src in ipairs(fields) do
         local key = getKey(src)
         if not key then
@@ -235,11 +237,12 @@ return function (source)
         end
         if not classes[key] then
             classes[key] = {}
+            keyCount = keyCount + 1
         end
         if not literals[key] then
             literals[key] = {}
         end
-        if not TEST and os.clock() - clock > 3 then
+        if not TEST and os.clock() - clock > config.config.hover.fieldInfer / 1000.0 then
             timeUp = true
         end
         local class, literal = getField(src, timeUp, mark, key)
@@ -248,6 +251,9 @@ return function (source)
         end
         classes[key][#classes[key]+1] = class
         literals[key][#literals[key]+1] = literal
+        if keyCount >= 1000 then
+            break
+        end
         ::CONTINUE::
     end
 
@@ -275,9 +281,8 @@ return function (source)
     else
         result = buildAsHash(classes, literals)
     end
-    -- TODO
     if timeUp then
-        result = '\n--出于性能考虑，已禁用了部分类型推断。\n' .. result
+        result = ('\n--%s\n%s'):format(lang.script.HOVER_TABLE_TIME_UP, result)
     end
     return result
 end

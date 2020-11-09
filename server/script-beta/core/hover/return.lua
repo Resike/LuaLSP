@@ -108,7 +108,11 @@ local function asFunction(source)
         end
         if #types > 0 or rtn[1] then
             local tp = mergeTypes(types) or 'any'
-            line[#line+1] = tp
+            line[#line+1] = ('%s%s%s'):format(
+                rtn[1].name and (rtn[1].name[1] .. ': ') or '',
+                tp,
+                rtn[1].optional and '?' or ''
+            )
         else
             break
         end
@@ -121,12 +125,15 @@ local function asFunction(source)
 end
 
 local function asDocFunction(source)
-    if not source.returns then
-        return ''
+    if not source.returns or #source.returns == 0 then
+        return nil
     end
     local returns = {}
     for i, rtn in ipairs(source.returns) do
-        local rtnText = vm.getInferType(rtn)
+        local rtnText = ('%s%s'):format(
+            vm.getInferType(rtn),
+            rtn.optional and '?' or ''
+        )
         if i == 1 then
             returns[#returns+1] = ('  -> %s'):format(rtnText)
         else

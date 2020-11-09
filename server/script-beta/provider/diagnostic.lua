@@ -11,6 +11,7 @@ local ws     = require 'workspace'
 local m = {}
 m._start = false
 m.cache = {}
+m.sleepRest = 0.0
 
 local function concat(t, sep)
     if type(t) ~= 'table' then
@@ -132,22 +133,19 @@ function m.syntaxErrors(uri, ast)
     return results
 end
 
-function m.diagnostics(uri)
+function m.diagnostics(uri, diags)
     if not m._start then
-        return m.cache[uri]
+        return
     end
 
-    local diags = core(uri)
-    if not diags then
-        return nil
-    end
-
-    local results = {}
-    for _, diag in ipairs(diags) do
-        results[#results+1] = buildDiagnostic(uri, diag)
-    end
-
-    return results
+    core(uri, function (results)
+        if #results == 0 then
+            return
+        end
+        for i = 1, #results do
+            diags[#diags+1] = buildDiagnostic(uri, results[i])
+        end
+    end)
 end
 
 function m.doDiagnostic(uri)
@@ -155,6 +153,9 @@ function m.doDiagnostic(uri)
     if files.isLibrary(uri) then
         return
     end
+
+    await.delay()
+
     local ast = files.getAst(uri)
     if not ast then
         m.clear(uri)
@@ -162,22 +163,40 @@ function m.doDiagnostic(uri)
     end
 
     local syntax = m.syntaxErrors(uri, ast)
-    local diagnostics = m.diagnostics(uri)
-    local full = merge(syntax, diagnostics)
-    if not full then
-        m.clear(uri)
-        return
+    local diags = {}
+
+    local function pushResult()
+        local full = merge(syntax, diags)
+        if not full then
+            m.clear(uri)
+            return
+        end
+
+        if util.equal(m.cache, full) then
+            return
+        end
+        m.cache[uri] = full
+
+        proto.notify('textDocument/publishDiagnostics', {
+            uri = files.getOriginUri(uri),
+            diagnostics = full,
+        })
     end
 
-    if util.equal(m.cache[uri], full) then
-        return
+    if await.hasID 'diagnosticsAll' then
+        m.checkStepResult = nil
+    else
+        local clock = os.clock()
+        m.checkStepResult = function ()
+            if os.clock() - clock >= 0.2 then
+                pushResult()
+                clock = os.clock()
+            end
+        end
     end
-    m.cache[uri] = full
 
-    proto.notify('textDocument/publishDiagnostics', {
-        uri = files.getOriginUri(uri),
-        diagnostics = full,
-    })
+    m.diagnostics(uri, diags)
+    pushResult()
 end
 
 function m.refresh(uri)
@@ -185,8 +204,6 @@ function m.refresh(uri)
         return
     end
     await.call(function ()
-        -- 一旦文件的版本发生变化，就放弃这次诊断
-        await.delay()
         if uri then
             m.doDiagnostic(uri)
         end
@@ -198,12 +215,18 @@ function m.diagnosticsAll()
     if not m._start then
         return
     end
+    local delay = config.config.diagnostics.workspaceDelay / 1000
+    if delay < 0 then
+        return
+    end
     await.close 'diagnosticsAll'
     await.call(function ()
+        await.sleep(delay)
+        m.diagnosticsAllClock = os.clock()
         local clock = os.clock()
         for uri in files.eachFile() do
-            await.delay()
             m.doDiagnostic(uri)
+            await.delay()
         end
         log.debug('全文诊断耗时：', os.clock() - clock)
     end, 'files.version', 'diagnosticsAll')
@@ -214,11 +237,53 @@ function m.start()
     m.diagnosticsAll()
 end
 
+function m.checkStepResult()
+    if await.hasID 'diagnosticsAll' then
+        return
+    end
+end
+
+function m.checkWorkspaceDiag()
+    if not await.hasID 'diagnosticsAll' then
+        return
+    end
+    local speedRate = config.config.diagnostics.workspaceRate
+    if speedRate <= 0 or speedRate >= 100 then
+        return
+    end
+    local currentClock = os.clock()
+    local passed = currentClock - m.diagnosticsAllClock
+    local sleepTime = passed * (100 - speedRate) / speedRate + m.sleepRest
+    m.sleepRest = 0.0
+    if sleepTime < 0.001 then
+        m.sleepRest = m.sleepRest + sleepTime
+        return
+    end
+    if sleepTime > 0.1 then
+        m.sleepRest = sleepTime - 0.1
+        sleepTime = 0.1
+    end
+    await.sleep(sleepTime)
+    m.diagnosticsAllClock = os.clock()
+    return false
+end
+
 files.watch(function (ev, uri)
     if ev == 'remove' then
         m.clear(uri)
     elseif ev == 'update' then
         m.refresh(uri)
+    elseif ev == 'open' then
+        m.doDiagnostic(uri)
+    end
+end)
+
+await.watch(function (ev, co)
+    if ev == 'delay' then
+        if m.checkStepResult then
+            m.checkStepResult()
+        end
+        return m.checkWorkspaceDiag()
     end
 end)
 

@@ -18,6 +18,8 @@ m.notifyCache = {}
 m.assocVersion = -1
 m.assocMatcher = nil
 m.globalVersion = 0
+m.linesMap = setmetatable({}, { __mode = 'v' })
+m.astMap   = setmetatable({}, { __mode = 'v' })
 
 --- 打开文件
 ---@param uri string
@@ -113,8 +115,8 @@ function m.setText(uri, text)
         return
     end
     file.text  = text
-    file.ast   = nil
-    file.lines = nil
+    m.linesMap[uri] = nil
+    m.astMap[uri] = nil
     file.cache = {}
     file.cacheActiveTime = math.huge
     file.version = file.version + 1
@@ -172,8 +174,25 @@ function m.removeAll()
     m.globalVersion = m.globalVersion + 1
     await.close('files.version')
     for uri in pairs(m.fileMap) do
-        m.fileMap[uri] = nil
+        m.fileMap[uri]  = nil
+        m.astMap[uri]   = nil
+        m.linesMap[uri] = nil
         m.onWatch('remove', uri)
+    end
+    --m.notifyCache = {}
+end
+
+--- 移除所有关闭的文件
+function m.removeAllClosed()
+    m.globalVersion = m.globalVersion + 1
+    await.close('files.version')
+    for uri in pairs(m.fileMap) do
+        if not m.openMap[uri] then
+            m.fileMap[uri]  = nil
+            m.astMap[uri]   = nil
+            m.linesMap[uri] = nil
+            m.onWatch('remove', uri)
+        end
     end
     --m.notifyCache = {}
 end
@@ -181,6 +200,54 @@ end
 --- 遍历文件
 function m.eachFile()
     return pairs(m.fileMap)
+end
+
+function m.compileAst(uri, text)
+    if not m.isOpen(uri) and #text >= config.config.workspace.preloadFileSize * 1000 then
+        if not m.notifyCache['preloadFileSize'] then
+            m.notifyCache['preloadFileSize'] = {}
+            m.notifyCache['skipLargeFileCount'] = 0
+        end
+        if not m.notifyCache['preloadFileSize'][uri] then
+            m.notifyCache['preloadFileSize'][uri] = true
+            m.notifyCache['skipLargeFileCount'] = m.notifyCache['skipLargeFileCount'] + 1
+            if m.notifyCache['skipLargeFileCount'] <= 3 then
+                local ws = require 'workspace'
+                proto.notify('window/showMessage', {
+                    type = 3,
+                    message = lang.script('WORKSPACE_SKIP_LARGE_FILE'
+                        , ws.getRelativePath(uri)
+                        , config.config.workspace.preloadFileSize
+                        , #text / 1000
+                    ),
+                })
+            end
+        end
+        return nil
+    end
+    local clock = os.clock()
+    local state, err = parser:compile(text
+        , 'lua'
+        , config.config.runtime.version
+        , {
+            special = config.config.runtime.special,
+        }
+    )
+    local passed = os.clock() - clock
+    if passed > 0.1 then
+        log.warn(('Compile [%s] takes [%.3f] sec, size [%.3f] kb.'):format(uri, passed, #text / 1000))
+    end
+    if state then
+        state.uri = uri
+        state.ast.uri = uri
+        if config.config.luadoc.enable then
+            parser:luadoc(state)
+        end
+        return state
+    else
+        log.error(err)
+        return nil
+    end
 end
 
 --- 获取文件语法树
@@ -197,57 +264,13 @@ function m.getAst(uri)
     if not file then
         return nil
     end
-    if #file.text >= config.config.workspace.preloadFileSize * 1000 then
-        if not m.notifyCache['preloadFileSize'] then
-            m.notifyCache['preloadFileSize'] = {}
-            m.notifyCache['skipLargeFileCount'] = 0
-        end
-        if not m.notifyCache['preloadFileSize'][uri] then
-            m.notifyCache['preloadFileSize'][uri] = true
-            m.notifyCache['skipLargeFileCount'] = m.notifyCache['skipLargeFileCount'] + 1
-            if m.notifyCache['skipLargeFileCount'] <= 3 then
-                local ws = require 'workspace'
-                proto.notify('window/showMessage', {
-                    type = 3,
-                    message = lang.script('WORKSPACE_SKIP_LARGE_FILE'
-                        , ws.getRelativePath(file.uri)
-                        , config.config.workspace.preloadFileSize
-                        , #file.text / 1000
-                    ),
-                })
-            end
-        end
-        file.ast = nil
-        return nil
-    end
-    if file.ast == nil then
-        local clock = os.clock()
-        local state, err = parser:compile(file.text
-            , 'lua'
-            , config.config.runtime.version
-            , {
-                special = config.config.runtime.special,
-            }
-        )
-        local passed = os.clock() - clock
-        if passed > 0.1 then
-            log.warn(('Compile [%s] takes [%.3f] sec, size [%.3f] kb.'):format(uri, passed, #file.text / 1000))
-        end
-        if state then
-            state.uri = file.uri
-            state.ast.uri = file.uri
-            file.ast = state
-            if config.config.luadoc.enable then
-                parser:luadoc(state)
-            end
-        else
-            log.error(err)
-            file.ast = false
-            return nil
-        end
+    local ast = m.astMap[uri]
+    if not ast then
+        ast = m.compileAst(uri, file.text)
+        m.astMap[uri] = ast
     end
     file.cacheActiveTime = timer.clock()
-    return file.ast
+    return ast
 end
 
 --- 获取文件行信息
@@ -261,10 +284,12 @@ function m.getLines(uri)
     if not file then
         return nil
     end
-    if not file.lines then
-        file.lines = parser:lines(file.text)
+    local lines = m.linesMap[uri]
+    if not lines then
+        lines = parser:lines(file.text)
+        m.linesMap[uri] = lines
     end
-    return file.lines
+    return lines
 end
 
 --- 获取原始uri
@@ -355,11 +380,26 @@ function m.onWatch(ev, ...)
 end
 
 function m.flushCache()
-    for _, file in pairs(m.fileMap) do
+    for uri, file in pairs(m.fileMap) do
         file.cacheActiveTime = math.huge
-        file.ast = nil
+        m.linesMap[uri] = nil
+        m.astMap[uri] = nil
         file.cache = {}
     end
+end
+
+function m.flushFileCache(uri)
+    if platform.OS == 'Windows' then
+        uri = uri:lower()
+    end
+    local file = m.fileMap[uri]
+    if not file then
+        return
+    end
+    file.cacheActiveTime = math.huge
+    m.linesMap[uri] = nil
+    m.astMap[uri] = nil
+    file.cache = {}
 end
 
 local function init()

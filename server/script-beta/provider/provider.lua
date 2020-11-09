@@ -18,6 +18,7 @@ local lang      = require 'language'
 
 local function updateConfig()
     local diagnostics = require 'provider.diagnostic'
+    local vm          = require 'vm'
     local configs = proto.awaitRequest('workspace/configuration', {
         items = {
             {
@@ -63,6 +64,9 @@ local function updateConfig()
         workspace.reload()
     end
     if not util.equal(oldConfig.luadoc, newConfig.luadoc) then
+        files.flushCache()
+    end
+    if not util.equal(oldConfig.intelliSense, newConfig.intelliSense) then
         files.flushCache()
     end
 

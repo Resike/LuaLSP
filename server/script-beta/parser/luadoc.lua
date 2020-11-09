@@ -52,6 +52,7 @@ Symbol              <-  ({} {
                         /   '>'
                         /   '('
                         /   ')'
+                        /   '?'
                         } {})
                     ->  Symbol
 ]], {
@@ -203,7 +204,7 @@ local function parseClass(parent)
     result.extends = parseName('doc.extends.name', result)
     if not result.extends then
         pushError {
-            type   = 'LUADOC_MISS_EXTENDS_NAME',
+            type   = 'LUADOC_MISS_CLASS_EXTENDS_NAME',
             start  = getFinish(),
             finish = getFinish(),
         }
@@ -291,6 +292,10 @@ local function  parseTypeUnitFunction()
         if not arg.extends then
             break
         end
+        if checkToken('symbol', '?', 1) then
+            nextToken()
+            arg.optional = true
+        end
         arg.finish = getFinish()
         typeUnit.args[#typeUnit.args+1] = arg
         if checkToken('symbol', ',', 1) then
@@ -303,9 +308,13 @@ local function  parseTypeUnitFunction()
     if checkToken('symbol', ':', 1) then
         nextToken()
         while true do
-            local rtn = parseType(arg)
+            local rtn = parseType(typeUnit)
             if not rtn then
                 break
+            end
+            if checkToken('symbol', '?', 1) then
+                nextToken()
+                rtn.optional = true
             end
             typeUnit.returns[#typeUnit.returns+1] = rtn
             if checkToken('symbol', ',', 1) then
@@ -442,15 +451,20 @@ local function parseParam()
         }
         return nil
     end
-    result.start = getStart()
+    result.start  = result.param.start
+    result.finish = getFinish()
     result.extends = parseType(result)
+    if checkToken('symbol', '?', 1) then
+        nextToken()
+        result.optional = true
+    end
     if not result.extends then
         pushError {
             type   = 'LUADOC_MISS_PARAM_EXTENDS',
             start  = getFinish(),
             finish = getFinish(),
         }
-        return nil
+        return result
     end
     result.finish = getFinish()
     return result
@@ -468,6 +482,11 @@ local function parseReturn()
         end
         if not result.start then
             result.start = docType.start
+        end
+        docType.name = parseName('doc.return.name', docType)
+        if checkToken('symbol', '?', 1) then
+            nextToken()
+            docType.optional = true
         end
         result.returns[#result.returns+1] = docType
         if not checkToken('symbol', ',', 1) then
@@ -549,15 +568,7 @@ local function parseGeneric()
         end
         if checkToken('symbol', ':', 1) then
             nextToken()
-            object.extends = parseName('doc.extends.name', object)
-            if not object.extends then
-                pushError {
-                    type   = 'LUADOC_MISS_EXTENDS_NAME',
-                    start  = getFinish(),
-                    finish = getFinish(),
-                }
-                return nil
-            end
+            object.extends = parseType(object)
         end
         object.finish = getFinish()
         result.generics[#result.generics+1] = object
@@ -646,11 +657,19 @@ local function convertTokens()
     end
 end
 
-local function buildLuaDoc(comment)
+local function buildLuaDoc(comment, nextComment)
     Offset = comment.start + 1
     local text = comment.text
-    if text:sub(1, 2) ~= '-@' then
+    if text:sub(1, 1) ~= '-' then
         return
+    end
+    if text:sub(2, 2) ~= '@' then
+        return {
+            type    = 'doc.comment',
+            start   = comment.start,
+            finish  = comment.finish,
+            comment = comment,
+        }
     end
     local finishPos = text:find('@', 3)
     local doc, lastComment
@@ -660,6 +679,20 @@ local function buildLuaDoc(comment)
     else
         doc = text:sub(3)
     end
+
+    local finish = comment.start + #doc + 2
+    while true do
+        local nextComm = nextComment('peek')
+        if nextComm and nextComm.text:sub(1, 2) == '-|' then
+            nextComment()
+            local hold = nextComm.start - finish + 1
+            doc = doc .. (' '):rep(hold) .. nextComm.text:sub(2)
+            finish = nextComm.finish + 1
+        else
+            break
+        end
+    end
+
     parseTokens(doc)
     local result = convertTokens()
     if result then
@@ -673,7 +706,7 @@ local function isNextLine(lns, binded, doc)
         return false
     end
     local lastDoc = binded[#binded]
-    local lastRow = guide.positionOf(lns, lastDoc.start)
+    local lastRow = guide.positionOf(lns, lastDoc.finish)
     local newRow  = guide.positionOf(lns, doc.start)
     return newRow - lastRow == 1
 end
@@ -713,7 +746,7 @@ local function bindDoc(state, lns, binded)
         doc.bindSources = bindSources
     end
     bindGeneric(binded)
-    local row = guide.positionOf(lns, lastDoc.start)
+    local row = guide.positionOf(lns, lastDoc.finish)
     local start, finish = guide.lineRange(lns, row + 1)
     if start >= finish then
         -- 空行
@@ -767,8 +800,21 @@ return function (_, state)
 
     pushError = state.pushError
 
-    for _, comment in ipairs(comments) do
-        local doc = buildLuaDoc(comment)
+    local ci = 1
+    local function nextComment(peek)
+        local comment = comments[ci]
+        if not peek then
+            ci = ci + 1
+        end
+        return comment
+    end
+
+    while true do
+        local comment = nextComment()
+        if not comment then
+            break
+        end
+        local doc = buildLuaDoc(comment, nextComment)
         if doc then
             ast.docs[#ast.docs+1] = doc
             doc.parent = ast.docs

@@ -1,4 +1,9 @@
 {
+	"__metadata": {
+		"id": "3a15b5a7-be12-47e3-8445-88ee3eabc8b2",
+		"publisherId": "fb626675-24cf-4881-8c13-b465f29bec2f",
+		"publisherDisplayName": "sumneko"
+	},
 	"activationEvents": [
 		"onLanguage:lua",
 		"onWebviewPanel:lua-doc",
@@ -14,7 +19,7 @@
 		"configuration": {
 			"properties": {
 				"Lua.awakened.cat": {
-					"default": false,
+					"default": true,
 					"markdownDescription": "%config.awakened.cat%",
 					"scope": "resource",
 					"type": "boolean"
@@ -132,33 +137,69 @@
 							"scope": "resource",
 							"type": "string"
 						},
+						"circle-doc-class": {
+							"default": "Warning",
+							"description": "%config.diagnostics.circle-doc-class%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"doc-field-no-class": {
+							"default": "Warning",
+							"description": "%config.diagnostics.doc-field-no-class%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"duplicate-doc-class": {
+							"default": "Warning",
+							"description": "%config.diagnostics.duplicate-doc-class%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"duplicate-doc-field": {
+							"default": "Warning",
+							"description": "%config.diagnostics.duplicate-doc-field%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"duplicate-doc-param": {
+							"default": "Warning",
+							"description": "%config.diagnostics.duplicate-doc-param%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
 						"duplicate-index": {
 							"default": "Warning",
 							"description": "%config.diagnostics.duplicate-index%",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"duplicate-method": {
-							"default": "Warning",
-							"description": "%config.diagnostics.duplicate-method%",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"emmy-lua": {
-							"default": "Warning",
-							"description": "%config.diagnostics.emmy-lua%",
 							"enum": [
 								"Error",
 								"Warning",
@@ -264,33 +305,45 @@
 							"scope": "resource",
 							"type": "string"
 						},
-						"set-const": {
-							"default": "Error",
-							"description": "%config.diagnostics.set-const%",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
-						"set-for-state": {
-							"default": "Warning",
-							"description": "%config.diagnostics.set-for-state%",
-							"enum": [
-								"Error",
-								"Warning",
-								"Information",
-								"Hint"
-							],
-							"scope": "resource",
-							"type": "string"
-						},
 						"trailing-space": {
 							"default": "Hint",
 							"description": "%config.diagnostics.trailing-space%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-doc-class": {
+							"default": "Warning",
+							"description": "%config.diagnostics.undefined-doc-class%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-doc-name": {
+							"default": "Warning",
+							"description": "%config.diagnostics.undefined-doc-name%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-doc-param": {
+							"default": "Warning",
+							"description": "%config.diagnostics.undefined-doc-param%",
 							"enum": [
 								"Error",
 								"Warning",
@@ -377,11 +430,29 @@
 					"title": "severity",
 					"type": "object"
 				},
+				"Lua.diagnostics.workspaceDelay": {
+					"default": 0,
+					"markdownDescription": "%config.diagnostics.workspaceDelay%",
+					"scope": "resource",
+					"type": "integer"
+				},
+				"Lua.diagnostics.workspaceRate": {
+					"default": 100,
+					"markdownDescription": "%config.diagnostics.workspaceRate%",
+					"scope": "resource",
+					"type": "integer"
+				},
 				"Lua.hover.enable": {
 					"default": true,
 					"markdownDescription": "%config.hover.enable%",
 					"scope": "resource",
 					"type": "boolean"
+				},
+				"Lua.hover.fieldInfer": {
+					"default": 3000,
+					"markdownDescription": "%config.hover.fieldInfer%",
+					"scope": "resource",
+					"type": "integer"
 				},
 				"Lua.hover.viewNumber": {
 					"default": true,
@@ -398,6 +469,18 @@
 				"Lua.hover.viewStringMax": {
 					"default": 1000,
 					"markdownDescription": "%config.hover.viewStringMax%",
+					"scope": "resource",
+					"type": "integer"
+				},
+				"Lua.intelliSense.fastGlobal": {
+					"default": true,
+					"markdownDescription": "%config.intelliSense.fastGlobal%",
+					"scope": "resource",
+					"type": "boolean"
+				},
+				"Lua.intelliSense.searchDepth": {
+					"default": 0,
+					"markdownDescription": "%config.intelliSense.searchDepth%",
 					"scope": "resource",
 					"type": "integer"
 				},
@@ -479,7 +562,7 @@
 					"type": "object"
 				},
 				"Lua.workspace.maxPreload": {
-					"default": 300,
+					"default": 1000,
 					"markdownDescription": "%config.workspace.maxPreload%",
 					"scope": "resource",
 					"type": "integer"
@@ -556,10 +639,5 @@
 		"type": "git",
 		"url": "https://github.com/sumneko/lua-language-server"
 	},
-	"version": "0.21.8",
-	"__metadata": {
-		"id": "3a15b5a7-be12-47e3-8445-88ee3eabc8b2",
-		"publisherId": "fb626675-24cf-4881-8c13-b465f29bec2f",
-		"publisherDisplayName": "sumneko"
-	}
+	"version": "1.0.0"
 }

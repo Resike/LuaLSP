@@ -7,6 +7,8 @@ local glob       = require 'glob'
 local platform   = require 'bee.platform'
 local await      = require 'await'
 local rpath      = require 'workspace.require-path'
+local proto      = require 'proto.proto'
+local lang       = require 'language'
 
 local m = {}
 m.type = 'workspace'
@@ -92,6 +94,13 @@ function m.getNativeMatcher()
                 pattern[#pattern+1] = line
             end
         end
+        buf = pub.awaitTask('loadFile', furi.encode(m.path .. '/.git/info/exclude'))
+        if buf then
+            for line in buf:gmatch '[^\r\n]+' do
+                log.info('Ignore by .git/info/exclude:', line)
+                pattern[#pattern+1] = line
+            end
+        end
     end
     -- config.workspace.library
     for path in pairs(config.config.workspace.library) do
@@ -106,7 +115,7 @@ function m.getNativeMatcher()
 end
 
 --- 创建代码库筛选器
-function m.getLibraryMatchers(option)
+function m.getLibraryMatchers()
     if m.libraryVersion == config.version then
         return m.libraryMatchers
     end
@@ -114,7 +123,7 @@ function m.getLibraryMatchers(option)
     m.libraryMatchers = {}
     for path, pattern in pairs(config.config.workspace.library) do
         local nPath = fs.absolute(fs.path(path)):string()
-        local matcher = glob.gitignore(pattern, option)
+        local matcher = glob.gitignore(pattern, m.matchOption)
         if platform.OS == 'Windows' then
             matcher:setOption 'ignoreCase'
         end
@@ -136,11 +145,35 @@ function m.isIgnored(uri)
     return ignore(path)
 end
 
+--- 文件是否作为库被加载
+function m.isLibrary(uri)
+    local path = furi.decode(uri)
+    for _, library in ipairs(m.getLibraryMatchers()) do
+        if library.matcher(path) then
+            return true
+        end
+    end
+    return false
+end
+
 local function loadFileFactory(root, progress, isLibrary)
     return function (path)
         local uri = furi.encode(root .. '/' .. path)
         if not files.isLua(uri) then
             return
+        end
+        if progress.preload >= config.config.workspace.maxPreload then
+            if not m.hasHitMaxPreload then
+                m.hasHitMaxPreload = true
+                proto.notify('window/showMessage', {
+                    type = 3,
+                    message = lang.script('MWS_MAX_PRELOAD', config.config.workspace.maxPreload),
+                })
+            end
+            return
+        end
+        if not isLibrary then
+            progress.preload = progress.preload + 1
         end
         progress.max = progress.max + 1
         pub.task('loadFile', uri, function (text)
@@ -162,13 +195,14 @@ function m.awaitPreload()
     await.close 'preload'
     await.setID 'preload'
     local progress = {
-        max  = 0,
-        read = 0,
+        max     = 0,
+        read    = 0,
+        preload = 0,
     }
     log.info('Preload start.')
     local nativeLoader    = loadFileFactory(m.path, progress)
     local native          = m.getNativeMatcher()
-    local librarys        = m.getLibraryMatchers(m.matchOption)
+    local librarys        = m.getLibraryMatchers()
     native:scan(nativeLoader)
     for _, library in ipairs(librarys) do
         local libraryInterface = interfaceFactory(library.path)
@@ -267,13 +301,15 @@ function m.getRelativePath(uri)
 end
 
 function m.reload()
-    files.removeAll()
+    files.removeAllClosed()
     rpath.flush()
     await.call(m.awaitPreload)
 end
 
 files.watch(function (ev, uri)
-    if ev == 'close' and m.isIgnored(uri) then
+    if  ev == 'close'
+    and m.isIgnored(uri)
+    and not m.isLibrary(uri) then
         files.remove(uri)
     end
 end)
