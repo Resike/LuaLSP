@@ -1,25 +1,18 @@
-local tonumber = tonumber
-local string_char = string.char
-local utf8_char = utf8.char
-local type = type
-local table = table
+local tonumber    = tonumber
+local stringChar  = string.char
+local utf8Char    = utf8.char
+local tableUnpack = table.unpack
+local mathType    = math.type
+local tableRemove = table.remove
+local pairs       = pairs
+local tableSort   = table.sort
 
-local Errs
+_ENV = nil
+
 local State
-local function pushError(err)
-    if err.finish < err.start then
-        err.finish = err.start
-    end
-    local last = Errs[#Errs]
-    if last then
-        if last.start <= err.start and last.finish >= err.finish then
-            return
-        end
-    end
-    err.level = err.level or 'error'
-    Errs[#Errs+1] = err
-    return err
-end
+local PushError
+local PushDiag
+local PushComment
 
 -- goto 单独处理
 local RESERVED = {
@@ -55,114 +48,32 @@ local VersionOp = {
     ['//'] = {'Lua 5.3', 'Lua 5.4'},
 }
 
-local function checkOpVersion(op, start)
-    local versions = VersionOp[op]
+local SymbolAlias = {
+    ['||'] = 'or',
+    ['&&'] = 'and',
+    ['!='] = '~=',
+    ['!']  = 'not',
+}
+
+local function checkOpVersion(op)
+    local versions = VersionOp[op.type]
     if not versions then
         return
     end
     for i = 1, #versions do
-        if versions[i] == State.Version then
+        if versions[i] == State.version then
             return
         end
     end
-    pushError {
-        type = 'UNSUPPORT_SYMBOL',
-        start = start,
-        finish = start + #op - 1,
+    PushError {
+        type    = 'UNSUPPORT_SYMBOL',
+        start   = op.start,
+        finish  = op.finish,
         version = versions,
-        info = {
-            version = State.Version,
+        info    = {
+            version = State.version,
         }
     }
-end
-
-local Exp
-
-local function expSplit(list, start, finish, level)
-    if start == finish then
-        return list[start]
-    end
-    local info = Exp[level]
-    if not info then
-        return
-    end
-    local func = info[1]
-    return func(list, start, finish, level)
-end
-
-local function binaryForward(list, start, finish, level)
-    local info = Exp[level]
-    for i = finish-1, start+2, -1 do
-        local op = list[i]
-        if info[op] then
-            local e1 = expSplit(list, start, i-2, level)
-            if not e1 then
-                goto CONTINUE
-            end
-            local e2 = expSplit(list, i+1, finish, level+1)
-            if not e2 then
-                goto CONTINUE
-            end
-            checkOpVersion(op, list[i-1])
-            return {
-                type   = 'binary',
-                op     = op,
-                start  = e1.start,
-                finish = e2.finish,
-                [1]    = e1,
-                [2]    = e2,
-            }
-        end
-        ::CONTINUE::
-    end
-    return expSplit(list, start, finish, level+1)
-end
-
-local function binaryBackward(list, start, finish, level)
-    local info = Exp[level]
-    for i = start+2, finish-1 do
-        local op = list[i]
-        if info[op] then
-            local e1 = expSplit(list, start, i-2, level+1)
-            if not e1 then
-                goto CONTINUE
-            end
-            local e2 = expSplit(list, i+1, finish, level)
-            if not e2 then
-                goto CONTINUE
-            end
-            checkOpVersion(op, list[i-1])
-            return {
-                type   = 'binary',
-                op     = op,
-                start  = e1.start,
-                finish = e2.finish,
-                [1]    = e1,
-                [2]    = e2,
-            }
-        end
-        ::CONTINUE::
-    end
-    return expSplit(list, start, finish, level+1)
-end
-
-local function unary(list, start, finish, level)
-    local info = Exp[level]
-    local op = list[start+1]
-    if info[op] then
-        local e1 = expSplit(list, start+2, finish, level)
-        if e1 then
-            checkOpVersion(op, list[start])
-            return {
-                type   = 'unary',
-                op     = op,
-                start  = list[start],
-                finish = e1.finish,
-                [1]    = e1,
-            }
-        end
-    end
-    return expSplit(list, start, finish, level+1)
 end
 
 local function checkMissEnd(start)
@@ -171,80 +82,162 @@ local function checkMissEnd(start)
     end
     local err = State.MissEndErr
     State.MissEndErr = nil
-    local _, finish = State.Lua:find('[%w_]+', start)
+    local _, finish = State.lua:find('[%w_]+', start)
     if not finish then
         return
     end
-    err.info.related = { start, finish }
-    pushError {
+    err.info.related = {
+        {
+            start  = start,
+            finish = finish,
+        }
+    }
+    PushError {
         type   = 'MISS_END',
         start  = start,
         finish = finish,
     }
 end
 
-Exp = {
-    {
-        ['or'] = true,
-        binaryForward,
-    },
-    {
-        ['and'] = true,
-        binaryForward,
-    },
-    {
-        ['<='] = true,
-        ['>='] = true,
-        ['<']  = true,
-        ['>']  = true,
-        ['~='] = true,
-        ['=='] = true,
-        binaryForward,
-    },
-    {
-        ['|'] = true,
-        binaryForward,
-    },
-    {
-        ['~'] = true,
-        binaryForward,
-    },
-    {
-        ['&'] = true,
-        binaryForward,
-    },
-    {
-        ['<<'] = true,
-        ['>>'] = true,
-        binaryForward,
-    },
-    {
-        ['..'] = true,
-        binaryBackward,
-    },
-    {
-        ['+'] = true,
-        ['-'] = true,
-        binaryForward,
-    },
-    {
-        ['*']  = true,
-        ['//'] = true,
-        ['/']  = true,
-        ['%']  = true,
-        binaryForward,
-    },
-    {
-        ['^'] = true,
-        binaryBackward,
-    },
-    {
-        ['not'] = true,
-        ['#']   = true,
-        ['~']   = true,
-        ['-']   = true,
-        unary,
-    },
+local function getSelect(vararg, index)
+    return {
+        type   = 'select',
+        start  = vararg.start,
+        finish = vararg.finish,
+        vararg = vararg,
+        index  = index,
+    }
+end
+
+local function getValue(values, i)
+    if not values then
+        return nil, nil
+    end
+    local value = values[i]
+    if not value then
+        local last = values[#values]
+        if not last then
+            return nil, nil
+        end
+        if last.type == 'call' or last.type == 'varargs' then
+            return getSelect(last, i - #values + 1)
+        end
+        return nil, nil
+    end
+    if value.type == 'call' or value.type == 'varargs' then
+        value = getSelect(value, 1)
+    end
+    return value
+end
+
+local function createLocal(key, effect, value, attrs)
+    if not key then
+        return nil
+    end
+    key.type   = 'local'
+    key.effect = effect
+    key.value  = value
+    key.attrs  = attrs
+    if value then
+        key.range = value.finish
+    end
+    return key
+end
+
+local function createCall(args, start, finish)
+    if args then
+        args.type    = 'callargs'
+        args.start   = start
+        args.finish  = finish
+    end
+    return {
+        type   = 'call',
+        start  = start,
+        finish = finish,
+        args   = args,
+    }
+end
+
+local function packList(start, list, finish)
+    local lastFinish = start
+    local wantName = true
+    local count = 0
+    for i = 1, #list do
+        local ast = list[i]
+        if ast.type == ',' then
+            if wantName or i == #list then
+                PushError {
+                    type   = 'UNEXPECT_SYMBOL',
+                    start  = ast.start,
+                    finish = ast.finish,
+                    info = {
+                        symbol = ',',
+                    }
+                }
+            end
+            wantName = true
+        else
+            if not wantName then
+                PushError {
+                    type   = 'MISS_SYMBOL',
+                    start  = lastFinish,
+                    finish = ast.start - 1,
+                    info = {
+                        symbol = ',',
+                    }
+                }
+            end
+            wantName = false
+            count = count + 1
+            list[count] = list[i]
+        end
+        lastFinish = ast.finish + 1
+    end
+    for i = count + 1, #list do
+        list[i] = nil
+    end
+    list.type   = 'list'
+    list.start  = start
+    list.finish = finish - 1
+    return list
+end
+
+local BinaryLevel = {
+    ['or']  = 1,
+    ['and'] = 2,
+    ['<=']  = 3,
+    ['>=']  = 3,
+    ['<']   = 3,
+    ['>']   = 3,
+    ['~=']  = 3,
+    ['==']  = 3,
+    ['|']   = 4,
+    ['~']   = 5,
+    ['&']   = 6,
+    ['<<']  = 7,
+    ['>>']  = 7,
+    ['..']  = 8,
+    ['+']   = 9,
+    ['-']   = 9,
+    ['*']   = 10,
+    ['//']  = 10,
+    ['/']   = 10,
+    ['%']   = 10,
+    ['^']   = 11,
+}
+
+local BinaryForward = {
+    [01]  = true,
+    [02]  = true,
+    [03]  = true,
+    [04]  = true,
+    [05]  = true,
+    [06]  = true,
+    [07]  = true,
+    [08]  = false,
+    [09]  = true,
+    [10]  = true,
+    [11]  = false,
 }
 
 local Defs = {
@@ -271,44 +264,54 @@ local Defs = {
             [1]    = false,
         }
     end,
-    LongComment = function (beforeEq, afterEq, str, finish, missPos)
-        State.Comments[#State.Comments+1] = {
-            start  = beforeEq,
-            finish = finish,
+    ShortComment = function (start, text, finish)
+        PushComment {
+            type   = 'comment.short',
+            start  = start,
+            finish = finish - 1,
+            text   = text,
         }
-        if missPos then
+    end,
+    LongComment = function (start, beforeEq, afterEq, str, close, finish)
+        PushComment {
+            type   = 'comment.long',
+            start  = start,
+            finish = finish - 1,
+            text   = '',
+        }
+        if not close then
             local endSymbol = ']' .. ('='):rep(afterEq-beforeEq) .. ']'
             local s, _, w = str:find('(%][%=]*%])[%c%s]*$')
             if s then
-                pushError {
+                PushError {
                     type   = 'ERR_LCOMMENT_END',
-                    start  = missPos - #str + s - 1,
-                    finish = missPos - #str + s + #w - 2,
+                    start  = finish - #str + s - 1,
+                    finish = finish - #str + s + #w - 2,
                     info   = {
                         symbol = endSymbol,
                     },
                     fix    = {
                         title = 'FIX_LCOMMENT_END',
                         {
-                            start  = missPos - #str + s - 1,
-                            finish = missPos - #str + s + #w - 2,
+                            start  = finish - #str + s - 1,
+                            finish = finish - #str + s + #w - 2,
                             text   = endSymbol,
                         }
                     },
                 }
             end
-            pushError {
+            PushError {
                 type   = 'MISS_SYMBOL',
-                start  = missPos,
-                finish = missPos,
+                start  = finish,
+                finish = finish,
                 info   = {
                     symbol = endSymbol,
                 },
                 fix    = {
                     title = 'ADD_LCOMMENT_END',
                     {
-                        start  = missPos,
-                        finish = missPos,
+                        start  = finish,
+                        finish = finish,
                         text   = endSymbol,
                     }
                 },
@@ -316,42 +319,86 @@ local Defs = {
         end
     end,
     CLongComment = function (start1, finish1, start2, finish2)
-        pushError {
-            type   = 'ERR_C_LONG_COMMENT',
-            start  = start1,
-            finish = finish2 - 1,
-            fix    = {
-                title = 'FIX_C_LONG_COMMENT',
-                {
-                    start  = start1,
-                    finish = finish1 - 1,
-                    text   = '--[[',
-                },
-                {
-                    start  = start2,
-                    finish = finish2 - 1,
-                    text   =  '--]]'
-                },
+        if State.options.nonstandardSymbol and State.options.nonstandardSymbol['/**/'] then
+        else
+            PushError {
+                type   = 'ERR_C_LONG_COMMENT',
+                start  = start1,
+                finish = finish2 - 1,
+                fix    = {
+                    title = 'FIX_C_LONG_COMMENT',
+                    {
+                        start  = start1,
+                        finish = finish1 - 1,
+                        text   = '--[[',
+                    },
+                    {
+                        start  = start2,
+                        finish = finish2 - 1,
+                        text   =  '--]]'
+                    },
+                }
             }
+        end
+        PushComment {
+            type     = 'comment.clong',
+            start    = start1,
+            finish   = finish2 - 1,
+            text     = '',
         }
     end,
-    CCommentPrefix = function (start, finish)
-        pushError {
-            type   = 'ERR_COMMENT_PREFIX',
-            start  = start,
-            finish = finish - 1,
-            fix    = {
-                title = 'FIX_COMMENT_PREFIX',
-                {
-                    start  = start,
-                    finish = finish - 1,
-                    text   = '--',
-                },
+    CCommentPrefix = function (start, finish, commentFinish)
+        if State.options.nonstandardSymbol and State.options.nonstandardSymbol['//'] then
+        else
+            PushError {
+                type   = 'ERR_COMMENT_PREFIX',
+                start  = start,
+                finish = finish - 1,
+                fix    = {
+                    title = 'FIX_COMMENT_PREFIX',
+                    {
+                        start  = start,
+                        finish = finish - 1,
+                        text   = '--',
+                    },
+                }
             }
+        end
+        PushComment {
+            type     = 'comment.cshort',
+            start    = start,
+            finish   = commentFinish - 1,
+            text     = '',
         }
-        return false
     end,
     String = function (start, quote, str, finish)
+        if quote == '`' then
+            if State.options.nonstandardSymbol and State.options.nonstandardSymbol['`'] then
+            else
+                PushError {
+                    type   = 'ERR_NONSTANDARD_SYMBOL',
+                    start  = start,
+                    finish = finish - 1,
+                    info   = {
+                        symbol = '"',
+                    },
+                    fix    = {
+                        title  = 'FIX_NONSTANDARD_SYMBOL',
+                        symbol = '"',
+                        {
+                            start  = start,
+                            finish = start,
+                            text   = '"',
+                        },
+                        {
+                            start  = finish - 1,
+                            finish = finish - 1,
+                            text   = '"',
+                        },
+                    }
+                }
+            end
+        end
         return {
             type   = 'string',
             start  = start,
@@ -365,7 +412,7 @@ local Defs = {
             local endSymbol = ']' .. ('='):rep(afterEq-beforeEq) .. ']'
             local s, _, w = str:find('(%][%=]*%])[%c%s]*$')
             if s then
-                pushError {
+                PushError {
                     type   = 'ERR_LSTRING_END',
                     start  = missPos - #str + s - 1,
                     finish = missPos - #str + s + #w - 2,
@@ -382,7 +429,7 @@ local Defs = {
                     },
                 }
             end
-            pushError {
+            PushError {
                 type   = 'MISS_SYMBOL',
                 start  = missPos,
                 finish = missPos,
@@ -406,41 +453,41 @@ local Defs = {
         if not char or char < 0 or char > 255 then
             return ''
         end
-        return string_char(char)
+        return stringChar(char)
     end,
     Char16 = function (pos, char)
-        if State.Version == 'Lua 5.1' then
-            pushError {
+        if State.version == 'Lua 5.1' then
+            PushError {
                 type = 'ERR_ESC',
                 start = pos-1,
                 finish = pos,
                 version = {'Lua 5.2', 'Lua 5.3', 'Lua 5.4', 'LuaJIT'},
                 info = {
-                    version = State.Version,
+                    version = State.version,
                 }
             }
             return char
         end
-        return string_char(tonumber(char, 16))
+        return stringChar(tonumber(char, 16))
     end,
     CharUtf8 = function (pos, char)
-        if  State.Version ~= 'Lua 5.3'
-        and State.Version ~= 'Lua 5.4'
-        and State.Version ~= 'LuaJIT'
+        if  State.version ~= 'Lua 5.3'
+        and State.version ~= 'Lua 5.4'
+        and State.version ~= 'LuaJIT'
         then
-            pushError {
+            PushError {
                 type = 'ERR_ESC',
                 start = pos-3,
                 finish = pos-2,
                 version = {'Lua 5.3', 'Lua 5.4', 'LuaJIT'},
                 info = {
-                    version = State.Version,
+                    version = State.version,
                 }
             }
             return char
         end
         if #char == 0 then
-            pushError {
+            PushError {
                 type = 'UTF8_SMALL',
                 start = pos-3,
                 finish = pos,
@@ -451,7 +498,7 @@ local Defs = {
         if not v then
             for i = 1, #char do
                 if not tonumber(char:sub(i, i), 16) then
-                    pushError {
+                    PushError {
                         type = 'MUST_X16',
                         start = pos + i - 1,
                         finish = pos + i - 1,
@@ -460,9 +507,9 @@ local Defs = {
             end
             return ''
         end
-        if State.Version == 'Lua 5.4' then
+        if State.version == 'Lua 5.4' then
             if v < 0 or v > 0x7FFFFFFF then
-                pushError {
+                PushError {
                     type = 'UTF8_MAX',
                     start = pos-3,
                     finish = pos+#char,
@@ -474,7 +521,7 @@ local Defs = {
             end
         else
             if v < 0 or v > 0x10FFFF then
-                pushError {
+                PushError {
                     type = 'UTF8_MAX',
                     start = pos-3,
                     finish = pos+#char,
@@ -487,7 +534,7 @@ local Defs = {
             end
         end
         if v >= 0 and v <= 0x10FFFF then
-            return utf8_char(v)
+            return utf8Char(v)
         end
         return ''
     end,
@@ -499,11 +546,11 @@ local Defs = {
                 start  = start,
                 finish = finish - 1,
                 [1]    = n,
-                [2]    = number,
             }
+            State.LastRaw = number
             return State.LastNumber
         else
-            pushError {
+            PushError {
                 type   = 'MALFORMED_NUMBER',
                 start  = start,
                 finish = finish - 1,
@@ -514,12 +561,14 @@ local Defs = {
                 finish = finish - 1,
                 [1]    = 0,
             }
+            State.LastRaw = number
             return State.LastNumber
         end
     end,
     FFINumber = function (start, symbol)
-        if math.type(State.LastNumber[1]) == 'float' then
-            pushError {
+        local lastNumber = State.LastNumber
+        if State.LastRaw:find('.', 1, true) then
+            PushError {
                 type = 'UNKNOWN_SYMBOL',
                 start = start,
                 finish = start + #symbol - 1,
@@ -527,49 +576,57 @@ local Defs = {
                     symbol = symbol,
                 }
             }
-            State.LastNumber[1] = 0
+            lastNumber[1] = 0
             return
         end
-        if State.Version ~= 'LuaJIT' then
-            pushError {
+        if State.version ~= 'LuaJIT' then
+            PushError {
                 type = 'UNSUPPORT_SYMBOL',
                 start = start,
                 finish = start + #symbol - 1,
                 version = 'LuaJIT',
                 info = {
-                    version = State.Version,
+                    version = State.version,
                 }
             }
-            State.LastNumber[1] = 0
+            lastNumber[1] = 0
         end
     end,
     ImaginaryNumber = function (start, symbol)
-        if State.Version ~= 'LuaJIT' then
-            pushError {
+        local lastNumber = State.LastNumber
+        if State.version ~= 'LuaJIT' then
+            PushError {
                 type = 'UNSUPPORT_SYMBOL',
                 start = start,
                 finish = start + #symbol - 1,
                 version = 'LuaJIT',
                 info = {
-                    version = State.Version,
+                    version = State.version,
                 }
             }
         end
-        State.LastNumber[1] = 0
+        lastNumber[1] = 0
     end,
     Name = function (start, str, finish)
         local isKeyWord
         if RESERVED[str] then
             isKeyWord = true
         elseif str == 'goto' then
-            if State.Version ~= 'Lua 5.1' and State.Version ~= 'LuaJIT' then
+            if State.version ~= 'Lua 5.1' and State.version ~= 'LuaJIT' then
                 isKeyWord = true
             end
         end
         if isKeyWord then
-            pushError {
+            PushError {
                 type = 'KEYWORD',
                 start = start,
+                finish = finish - 1,
+            }
+        end
+        if not State.options.unicodeName and str:find '[\x80-\xff]' then
+            PushError {
+                type   = 'UNICODE_NAME',
+                start  = start,
                 finish = finish - 1,
             }
         end
@@ -580,90 +637,316 @@ local Defs = {
             [1]    = str,
         }
     end,
-    Simple = function (first, ...)
-        if ... then
-            local obj = {
-                type = 'simple',
-                start = first.start,
-                first, ...,
-            }
-            local last = obj[#obj]
-            obj.finish = last.finish
-            return obj
-        elseif first == '' then
-            return nil
-        else
-            return first
-        end
-    end,
-    SimpleCall = function (simple)
-        if not simple then
-            return nil
-        end
-        if simple.type ~= 'simple' then
-            pushError {
-                type   = 'EXP_IN_ACTION',
-                start  = simple.start,
-                finish = simple.finish,
-            }
-            return simple
-        end
-        local last = simple[#simple]
-        if last.type == 'call' then
-            return simple
-        end
-        local colon = simple[#simple-1]
-        if colon and colon.type == ':' then
-            -- 型如 `obj:method`，将错误让给MISS_SYMBOL
-            return simple
-        end
-        pushError {
-            type   = 'EXP_IN_ACTION',
-            start  = simple[1].start,
-            finish = last.finish,
+    GetField = function (dot, field)
+        local obj = {
+            type   = 'getfield',
+            field  = field,
+            dot    = dot,
+            start  = dot.start,
+            finish = (field or dot).finish,
         }
-        return simple
+        if field then
+            field.type = 'field'
+            field.parent = obj
+        end
+        return obj
     end,
-    Exp = function (first, ...)
+    GetIndex = function (start, index, finish)
+        local obj = {
+            type   = 'getindex',
+            start  = start,
+            finish = finish - 1,
+            index  = index,
+        }
+        if index then
+            index.parent = obj
+        end
+        return obj
+    end,
+    GetMethod = function (colon, method)
+        local obj = {
+            type   = 'getmethod',
+            method = method,
+            colon  = colon,
+            start  = colon.start,
+            finish = (method or colon).finish,
+        }
+        if method then
+            method.type = 'method'
+            method.parent = obj
+        end
+        return obj
+    end,
+    Single = function (unit)
+        unit.type  = 'getname'
+        return unit
+    end,
+    Simple = function (units)
+        local last = units[1]
+        for i = 2, #units do
+            local current  = units[i]
+            current.node = last
+            current.start  = last.start
+            last.next = current
+            last = units[i]
+        end
+        return last
+    end,
+    SimpleCall = function (call)
+        if call.type ~= 'call' and call.type ~= 'getmethod' then
+            PushError {
+                type   = 'EXP_IN_ACTION',
+                start  = call.start,
+                finish = call.finish,
+            }
+        end
+        return call
+    end,
+    BinaryOp = function (start, op)
+        if SymbolAlias[op] then
+            if State.options.nonstandardSymbol and State.options.nonstandardSymbol[op] then
+            else
+                PushError {
+                    type   = 'ERR_NONSTANDARD_SYMBOL',
+                    start  = start,
+                    finish = start + #op - 1,
+                    info   = {
+                        symbol = SymbolAlias[op],
+                    },
+                    fix    = {
+                        title  = 'FIX_NONSTANDARD_SYMBOL',
+                        symbol = SymbolAlias[op],
+                        {
+                            start  = start,
+                            finish = start + #op - 1,
+                            text   = SymbolAlias[op],
+                        },
+                    }
+                }
+            end
+            op = SymbolAlias[op]
+        end
+        return {
+            type   = op,
+            start  = start,
+            finish = start + #op - 1,
+        }
+    end,
+    UnaryOp = function (start, op)
+        if SymbolAlias[op] then
+            if State.options.nonstandardSymbol and State.options.nonstandardSymbol[op] then
+            else
+                PushError {
+                    type   = 'ERR_NONSTANDARD_SYMBOL',
+                    start  = start,
+                    finish = start + #op - 1,
+                    info   = {
+                        symbol = SymbolAlias[op],
+                    },
+                    fix    = {
+                        title  = 'FIX_NONSTANDARD_SYMBOL',
+                        symbol = SymbolAlias[op],
+                        {
+                            start  = start,
+                            finish = start + #op - 1,
+                            text   = SymbolAlias[op],
+                        },
+                    }
+                }
+            end
+            op = SymbolAlias[op]
+        end
+        return {
+            type   = op,
+            start  = start,
+            finish = start + #op - 1,
+        }
+    end,
+    Unary = function (first, ...)
         if not ... then
-            return first
+            return nil
         end
         local list = {first, ...}
-        return expSplit(list, 1, #list, 1)
-    end,
-    Prefix = function (start, exp, finish)
-        exp.brackets = true
-        return exp
-    end,
-    Index = function (start, exp, finish)
-        return {
-            type = 'index',
-            start = start,
-            finish = finish - 1,
-            [1] = exp,
-        }
-    end,
-    Call = function (start, arg, finish)
-        if arg == nil then
-            return {
-                type = 'call',
-                start = start,
-                finish = finish - 1,
+        local e = list[#list]
+        for i = #list - 1, 1, -1 do
+            local op = list[i]
+            checkOpVersion(op)
+            e = {
+                type   = 'unary',
+                op     = op,
+                start  = op.start,
+                finish = e.finish,
+                [1]    = e,
             }
         end
-        if arg.type == 'list' then
-            arg.type = 'call'
-            arg.start = start
-            arg.finish = finish - 1
-            return arg
+        return e
+    end,
+    SubBinary = function (op, symb)
+        if symb then
+            return op, symb
         end
-        local obj = {
-            type = 'call',
-            start = start,
-            finish = finish - 1,
-            [1]  = arg,
+        PushError {
+            type   = 'MISS_EXP',
+            start  = op.start,
+            finish = op.finish,
         }
-        return obj
+    end,
+    Binary = function (first, op, second, ...)
+        if not first then
+            return second
+        end
+        if not op then
+            return first
+        end
+        if not ... then
+            checkOpVersion(op)
+            return {
+                type   = 'binary',
+                op     = op,
+                start  = first.start,
+                finish = second.finish,
+                [1]    = first,
+                [2]    = second,
+            }
+        end
+        local list = {first, op, second, ...}
+        local ops = {}
+        for i = 2, #list, 2 do
+            ops[#ops+1] = i
+        end
+        tableSort(ops, function (a, b)
+            local op1 = list[a]
+            local op2 = list[b]
+            local lv1 = BinaryLevel[op1.type]
+            local lv2 = BinaryLevel[op2.type]
+            if lv1 == lv2 then
+                local forward = BinaryForward[lv1]
+                if forward then
+                    return op1.start > op2.start
+                else
+                    return op1.start < op2.start
+                end
+            else
+                return lv1 < lv2
+            end
+        end)
+        local final
+        for i = #ops, 1, -1 do
+            local n     = ops[i]
+            local op    = list[n]
+            local left  = list[n-1]
+            local right = list[n+1]
+            local exp = {
+                type   = 'binary',
+                op     = op,
+                start  = left.start,
+                finish = right and right.finish or op.finish,
+                [1]    = left,
+                [2]    = right,
+            }
+            local leftIndex, rightIndex
+            if list[left] then
+                leftIndex = list[left[1]]
+            else
+                leftIndex = n - 1
+            end
+            if list[right] then
+                rightIndex = list[right[2]]
+            else
+                rightIndex = n + 1
+            end
+
+            list[leftIndex]  = exp
+            list[rightIndex] = exp
+            list[left]       = leftIndex
+            list[right]      = rightIndex
+            list[exp]        = n
+            final = exp
+
+            checkOpVersion(op)
+        end
+        return final
+    end,
+    Paren = function (start, exp, finish)
+        if exp and exp.type == 'paren' then
+            exp.start  = start
+            exp.finish = finish - 1
+            return exp
+        end
+        return {
+            type   = 'paren',
+            start  = start,
+            finish = finish - 1,
+            exp    = exp
+        }
+    end,
+    VarArgs = function (dots)
+        dots.type = 'varargs'
+        return dots
+    end,
+    PackLoopArgs = function (start, list, finish)
+        local list = packList(start, list, finish)
+        if #list == 0 then
+            PushError {
+                type   = 'MISS_LOOP_MIN',
+                start  = finish,
+                finish = finish,
+            }
+        elseif #list == 1 then
+            PushError {
+                type   = 'MISS_LOOP_MAX',
+                start  = finish,
+                finish = finish,
+            }
+        end
+        return list
+    end,
+    PackInNameList = function (start, list, finish)
+        local list = packList(start, list, finish)
+        if #list == 0 then
+            PushError {
+                type   = 'MISS_NAME',
+                start  = start,
+                finish = finish,
+            }
+        end
+        return list
+    end,
+    PackInExpList = function (start, list, finish)
+        local list = packList(start, list, finish)
+        if #list == 0 then
+            PushError {
+                type   = 'MISS_EXP',
+                start  = start,
+                finish = finish,
+            }
+        end
+        return list
+    end,
+    PackExpList = function (start, list, finish)
+        local list = packList(start, list, finish)
+        return list
+    end,
+    PackNameList = function (start, list, finish)
+        local list = packList(start, list, finish)
+        return list
+    end,
+    Call = function (start, args, finish)
+        return createCall(args, start, finish-1)
+    end,
+    COMMA = function (start)
+        return {
+            type   = ',',
+            start  = start,
+            finish = start,
+        }
+    end,
+    SEMICOLON = function (start)
+        return {
+            type   = ';',
+            start  = start,
+            finish = start,
+        }
     end,
     DOTS = function (start)
         return {
@@ -672,26 +955,25 @@ local Defs = {
             finish = start + 2,
         }
     end,
-    DotsAsArg = function (obj)
-        State.Dots[#State.Dots] = true
-        return obj
-    end,
-    DotsAsExp = function (obj)
-        if not State.Dots[#State.Dots] then
-            pushError {
-                type = 'UNEXPECT_DOTS',
-                start = obj.start,
-                finish = obj.finish,
-            }
-        end
-        return obj
-    end,
     COLON = function (start)
         return {
             type   = ':',
             start  = start,
             finish = start,
         }
+    end,
+    ASSIGN = function (start, symbol)
+        if State.options.nonstandardSymbol and State.options.nonstandardSymbol[symbol] then
+        else
+            PushError {
+                type    = 'UNSUPPORT_SYMBOL',
+                start   = start,
+                finish  = start + #symbol - 1,
+                info    = {
+                    version = 'Lua',
+                }
+            }
+        end
     end,
     DOT = function (start)
         return {
@@ -700,817 +982,524 @@ local Defs = {
             finish = start,
         }
     end,
-    Function = function (start, argStart, arg, argFinish, ...)
-        local obj = {
-            type      = 'function',
-            start     = start,
-            arg       = arg,
-            argStart  = argStart - 1,
-            argFinish = argFinish,
-            ...
+    Function = function (functionStart, functionFinish, args, actions, endStart, endFinish)
+        actions.type   = 'function'
+        actions.start  = functionStart
+        actions.finish = endFinish - 1
+        actions.args   = args
+        actions.keyword= {
+            functionStart, functionFinish - 1,
+            endStart,      endFinish - 1,
         }
-        local max = #obj
-        obj.finish = obj[max] - 1
-        obj[max]   = nil
-        if obj.argFinish > obj.finish then
-            obj.argFinish = obj.finish
-        end
-        checkMissEnd(start)
-        return obj
+        checkMissEnd(functionStart)
+        return actions
     end,
-    NamedFunction = function (start, name, argStart, arg, argFinish, ...)
-        local obj = {
-            type      = 'function',
-            start     = start,
-            name      = name,
-            arg       = arg,
-            argStart  = argStart - 1,
-            argFinish = argFinish,
-            ...
+    NamedFunction = function (functionStart, functionFinish, name, args, actions, endStart, endFinish)
+        actions.type   = 'function'
+        actions.start  = functionStart
+        actions.finish = endFinish - 1
+        actions.args   = args
+        actions.keyword= {
+            functionStart, functionFinish - 1,
+            endStart,      endFinish - 1,
         }
-        local max = #obj
-        obj.finish = obj[max] - 1
-        obj[max]   = nil
-        if obj.argFinish > obj.finish then
-            obj.argFinish = obj.finish
+        checkMissEnd(functionStart)
+        if not name then
+            return
         end
-        checkMissEnd(start)
-        return obj
+        if name.type == 'getname' then
+            name.type = 'setname'
+            name.value = actions
+        elseif name.type == 'getfield' then
+            name.type = 'setfield'
+            name.value = actions
+        elseif name.type == 'getmethod' then
+            name.type = 'setmethod'
+            name.value = actions
+        end
+        name.range = actions.finish
+        name.vstart = functionStart
+        return name
     end,
-    LocalFunction = function (start, name, argStart, arg, argFinish, ...)
-        local obj = {
-            type      = 'localfunction',
-            start     = start,
-            name      = name,
-            arg       = arg,
-            argStart  = argStart - 1,
-            argFinish = argFinish,
-            ...
+    LocalFunction = function (start, functionStart, functionFinish, name, args, actions, endStart, endFinish)
+        actions.type   = 'function'
+        actions.start  = start
+        actions.finish = endFinish - 1
+        actions.args   = args
+        actions.keyword= {
+            functionStart, functionFinish - 1,
+            endStart,      endFinish - 1,
         }
-        local max = #obj
-        obj.finish = obj[max] - 1
-        obj[max]   = nil
-        if obj.argFinish > obj.finish then
-            obj.argFinish = obj.finish
+        checkMissEnd(start)
+
+        if not name then
+            return
         end
 
-        if name.type ~= 'name' then
-            pushError {
+        if name.type ~= 'getname' then
+            PushError {
                 type = 'UNEXPECT_LFUNC_NAME',
                 start = name.start,
                 finish = name.finish,
             }
+            return
         end
 
-        checkMissEnd(start)
+        local loc = createLocal(name, name.start, actions)
+        loc.localfunction = true
+        loc.vstart = functionStart
+
+        return loc
+    end,
+    Table = function (start, tbl, finish)
+        tbl.type   = 'table'
+        tbl.start  = start
+        tbl.finish = finish - 1
+        local wantField = true
+        local lastStart = start + 1
+        local fieldCount = 0
+        for i = 1, #tbl do
+            local field = tbl[i]
+            if field.type == ',' or field.type == ';' then
+                if wantField then
+                    PushError {
+                        type = 'MISS_EXP',
+                        start = lastStart,
+                        finish = field.start - 1,
+                    }
+                end
+                wantField = true
+                lastStart = field.finish + 1
+            else
+                if not wantField then
+                    PushError {
+                        type = 'MISS_SEP_IN_TABLE',
+                        start = lastStart,
+                        finish = field.start - 1,
+                    }
+                end
+                wantField = false
+                lastStart = field.finish + 1
+                fieldCount = fieldCount + 1
+                tbl[fieldCount] = field
+            end
+        end
+        for i = fieldCount + 1, #tbl do
+            tbl[i] = nil
+        end
+        return tbl
+    end,
+    NewField = function (start, field, value, finish)
+        local obj = {
+            type   = 'tablefield',
+            start  = start,
+            finish = finish-1,
+            field  = field,
+            value  = value,
+        }
+        if field then
+            field.type = 'field'
+            field.parent = obj
+        end
         return obj
     end,
-    Table = function (start, ...)
-        local args = {...}
-        local max = #args
-        local finish = args[max] - 1
-        local table = {
-            type   = 'table',
+    NewIndex = function (start, index, value, finish)
+        local obj = {
+            type   = 'tableindex',
             start  = start,
-            finish = finish
+            finish = finish-1,
+            index  = index,
+            value  = value,
         }
-        start = start + 1
-        local wantField = true
-        for i = 1, max-1 do
-            local arg = args[i]
-            local isField = type(arg) == 'table'
-            local isEmmy = isField and arg.type:sub(1, 4) == 'emmy'
-            if wantField and not isField then
-                pushError {
-                    type = 'MISS_EXP',
-                    start = start,
-                    finish = arg - 1,
-                }
-            elseif not wantField and isField and not isEmmy then
-                pushError {
-                    type = 'MISS_SEP_IN_TABLE',
-                    start = start,
-                    finish = arg.start-1,
-                }
-            end
-            if isField then
-                table[#table+1] = arg
-                if not isEmmy then
-                    wantField = false
-                    start = arg.finish + 1
-                end
-            else
-                wantField = true
-                start = arg
-            end
+        if index then
+            index.parent = obj
         end
-        return table
+        return obj
     end,
-    NewField = function (key, value)
-        return {
-            type = 'pair',
-            start = key.start,
-            finish = value.finish,
-            key, value,
-        }
-    end,
-    NewIndex = function (key, value)
-        return {
-            type = 'pair',
-            start = key.start,
-            finish = value.finish,
-            key, value,
-        }
-    end,
-    List = function (first, second, ...)
-        if second then
-            local list = {
-                type = 'list',
-                start = first.start,
-                first, second, ...
-            }
-            local last = list[#list]
-            list.finish = last.finish
-            return list
-        elseif type(first) == 'table' then
-            return first
-        else
-            return nil
-        end
-    end,
-    ArgList = function (...)
-        if ... == '' then
-            return nil
-        end
-        local args = table.pack(...)
-        local list = {}
-        local max = args.n
-        args.n = nil
+    FuncArgs = function (start, args, finish)
+        args.type   = 'funcargs'
+        args.start  = start
+        args.finish = finish - 1
+        local lastStart = start + 1
         local wantName = true
-        for i = 1, max do
-            local obj = args[i]
-            if type(obj) == 'number' then
+        local argCount = 0
+        for i = 1, #args do
+            local arg = args[i]
+            local argAst = arg
+            if argAst.type == ',' then
                 if wantName then
-                    pushError {
+                    PushError {
                         type = 'MISS_NAME',
-                        start = obj,
-                        finish = obj,
+                        start = lastStart,
+                        finish = argAst.start-1,
                     }
                 end
                 wantName = true
             else
                 if not wantName then
-                    pushError {
+                    PushError {
                         type = 'MISS_SYMBOL',
-                        start = obj.start-1,
-                        finish = obj.start-1,
+                        start = lastStart-1,
+                        finish = argAst.start-1,
                         info = {
                             symbol = ',',
                         }
                     }
                 end
                 wantName = false
-                list[#list+1] = obj
-                if obj.type == '...' then
-                    if i < max then
+                argCount = argCount + 1
+
+                if argAst.type == '...' then
+                    args[argCount] = arg
+                    if i < #args then
                         local a = args[i+1]
-                        local b = args[max]
-                        pushError {
-                            type = 'ARGS_AFTER_DOTS',
-                            start = type(a) == 'number' and a or a.start,
-                            finish = type(b) == 'number' and b or b.finish,
+                        local b = args[#args]
+                        PushError {
+                            type   = 'ARGS_AFTER_DOTS',
+                            start  = a.start,
+                            finish = b.finish,
                         }
                     end
                     break
+                else
+                    args[argCount] = createLocal(arg, arg.start)
                 end
             end
+            lastStart = argAst.finish + 1
         end
-        if wantName then
-            local last = args[max]
-            pushError {
-                type = 'MISS_NAME',
-                start = last+1,
-                finish = last+1,
+        for i = argCount + 1, #args do
+            args[i] = nil
+        end
+        if wantName and argCount > 0 then
+            PushError {
+                type   = 'MISS_NAME',
+                start  = lastStart,
+                finish = finish - 1,
             }
         end
-        if #list == 0 then
-            return nil
-        elseif #list == 1 then
-            return list[1]
-        else
-            list.type = 'list'
-            list.start = list[1].start
-            list.finish = list[#list].finish
-            return list
-        end
+        return args
     end,
-    CallArgList = function (start, ...)
-        local args = {...}
-        local max = #args
-        local finish = args[max] - 1
-        local exps = {
-            type = 'list',
-            start = start,
-            finish = finish,
-        }
-        local wantExp = true
-        for i = 1, max-1 do
-            local arg = args[i]
-            local isExp = type(arg) == 'table'
-            if wantExp and not isExp then
-                pushError {
-                    type = 'MISS_EXP',
-                    start = start,
-                    finish = arg - 1,
-                }
-            elseif not wantExp and isExp then
-                pushError {
-                    type = 'MISS_SYMBOL',
-                    start = start,
-                    finish = arg.start-1,
-                    info = {
-                        symbol = ',',
-                    }
-                }
+    Set = function (start, keys, values, finish)
+        for i = 1, #keys do
+            local key = keys[i]
+            if key.type == 'getname' then
+                key.type = 'setname'
+                key.value = getValue(values, i)
+            elseif key.type == 'getfield' then
+                key.type = 'setfield'
+                key.value = getValue(values, i)
+            elseif key.type == 'getindex' then
+                key.type = 'setindex'
+                key.value = getValue(values, i)
             end
-            if isExp then
-                exps[#exps+1] = arg
-                wantExp = false
-                start = arg.finish + 1
-            else
-                wantExp = true
-                start = arg
+            if key.value then
+                key.range = key.value.finish
             end
         end
-        if wantExp then
-            pushError {
-                type = 'MISS_EXP',
-                start = start,
-                finish = finish,
-            }
+        if values then
+            for i = #keys+1, #values do
+                local value = values[i]
+                PushDiag('redundant-value', {
+                    start  = value.start,
+                    finish = value.finish,
+                    max    = #keys,
+                    passed = #values,
+                })
+            end
         end
-        if #exps == 0 then
-            return nil
-        elseif #exps == 1 then
-            return exps[1]
-        else
-            return exps
-        end
+        return tableUnpack(keys)
     end,
-    Nothing = function ()
-        return nil
-    end,
-    None = function()
-        return
-    end,
-    Skip = function ()
-        return false
-    end,
-    Set = function (keys, values)
-        return {
-            type = 'set',
-            keys, values,
-        }
-    end,
-    LocalTag = function (...)
-        if not ... or ... == '' then
+    LocalAttr = function (attrs)
+        if #attrs == 0 then
             return nil
         end
-        local tags = {...}
-        for i, tag in ipairs(tags) do
-            if State.Version ~= 'Lua 5.4' then
-                pushError {
-                    type = 'UNSUPPORT_SYMBOL',
-                    start = tag.start,
-                    finish = tag.finish,
+        for i = 1, #attrs do
+            local attr = attrs[i]
+            local attrAst = attr
+            attrAst.type = 'localattr'
+            if State.version ~= 'Lua 5.4' then
+                PushError {
+                    type    = 'UNSUPPORT_SYMBOL',
+                    start   = attrAst.start,
+                    finish  = attrAst.finish,
                     version = 'Lua 5.4',
-                    info = {
-                        version = State.Version,
+                    info    = {
+                        version = State.version,
                     }
                 }
-            elseif tag[1] ~= 'const' and tag[1] ~= 'close' then
-                pushError {
-                    type = 'UNKNOWN_TAG',
-                    start = tag.start,
-                    finish = tag.finish,
-                    info = {
-                        tag = tag[1],
+            elseif attrAst[1] ~= 'const' and attrAst[1] ~= 'close' then
+                PushError {
+                    type   = 'UNKNOWN_TAG',
+                    start  = attrAst.start,
+                    finish = attrAst.finish,
+                    info   = {
+                        tag = attrAst[1],
                     }
                 }
             elseif i > 1 then
-                pushError {
-                    type = 'MULTI_TAG',
-                    start = tag.start,
-                    finish = tag.finish,
-                    info = {
-                        tag = tag[1],
+                PushError {
+                    type   = 'MULTI_TAG',
+                    start  = attrAst.start,
+                    finish = attrAst.finish,
+                    info   = {
+                        tag = attrAst[1],
                     }
                 }
             end
         end
-        return tags
+        attrs.start  = attrs[1].start
+        attrs.finish = attrs[#attrs].finish
+        return attrs
     end,
-    LocalName = function (name, tags)
-        name.tags = tags
+    LocalName = function (name, attrs)
+        if not name then
+            return
+        end
+        name.attrs = attrs
         return name
     end,
-    Local = function (keys, values)
+    Local = function (start, keys, values, finish)
+        for i = 1, #keys do
+            local key = keys[i]
+            local attrs = key.attrs
+            key.attrs = nil
+            local value = getValue(values, i)
+            createLocal(key, finish, value, attrs)
+        end
+        if values then
+            for i = #keys+1, #values do
+                local value = values[i]
+                PushDiag('redundant-value', {
+                    start  = value.start,
+                    finish = value.finish,
+                    max    = #keys,
+                    passed = #values,
+                })
+            end
+        end
+        return tableUnpack(keys)
+    end,
+    Do = function (start, actions, endA, endB)
+        actions.type = 'do'
+        actions.start  = start
+        actions.finish = endB - 1
+        actions.keyword= {
+            start, start + #'do' - 1,
+            endA , endB - 1,
+        }
+        checkMissEnd(start)
+        return actions
+    end,
+    Break = function (start, finish)
         return {
-            type = 'local',
-            keys, values,
+            type   = 'break',
+            start  = start,
+            finish = finish - 1,
         }
     end,
-    DoBody = function (...)
-        if ... == '' then
-            return {
-                type = 'do',
-            }
-        else
-            return {
-                type = 'do',
-                ...
-            }
-        end
-    end,
-    Do = function (start, action, finish)
-        action.start  = start
-        action.finish = finish - 1
-        checkMissEnd(start)
-        return action
-    end,
-    Break = function (finish, ...)
-        if State.Break > 0 then
-            local breakChunk = {
-                type = 'break',
-            }
-            if not ... then
-                return breakChunk
-            end
-            local action = select(-1, ...)
-            if not action then
-                return breakChunk
-            end
-            if State.Version == 'Lua 5.1' or State.Version == 'LuaJIT' then
-                pushError {
-                    type = 'ACTION_AFTER_BREAK',
-                    start = finish - #'break',
-                    finish = finish - 1,
-                }
-            end
-            return breakChunk, action
-        else
-            pushError {
-                type = 'BREAK_OUTSIDE',
-                start = finish - #'break',
-                finish = finish - 1,
-            }
-            if not ... then
-                return false
-            end
-            local action = select(-1, ...)
-            if not action then
-                return false
-            end
-            return action
-        end
-    end,
-    BreakStart = function ()
-        State.Break = State.Break + 1
-    end,
-    BreakEnd = function ()
-        State.Break = State.Break - 1
-    end,
-    Return = function (start, exp, finish)
-        if not finish then
-            finish = exp
-            exp = {
-                type = 'return',
-                start = start,
-                finish = finish - 1,
-            }
-        else
-            if exp.type == 'list' then
-                exp.type = 'return'
-                exp.start = start
-                exp.finish = finish - 1
-            else
-                exp = {
-                    type = 'return',
-                    start = start,
-                    finish = finish - 1,
-                    [1] = exp,
-                }
-            end
-        end
-        return exp
+    Return = function (start, exps, finish)
+        exps.type   = 'return'
+        exps.start  = start
+        exps.finish = finish - 1
+        return exps
     end,
     Label = function (start, name, finish)
-        if State.Version == 'Lua 5.1' then
-            pushError {
-                type = 'UNSUPPORT_SYMBOL',
-                start = start,
+        if State.version == 'Lua 5.1' then
+            PushError {
+                type   = 'UNSUPPORT_SYMBOL',
+                start  = start,
                 finish = finish - 1,
                 version = {'Lua 5.2', 'Lua 5.3', 'Lua 5.4', 'LuaJIT'},
                 info = {
-                    version = State.Version,
+                    version = State.version,
                 }
             }
-            return false
+            return
+        end
+        if not name then
+            return
         end
         name.type = 'label'
-        local labels = State.Label[#State.Label]
-        local str = name[1]
-        if labels[str] then
-            --pushError {
-            --    type = 'REDEFINE_LABEL',
-            --    start = name.start,
-            --    finish = name.finish,
-            --    info = {
-            --        label = str,
-            --        related = {labels[str].start, labels[str].finish},
-            --    }
-            --}
-        else
-            labels[str] = name
-        end
         return name
     end,
     GoTo = function (start, name, finish)
-        if State.Version == 'Lua 5.1' then
-            pushError {
-                type = 'UNSUPPORT_SYMBOL',
-                start = start,
-                finish = finish - 1,
+        if State.version == 'Lua 5.1' then
+            PushError {
+                type    = 'UNSUPPORT_SYMBOL',
+                start   = start,
+                finish  = finish - 1,
                 version = {'Lua 5.2', 'Lua 5.3', 'Lua 5.4', 'LuaJIT'},
                 info = {
-                    version = State.Version,
+                    version = State.version,
                 }
             }
-            return false
+            return
+        end
+        if not name then
+            return
         end
         name.type = 'goto'
-        local labels = State.Label[#State.Label]
-        labels[#labels+1] = name
         return name
     end,
-    -- TODO 这里的检查不完整，但是完整的检查比较复杂，开销比较高
-    -- 不能jump到另一个局部变量的作用域
-    -- 函数会切断goto与label
-    -- 不能从block外jump到block内，但是可以从block内jump到block外
-    BlockStart = function ()
-        State.Label[#State.Label+1] = {}
-        State.Dots[#State.Dots+1] = false
+    IfBlock = function (ifStart, ifFinish, exp, thenStart, thenFinish, actions, finish)
+        actions.type   = 'ifblock'
+        actions.start  = ifStart
+        actions.finish = finish - 1
+        actions.filter = exp
+        actions.keyword= {
+            ifStart,   ifFinish - 1,
+            thenStart, thenFinish - 1,
+        }
+        return actions
     end,
-    BlockEnd = function ()
-        local labels = State.Label[#State.Label]
-        State.Label[#State.Label] = nil
-        State.Dots[#State.Dots] = nil
-        for i = 1, #labels do
-            local name = labels[i]
-            local str = name[1]
-            if not labels[str] then
-                pushError {
-                    type = 'NO_VISIBLE_LABEL',
-                    start = name.start,
-                    finish = name.finish,
+    ElseIfBlock = function (elseifStart, elseifFinish, exp, thenStart, thenFinish, actions, finish)
+        actions.type   = 'elseifblock'
+        actions.start  = elseifStart
+        actions.finish = finish - 1
+        actions.filter = exp
+        actions.keyword= {
+            elseifStart, elseifFinish - 1,
+            thenStart,   thenFinish - 1,
+        }
+        return actions
+    end,
+    ElseBlock = function (elseStart, elseFinish, actions, finish)
+        actions.type   = 'elseblock'
+        actions.start  = elseStart
+        actions.finish = finish - 1
+        actions.keyword= {
+            elseStart, elseFinish - 1,
+        }
+        return actions
+    end,
+    If = function (start, blocks, endStart, endFinish)
+        blocks.type   = 'if'
+        blocks.start  = start
+        blocks.finish = endFinish - 1
+        local hasElse
+        for i = 1, #blocks do
+            local block = blocks[i]
+            if i == 1 and block.type ~= 'ifblock' then
+                PushError {
+                    type = 'MISS_SYMBOL',
+                    start = block.start,
+                    finish = block.start,
                     info = {
-                        label = str,
+                        symbol = 'if',
                     }
                 }
             end
+            if hasElse then
+                PushError {
+                    type   = 'BLOCK_AFTER_ELSE',
+                    start  = block.start,
+                    finish = block.finish,
+                }
+            end
+            if block.type == 'elseblock' then
+                hasElse = true
+            end
         end
-    end,
-    IfBlock = function (exp, start, ...)
-        local obj = {
-            filter = exp,
-            start  = start,
-            ...
-        }
-        local max = #obj
-        obj.finish = obj[max]
-        obj[max]   = nil
-        return obj
-    end,
-    ElseIfBlock = function (exp, start, ...)
-        local obj = {
-            filter = exp,
-            start  = start,
-            ...
-        }
-        local max = #obj
-        obj.finish = obj[max]
-        obj[max]   = nil
-        return obj
-    end,
-    ElseBlock = function (start, ...)
-        local obj = {
-            start  = start,
-            ...
-        }
-        local max = #obj
-        obj.finish = obj[max]
-        obj[max]   = nil
-        return obj
-    end,
-    If = function (start, ...)
-        local obj = {
-            type  = 'if',
-            start = start,
-            ...
-        }
-        local max = #obj
-        obj.finish = obj[max] - 1
-        obj[max]   = nil
         checkMissEnd(start)
-        return obj
+        return blocks
     end,
-    Loop = function (start, arg, min, max, step, ...)
-        local obj = {
-            type  = 'loop',
-            start = start,
-            arg   = arg,
-            min   = min,
-            max   = max,
-            step  = step,
-            ...
+    Loop = function (forA, forB, arg, steps, doA, doB, blockStart, block, endA, endB)
+        local loc = createLocal(arg, blockStart, steps[1])
+        block.type   = 'loop'
+        block.start  = forA
+        block.finish = endB - 1
+        block.loc    = loc
+        block.max    = steps[2]
+        block.step   = steps[3]
+        block.keyword= {
+            forA, forB - 1,
+            doA , doB  - 1,
+            endA, endB - 1,
         }
-        local max = #obj
-        obj.finish = obj[max] - 1
-        obj[max]   = nil
-        checkMissEnd(start)
-        return obj
+        checkMissEnd(forA)
+        return block
     end,
-    In = function (start, arg, exp, ...)
-        local obj = {
-            type  = 'in',
-            start = start,
-            arg   = arg,
-            exp   = exp,
-            ...
+    In = function (forA, forB, keys, inA, inB, exp, doA, doB, blockStart, block, endA, endB)
+        local func = tableRemove(exp, 1)
+        block.type   = 'in'
+        block.start  = forA
+        block.finish = endB - 1
+        block.keys   = keys
+        block.keyword= {
+            forA, forB - 1,
+            inA , inB  - 1,
+            doA , doB  - 1,
+            endA, endB - 1,
         }
-        local max = #obj
-        obj.finish = obj[max] - 1
-        obj[max]   = nil
-        checkMissEnd(start)
-        return obj
-    end,
-    While = function (start, filter, ...)
-        local obj = {
-            type   = 'while',
-            start  = start,
-            filter = filter,
-            ...
-        }
-        local max = #obj
-        obj.finish = obj[max] - 1
-        obj[max]   = nil
-        checkMissEnd(start)
-        return obj
-    end,
-    Repeat = function (start, ...)
-        local obj = {
-            type  = 'repeat',
-            start = start,
-            ...
-        }
-        local max = #obj
-        obj.finish = obj[max] - 1
-        obj.filter = obj[max-1]
-        obj[max]   = nil
-        obj[max-1] = nil
-        return obj
-    end,
-    Lua = function (...)
-        if ... == '' then
-            return {}
-        end
-        return {...}
-    end,
 
-    -- EmmyLua 支持
-    EmmyName = function (start, str)
+        local values
+        if func then
+            local call = createCall(exp, func.finish + 1, exp.finish)
+            call.node = func
+            call.start = func.start
+            func.next = call
+            values = { call }
+            keys.range = call.finish
+        end
+        for i = 1, #keys do
+            local loc = keys[i]
+            if values then
+                createLocal(loc, blockStart, getValue(values, i))
+            else
+                createLocal(loc, blockStart)
+            end
+        end
+        checkMissEnd(forA)
+        return block
+    end,
+    While = function (whileA, whileB, filter, doA, doB, block, endA, endB)
+        block.type   = 'while'
+        block.start  = whileA
+        block.finish = endB - 1
+        block.filter = filter
+        block.keyword= {
+            whileA, whileB - 1,
+            doA   , doB    - 1,
+            endA  , endB   - 1,
+        }
+        checkMissEnd(whileA)
+        return block
+    end,
+    Repeat = function (repeatA, repeatB, block, untilA, untilB, filter, finish)
+        block.type   = 'repeat'
+        block.start  = repeatA
+        block.finish = finish
+        block.filter = filter
+        block.keyword= {
+            repeatA, repeatB - 1,
+            untilA , untilB  - 1,
+        }
+        return block
+    end,
+    RTContinue = function (_, pos, ...)
+        if State.options.nonstandardSymbol and State.options.nonstandardSymbol['continue'] then
+            return pos, ...
+        else
+            return false
+        end
+    end,
+    Continue = function (start, finish)
         return {
-            type   = 'emmyName',
+            type   = 'nonstandardSymbol.continue',
             start  = start,
-            finish = start + #str - 1,
-            [1]    = str,
-        }
-    end,
-    DirtyEmmyName = function (pos)
-        pushError {
-            type = 'MISS_NAME',
-            level = 'warning',
-            start = pos,
-            finish = pos,
-        }
-        return {
-            type   = 'emmyName',
-            start  = pos-1,
-            finish = pos-1,
-            [1]    = ''
-        }
-    end,
-    EmmyClass = function (class, startPos, extends)
-        if extends and extends[1] == '' then
-            extends.start = startPos
-        end
-        return {
-            type = 'emmyClass',
-            start = class.start,
-            finish = (extends or class).finish,
-            [1] = class,
-            [2] = extends,
-        }
-    end,
-    EmmyType = function (typeDef)
-        return typeDef
-    end,
-    EmmyCommonType = function (...)
-        local result = {
-            type = 'emmyType',
-            ...
-        }
-        for i = 1, #result // 2 do
-            local startPos = result[i * 2]
-            local emmyName = result[i * 2 + 1]
-            if emmyName[1] == '' then
-                emmyName.start = startPos
-            end
-            result[i + 1] = emmyName
-        end
-        for i = #result // 2 + 2, #result do
-            result[i] = nil
-        end
-        result.start = result[1].start
-        result.finish = result[#result].finish
-        return result
-    end,
-    EmmyArrayType = function (start, emmy, _, finish)
-        emmy.type = 'emmyArrayType'
-        emmy.start = start
-        emmy.finish = finish - 1
-        return emmy
-    end,
-    EmmyTableType = function (start, keyType, valueType, finish)
-        return {
-            type = 'emmyTableType',
-            start = start,
             finish = finish - 1,
-            [1] = keyType,
-            [2] = valueType,
         }
     end,
-    EmmyFunctionType = function (start, args, returns, finish)
-        local result = {
-            start = start,
-            finish = finish - 1,
-            type = 'emmyFunctionType',
-            args = args,
-            returns = returns,
-        }
-        return result
-    end,
-    EmmyFunctionRtns = function (...)
-        return {...}
-    end,
-    EmmyFunctionArgs = function (...)
-        local args = {...}
-        args[#args] = nil
-        return args
-    end,
-    EmmyAlias = function (name, emmyName, ...)
-        return {
-            type = 'emmyAlias',
-            start = name.start,
-            finish = emmyName.finish,
-            name,
-            emmyName,
-            ...
-        }
-    end,
-    EmmyParam = function (argName, emmyName, option, ...)
-        local emmy = {
-            type = 'emmyParam',
-            option = option,
-            argName,
-            emmyName,
-            ...
-        }
-        emmy.start = emmy[1].start
-        emmy.finish = emmy[#emmy].finish
-        return emmy
-    end,
-    EmmyReturn = function (start, type, name, finish, option)
-        local emmy = {
-            type = 'emmyReturn',
-            option = option,
-            start = start,
-            finish = finish - 1,
-            [1] = type,
-            [2] = name,
-        }
-        return emmy
-    end,
-    EmmyField = function (access, fieldName, ...)
-        local obj = {
-            type = 'emmyField',
-            access, fieldName,
-            ...
-        }
-        obj.start = obj[2].start
-        obj.finish = obj[3].finish
-        return obj
-    end,
-    EmmyGenericBlock = function (genericName, parentName)
-        return {
-            start = genericName.start,
-            finish = parentName and parentName.finish or genericName.finish,
-            genericName,
-            parentName,
-        }
-    end,
-    EmmyGeneric = function (...)
-        local emmy = {
-            type = 'emmyGeneric',
-            ...
-        }
-        emmy.start = emmy[1].start
-        emmy.finish = emmy[#emmy].finish
-        return emmy
-    end,
-    EmmyVararg = function (typeName)
-        return {
-            type = 'emmyVararg',
-            start = typeName.start,
-            finish = typeName.finish,
-            typeName,
-        }
-    end,
-    EmmyLanguage = function (language)
-        return {
-            type = 'emmyLanguage',
-            start = language.start,
-            finish = language.finish,
-            language,
-        }
-    end,
-    EmmySee = function (start, className, methodName, finish)
-        return {
-            type = 'emmySee',
-            start = start,
-            finish = finish - 1,
-            className, methodName
-        }
-    end,
-    EmmyOverLoad = function (EmmyFunctionType)
-        EmmyFunctionType.type = 'emmyOverLoad'
-        return EmmyFunctionType
-    end,
-    EmmyIncomplete = function (emmyName)
-        emmyName.type = 'emmyIncomplete'
-        return emmyName
-    end,
-    EmmyComment = function (...)
-        local lines = {...}
-        for i = 2, #lines do
-            local line = lines[i]
-            if line:sub(1, 1) == '|' then
-                lines[i] = '\n' .. line:sub(2)
-            end
-        end
-        return {
-            type = 'emmyComment',
-            [1] = table.concat(lines, '\n'),
-        }
-    end,
-    EmmyOption = function (options)
-        if not options or options == '' then
-            return nil
-        end
-        local option = {}
-        for _, pair in ipairs(options) do
-            if pair.type == 'pair' then
-                local key = pair[1]
-                local value = pair[2]
-                if key.type == 'name' then
-                    option[key[1]] = value[1]
-                end
-            end
-        end
-        return option
-    end,
-    EmmyTypeEnum = function (default, enum, comment)
-        enum.type = 'emmyEnum'
-        if default ~= '' then
-            enum.default = true
-        end
-        enum.comment = comment
-        return enum
+    Lua = function (start, actions, finish)
+        actions.type   = 'main'
+        actions.start  = start
+        actions.finish = finish - 1
+        return actions
     end,
 
     -- 捕获错误
     UnknownSymbol = function (start, symbol)
-        pushError {
+        PushError {
             type = 'UNKNOWN_SYMBOL',
             start = start,
             finish = start + #symbol - 1,
@@ -1521,7 +1510,7 @@ local Defs = {
         return
     end,
     UnknownAction = function (start, symbol)
-        pushError {
+        PushError {
             type = 'UNKNOWN_SYMBOL',
             start = start,
             finish = start + #symbol - 1,
@@ -1529,50 +1518,39 @@ local Defs = {
                 symbol = symbol,
             }
         }
-        return false
     end,
     DirtyName = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_NAME',
             start = pos,
             finish = pos,
         }
-        return {
-            type   = 'name',
-            start  = pos-1,
-            finish = pos-1,
-            [1]    = ''
-        }
+        return nil
     end,
     DirtyExp = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_EXP',
             start = pos,
             finish = pos,
         }
-        return {
-            type   = 'name',
-            start  = pos,
-            finish = pos,
-            [1]    = ''
-        }
+        return nil
     end,
     MissExp = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_EXP',
             start = pos,
             finish = pos,
         }
     end,
     MissExponent = function (start, finish)
-        pushError {
+        PushError {
             type = 'MISS_EXPONENT',
             start = start,
             finish = finish - 1,
         }
     end,
     MissQuote1 = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1582,7 +1560,7 @@ local Defs = {
         }
     end,
     MissQuote2 = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1591,15 +1569,25 @@ local Defs = {
             }
         }
     end,
+    MissQuote3 = function (pos)
+        PushError {
+            type = 'MISS_SYMBOL',
+            start = pos,
+            finish = pos,
+            info = {
+                symbol = "`"
+            }
+        }
+    end,
     MissEscX = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_ESC_X',
             start = pos-2,
             finish = pos+1,
         }
     end,
     MissTL = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1609,7 +1597,7 @@ local Defs = {
         }
     end,
     MissTR = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1617,10 +1605,9 @@ local Defs = {
                 symbol = '}',
             }
         }
-        return pos + 1
     end,
     MissBR = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1628,10 +1615,9 @@ local Defs = {
                 symbol = ']',
             }
         }
-        return pos + 1
     end,
     MissPL = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1640,19 +1626,8 @@ local Defs = {
             }
         }
     end,
-    DirtyPR = function (pos)
-        pushError {
-            type = 'MISS_SYMBOL',
-            start = pos,
-            finish = pos,
-            info = {
-                symbol = ')',
-            }
-        }
-        return pos + 1
-    end,
     MissPR = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1662,21 +1637,21 @@ local Defs = {
         }
     end,
     ErrEsc = function (pos)
-        pushError {
+        PushError {
             type = 'ERR_ESC',
             start = pos-1,
             finish = pos,
         }
     end,
     MustX16 = function (pos, str)
-        pushError {
+        PushError {
             type = 'MUST_X16',
             start = pos,
             finish = pos + #str - 1,
         }
     end,
     MissAssign = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1686,7 +1661,7 @@ local Defs = {
         }
     end,
     MissTableSep = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1696,21 +1671,21 @@ local Defs = {
         }
     end,
     MissField = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_FIELD',
             start = pos,
             finish = pos,
         }
     end,
     MissMethod = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_METHOD',
             start = pos,
             finish = pos,
         }
     end,
     MissLabel = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1720,7 +1695,7 @@ local Defs = {
         }
     end,
     MissEnd = function (pos)
-        State.MissEndErr = pushError {
+        State.MissEndErr = PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1728,9 +1703,10 @@ local Defs = {
                 symbol = 'end',
             }
         }
+        return pos, pos
     end,
     MissDo = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1738,9 +1714,10 @@ local Defs = {
                 symbol = 'do',
             }
         }
+        return pos, pos
     end,
     MissComma = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1750,7 +1727,7 @@ local Defs = {
         }
     end,
     MissIn = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1758,9 +1735,10 @@ local Defs = {
                 symbol = 'in',
             }
         }
+        return pos, pos
     end,
     MissUntil = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1768,9 +1746,10 @@ local Defs = {
                 symbol = 'until',
             }
         }
+        return pos, pos
     end,
     MissThen = function (pos)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = pos,
             finish = pos,
@@ -1778,32 +1757,30 @@ local Defs = {
                 symbol = 'then',
             }
         }
+        return pos, pos
+    end,
+    MissName = function (pos)
+        PushError {
+            type = 'MISS_NAME',
+            start = pos,
+            finish = pos,
+        }
     end,
     ExpInAction = function (start, exp, finish)
-        pushError {
+        PushError {
             type = 'EXP_IN_ACTION',
             start = start,
             finish = finish - 1,
         }
-        return exp
-    end,
-    AfterReturn = function (rtn, ...)
-        if not ... then
-            return rtn
+        -- 当exp为nil时，不能返回任何值，否则会产生带洞的actionlist
+        if exp then
+            return exp
+        else
+            return
         end
-        local action = select(-1, ...)
-        if not action then
-            return rtn
-        end
-        pushError {
-            type = 'ACTION_AFTER_RETURN',
-            start = rtn.start,
-            finish = rtn.finish,
-        }
-        return rtn, action
     end,
     MissIf = function (start, block)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = start,
             finish = start,
@@ -1814,7 +1791,7 @@ local Defs = {
         return block
     end,
     MissGT = function (start)
-        pushError {
+        PushError {
             type = 'MISS_SYMBOL',
             start = start,
             finish = start,
@@ -1824,7 +1801,7 @@ local Defs = {
         }
     end,
     ErrAssign = function (start, finish)
-        pushError {
+        PushError {
             type = 'ERR_ASSIGN_AS_EQ',
             start = start,
             finish = finish - 1,
@@ -1839,7 +1816,7 @@ local Defs = {
         }
     end,
     ErrEQ = function (start, finish)
-        pushError {
+        PushError {
             type   = 'ERR_EQ_AS_ASSIGN',
             start  = start,
             finish = finish - 1,
@@ -1855,7 +1832,7 @@ local Defs = {
         return '=='
     end,
     ErrUEQ = function (start, finish)
-        pushError {
+        PushError {
             type   = 'ERR_UEQ',
             start  = start,
             finish = finish - 1,
@@ -1871,7 +1848,7 @@ local Defs = {
         return '=='
     end,
     ErrThen = function (start, finish)
-        pushError {
+        PushError {
             type = 'ERR_THEN_AS_DO',
             start = start,
             finish = finish - 1,
@@ -1884,9 +1861,10 @@ local Defs = {
                 }
             }
         }
+        return start, finish
     end,
     ErrDo = function (start, finish)
-        pushError {
+        PushError {
             type = 'ERR_DO_AS_THEN',
             start = start,
             finish = finish - 1,
@@ -1899,15 +1877,26 @@ local Defs = {
                 }
             }
         }
+        return start, finish
     end,
 }
 
-local function init(state, errs)
-    State = state
-    Errs = errs
+local function init(state)
+    State       = state
+    PushError   = state.pushError
+    PushDiag    = state.pushDiag
+    PushComment = state.pushComment
+end
+
+local function close()
+    State       = nil
+    PushError   = function (...) end
+    PushDiag    = function (...) end
+    PushComment = function (...) end
 end
 
 return {
-    defs = Defs,
-    init = init,
+    defs  = Defs,
+    init  = init,
+    close = close,
 }

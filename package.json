@@ -18,12 +18,6 @@
 	"contributes": {
 		"configuration": {
 			"properties": {
-				"Lua.awakened.cat": {
-					"default": true,
-					"markdownDescription": "%config.awakened.cat%",
-					"scope": "resource",
-					"type": "boolean"
-				},
 				"Lua.color.mode": {
 					"default": "Semantic",
 					"enum": [
@@ -82,6 +76,12 @@
 					"scope": "resource",
 					"type": "string"
 				},
+				"Lua.completion.workspaceWord": {
+					"default": true,
+					"markdownDescription": "%config.completion.workspaceWord%",
+					"scope": "resource",
+					"type": "boolean"
+				},
 				"Lua.develop.debuggerPort": {
 					"default": 11412,
 					"markdownDescription": "%config.develop.debuggerPort%",
@@ -122,6 +122,314 @@
 					"scope": "resource",
 					"type": "array"
 				},
+				"Lua.diagnostics.neededFileStatus": {
+					"markdownDescription": "%config.diagnostics.neededFileStatus%",
+					"properties": {
+						"ambiguity-1": {
+							"default": "Any",
+							"description": "%config.diagnostics.ambiguity-1%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"circle-doc-class": {
+							"default": "Any",
+							"description": "%config.diagnostics.circle-doc-class%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"close-non-object": {
+							"default": "Any",
+							"description": "%config.diagnostics.close-non-object%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"code-after-break": {
+							"default": "Opened",
+							"description": "%config.diagnostics.code-after-break%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"count-down-loop": {
+							"default": "Any",
+							"description": "%config.diagnostics.count-down-loop%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"doc-field-no-class": {
+							"default": "Any",
+							"description": "%config.diagnostics.doc-field-no-class%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"duplicate-doc-class": {
+							"default": "Any",
+							"description": "%config.diagnostics.duplicate-doc-class%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"duplicate-doc-field": {
+							"default": "Any",
+							"description": "%config.diagnostics.duplicate-doc-field%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"duplicate-doc-param": {
+							"default": "Any",
+							"description": "%config.diagnostics.duplicate-doc-param%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"duplicate-index": {
+							"default": "Any",
+							"description": "%config.diagnostics.duplicate-index%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"empty-block": {
+							"default": "Opened",
+							"description": "%config.diagnostics.empty-block%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"global-in-nil-env": {
+							"default": "Any",
+							"description": "%config.diagnostics.global-in-nil-env%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"lowercase-global": {
+							"default": "Any",
+							"description": "%config.diagnostics.lowercase-global%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"newfield-call": {
+							"default": "Any",
+							"description": "%config.diagnostics.newfield-call%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"newline-call": {
+							"default": "Any",
+							"description": "%config.diagnostics.newline-call%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"redefined-local": {
+							"default": "Opened",
+							"description": "%config.diagnostics.redefined-local%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"redundant-parameter": {
+							"default": "Opened",
+							"description": "%config.diagnostics.redundant-parameter%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"redundant-value": {
+							"default": "Opened",
+							"description": "%config.diagnostics.redundant-value%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"trailing-space": {
+							"default": "Opened",
+							"description": "%config.diagnostics.trailing-space%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"unbalanced-assignments": {
+							"default": "Any",
+							"description": "%config.diagnostics.unbalanced-assignments%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-doc-class": {
+							"default": "Any",
+							"description": "%config.diagnostics.undefined-doc-class%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-doc-name": {
+							"default": "Any",
+							"description": "%config.diagnostics.undefined-doc-name%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-doc-param": {
+							"default": "Any",
+							"description": "%config.diagnostics.undefined-doc-param%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-env-child": {
+							"default": "Any",
+							"description": "%config.diagnostics.undefined-env-child%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-field": {
+							"default": "Opened",
+							"description": "%config.diagnostics.undefined-field%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-global": {
+							"default": "Any",
+							"description": "%config.diagnostics.undefined-global%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"unused-function": {
+							"default": "Opened",
+							"description": "%config.diagnostics.unused-function%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"unused-label": {
+							"default": "Opened",
+							"description": "%config.diagnostics.unused-label%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"unused-local": {
+							"default": "Opened",
+							"description": "%config.diagnostics.unused-local%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"unused-vararg": {
+							"default": "Opened",
+							"description": "%config.diagnostics.unused-vararg%",
+							"enum": [
+								"Any",
+								"Opened"
+							],
+							"scope": "resource",
+							"type": "string"
+						}
+					},
+					"scope": "resource",
+					"title": "neededFileStatus",
+					"type": "object"
+				},
 				"Lua.diagnostics.severity": {
 					"markdownDescription": "%config.diagnostics.severity%",
 					"properties": {
@@ -140,6 +448,42 @@
 						"circle-doc-class": {
 							"default": "Warning",
 							"description": "%config.diagnostics.circle-doc-class%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"close-non-object": {
+							"default": "Warning",
+							"description": "%config.diagnostics.close-non-object%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"code-after-break": {
+							"default": "Hint",
+							"description": "%config.diagnostics.code-after-break%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"count-down-loop": {
+							"default": "Warning",
+							"description": "%config.diagnostics.count-down-loop%",
 							"enum": [
 								"Error",
 								"Warning",
@@ -317,6 +661,18 @@
 							"scope": "resource",
 							"type": "string"
 						},
+						"unbalanced-assignments": {
+							"default": "Warning",
+							"description": "%config.diagnostics.unbalanced-assignments%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
 						"undefined-doc-class": {
 							"default": "Warning",
 							"description": "%config.diagnostics.undefined-doc-class%",
@@ -356,6 +712,18 @@
 						"undefined-env-child": {
 							"default": "Information",
 							"description": "%config.diagnostics.undefined-env-child%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
+						"undefined-field": {
+							"default": "Warning",
+							"description": "%config.diagnostics.undefined-field%",
 							"enum": [
 								"Error",
 								"Warning",
@@ -442,6 +810,30 @@
 					"scope": "resource",
 					"type": "integer"
 				},
+				"Lua.hint.enable": {
+					"default": false,
+					"markdownDescription": "%config.hint.enable%",
+					"scope": "resource",
+					"type": "boolean"
+				},
+				"Lua.hint.paramName": {
+					"default": true,
+					"markdownDescription": "%config.hint.paramName%",
+					"scope": "resource",
+					"type": "boolean"
+				},
+				"Lua.hint.paramType": {
+					"default": true,
+					"markdownDescription": "%config.hint.paramType%",
+					"scope": "resource",
+					"type": "boolean"
+				},
+				"Lua.hint.setType": {
+					"default": false,
+					"markdownDescription": "%config.hint.setType%",
+					"scope": "resource",
+					"type": "boolean"
+				},
 				"Lua.hover.enable": {
 					"default": true,
 					"markdownDescription": "%config.hover.enable%",
@@ -451,6 +843,12 @@
 				"Lua.hover.fieldInfer": {
 					"default": 3000,
 					"markdownDescription": "%config.hover.fieldInfer%",
+					"scope": "resource",
+					"type": "integer"
+				},
+				"Lua.hover.previewFields": {
+					"default": 100,
+					"markdownDescription": "%config.hover.previewFields%",
 					"scope": "resource",
 					"type": "integer"
 				},
@@ -472,17 +870,33 @@
 					"scope": "resource",
 					"type": "integer"
 				},
-				"Lua.intelliSense.fastGlobal": {
-					"default": true,
-					"markdownDescription": "%config.intelliSense.fastGlobal%",
-					"scope": "resource",
-					"type": "boolean"
-				},
 				"Lua.intelliSense.searchDepth": {
 					"default": 0,
 					"markdownDescription": "%config.intelliSense.searchDepth%",
 					"scope": "resource",
 					"type": "integer"
+				},
+				"Lua.runtime.nonstandardSymbol": {
+					"items": {
+						"enum": [
+							"//",
+							"/**/",
+							"`",
+							"+=",
+							"-=",
+							"*=",
+							"/=",
+							"||",
+							"&&",
+							"!",
+							"!=",
+							"continue"
+						],
+						"type": "string"
+					},
+					"markdownDescription": "%config.runtime.nonstandardSymbol%",
+					"scope": "resource",
+					"type": "array"
 				},
 				"Lua.runtime.path": {
 					"default": [
@@ -496,6 +910,12 @@
 					"markdownDescription": "%config.runtime.path%",
 					"scope": "resource",
 					"type": "array"
+				},
+				"Lua.runtime.plugin": {
+					"default": ".vscode/lua/plugin.lua",
+					"markdownDescription": "%config.runtime.plugin%",
+					"scope": "resource",
+					"type": "string"
 				},
 				"Lua.runtime.special": {
 					"markdownDescription": "%config.runtime.special%",
@@ -520,6 +940,12 @@
 					"scope": "resource",
 					"type": "object"
 				},
+				"Lua.runtime.unicodeName": {
+					"default": false,
+					"markdownDescription": "%config.runtime.unicodeName%",
+					"scope": "resource",
+					"type": "boolean"
+				},
 				"Lua.runtime.version": {
 					"default": "Lua 5.4",
 					"enum": [
@@ -536,6 +962,24 @@
 				"Lua.signatureHelp.enable": {
 					"default": true,
 					"markdownDescription": "%config.signatureHelp.enable%",
+					"scope": "resource",
+					"type": "boolean"
+				},
+				"Lua.telemetry.enable": {
+					"default": true,
+					"markdownDescription": "%config.telemetry.enable%",
+					"scope": "resource",
+					"type": "boolean"
+				},
+				"Lua.window.progressBar": {
+					"default": true,
+					"markdownDescription": "%config.window.progressBar%",
+					"scope": "resource",
+					"type": "boolean"
+				},
+				"Lua.window.statusBar": {
+					"default": true,
+					"markdownDescription": "%config.window.statusBar%",
 					"scope": "resource",
 					"type": "boolean"
 				},
@@ -639,5 +1083,5 @@
 		"type": "git",
 		"url": "https://github.com/sumneko/lua-language-server"
 	},
-	"version": "1.0.0"
+	"version": "1.15.1"
 }

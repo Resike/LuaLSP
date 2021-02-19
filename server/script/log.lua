@@ -1,116 +1,145 @@
-local fs = require 'bee.filesystem'
+local fs             = require 'bee.filesystem'
+local time           = require 'bee.time'
 
-local log = {}
+local monotonic      = time.monotonic
+local osDate         = os.date
+local ioOpen         = io.open
+local tablePack      = table.pack
+local tableConcat    = table.concat
+local tostring       = tostring
+local debugTraceBack = debug.traceback
+local mathModf       = math.modf
+local debugGetInfo   = debug.getinfo
+local ioStdErr       = io.stderr
 
-log.file = nil
-log.start_time = os.time() - os.clock()
-log.size = 0
-log.max_size = 100 * 1024 * 1024
+_ENV = nil
 
-local function trim_src(src)
-    src = src:sub(log.prefix_len + 3, -5)
+local m = {}
+
+m.file = nil
+m.startTime = time.time() - monotonic()
+m.size = 0
+m.maxSize = 100 * 1024 * 1024
+
+local function trimSrc(src)
+    src = src:sub(m.prefixLen + 3, -5)
     src = src:gsub('^[/\\]+', '')
     src = src:gsub('[\\/]+', '.')
     return src
 end
 
 local function init_log_file()
-    if not log.file then
-        log.file = io.open(log.path, 'w')
-        if not log.file then
+    if not m.file then
+        m.file = ioOpen(m.path, 'w')
+        if not m.file then
             return
         end
-        log.file:write('')
-        log.file:close()
-        log.file = io.open(log.path, 'ab')
-        if not log.file then
+        m.file:write('')
+        m.file:close()
+        m.file = ioOpen(m.path, 'ab')
+        if not m.file then
             return
         end
-        log.file:setvbuf 'no'
+        m.file:setvbuf 'no'
     end
 end
 
-local function push_log(level, ...)
-    if not log.path then
+local function pushLog(level, ...)
+    if not m.path then
         return
     end
-    if log.size > log.max_size then
-        return
-    end
-    local t = table.pack(...)
+    local t = tablePack(...)
     for i = 1, t.n do
         t[i] = tostring(t[i])
     end
-    local str = table.concat(t, '\t', 1, t.n)
+    local str = tableConcat(t, '\t', 1, t.n)
     if level == 'error' then
-        str = str .. '\n' .. debug.traceback(nil, 3)
-        io.stderr:write(str .. '\n')
+        str = str .. '\n' .. debugTraceBack(nil, 3)
     end
-    init_log_file()
-    if not log.file then
+    local info = debugGetInfo(3, 'Sl')
+    return m.raw(0, level, str, info.source, info.currentline, monotonic())
+end
+
+function m.info(...)
+    pushLog('info', ...)
+end
+
+function m.debug(...)
+    pushLog('debug', ...)
+end
+
+function m.trace(...)
+    pushLog('trace', ...)
+end
+
+function m.warn(...)
+    pushLog('warn', ...)
+end
+
+function m.error(...)
+    return pushLog('error', ...)
+end
+
+function m.raw(thd, level, msg, source, currentline, clock)
+    if level == 'error' then
+        ioStdErr:write(msg .. '\n')
+        if not m.firstError then
+            m.firstError = msg
+        end
+    end
+    if m.size > m.maxSize then
         return
     end
-    local sec, ms = math.modf(log.start_time + os.clock())
-    local timestr = os.date('%Y-%m-%d %H:%M:%S', sec)
-    local info = debug.getinfo(3, 'Sl')
+    init_log_file()
+    if not m.file then
+        return ''
+    end
+    local sec, ms = mathModf((m.startTime + clock) / 1000)
+    local timestr = osDate('%H:%M:%S', sec)
+    local agl = ''
+    if #level < 5 then
+        agl = (' '):rep(5 - #level)
+    end
     local buf
-    if info and info.currentline > 0 then
-        buf = ('[%s.%03.f][%s][%s:%s]: %s\n'):format(timestr, ms * 1000, level, trim_src(info.source), info.currentline, str)
+    if currentline == -1 then
+        buf = ('[%s.%03.f][%s]%s[#%d]: %s\n'):format(timestr, ms * 1000, level, agl, thd, msg)
     else
-        buf = ('[%s.%03.f][%s]: %s\n'):format(timestr, ms * 1000, level, str)
+        buf = ('[%s.%03.f][%s]%s[#%d:%s:%s]: %s\n'):format(timestr, ms * 1000, level, agl, thd, trimSrc(source), currentline, msg)
     end
-    log.file:write(buf)
-    log.size = log.size + #buf
-    if log.size > log.max_size then
-        log.file:write('[REACH MAX SIZE]')
+    m.size = m.size + #buf
+    if m.size > m.maxSize then
+        m.file:write(buf:sub(1, m.size - m.maxSize))
+        m.file:write('[REACH MAX SIZE]')
+    else
+        m.file:write(buf)
     end
-    return str
+    return buf
 end
 
-function log.info(...)
-    push_log('info', ...)
-end
-
-function log.debug(...)
-    push_log('debug', ...)
-end
-
-function log.trace(...)
-    push_log('trace', ...)
-end
-
-function log.warn(...)
-    push_log('warn', ...)
-end
-
-function log.error(...)
-    return push_log('error', ...)
-end
-
-function log.init(root, path)
+function m.init(root, path)
     local lastBuf
-    if log.file then
-        log.file:close()
-        log.file = nil
-        local file = io.open(log.path, 'rb')
+    if m.file then
+        m.file:close()
+        m.file = nil
+        local file = ioOpen(m.path, 'rb')
         if file then
-            lastBuf = file:read 'a'
+            lastBuf = file:read(m.maxSize)
             file:close()
         end
     end
-    log.path = path:string()
-    log.prefix_len = #root:string()
-    log.size = 0
+    m.path = path:string()
+    m.prefixLen = #root:string()
+    m.size = 0
     if not fs.exists(path:parent_path()) then
         fs.create_directories(path:parent_path())
     end
     if lastBuf then
         init_log_file()
-        if log.file then
-            log.file:write(lastBuf)
-            log.size = log.size + #lastBuf
+        if m.file then
+            m.file:write(lastBuf)
+            m.size = m.size + #lastBuf
         end
     end
 end
 
-return log
+return m

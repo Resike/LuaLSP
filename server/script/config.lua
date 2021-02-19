@@ -1,4 +1,8 @@
-local DiagnosticDefaultSeverity = require 'constant.DiagnosticDefaultSeverity'
+local util   = require 'utility'
+local define = require 'proto.define'
+
+local m = {}
+m.version = 0
 
 local function Boolean(v)
     if type(v) == 'boolean' then
@@ -91,21 +95,28 @@ end
 
 local ConfigTemplate = {
     runtime = {
-        version         = {'Lua 5.4', String},
-        library         = {{},        Str2Hash ';'},
-        path            = {{
-                                "?.lua",
-                                "?/init.lua",
-                                "?/?.lua"
-                            },        Array(String)},
-        special         = {{},        Hash(String, String)},
+        version           = {'Lua 5.4', String},
+        path              = {{
+                                  "?.lua",
+                                  "?/init.lua",
+                                  "?/?.lua"
+                              },        Array(String)},
+        special           = {{},        Hash(String, String)},
+        meta              = {'${version} ${language}', String},
+        unicodeName       = {false,     Boolean},
+        nonstandardSymbol = {{},        Str2Hash ';'},
+        plugin            = {'.vscode/lua/plugin.lua', String},
     },
     diagnostics = {
         enable          = {true, Boolean},
         globals         = {{},   Str2Hash ';'},
         disable         = {{},   Str2Hash ';'},
         severity        = {
-            table.deepCopy(DiagnosticDefaultSeverity),
+            util.deepCopy(define.DiagnosticDefaultSeverity),
+            Hash(String, String),
+        },
+        neededFileStatus = {
+            util.deepCopy(define.DiagnosticDefaultNeededFileStatus),
             Hash(String, String),
         },
         workspaceDelay  = {0,    Integer},
@@ -127,6 +138,7 @@ local ConfigTemplate = {
         callSnippet     = {'Disable', String},
         keywordSnippet  = {'Replace', String},
         displayContext  = {6,         Integer},
+        workspaceWord   = {true,      Boolean},
     },
     signatureHelp = {
         enable          = {true,      Boolean},
@@ -137,82 +149,88 @@ local ConfigTemplate = {
         viewStringMax   = {1000,      Integer},
         viewNumber      = {true,      Boolean},
         fieldInfer      = {3000,      Integer},
+        previewFields   = {100,       Integer},
     },
     color = {
         mode            = {'Semantic', String},
     },
-    luadoc = {
-        enable          = {true, Boolean},
-    },
-    plugin = {
-        enable          = {false, Boolean},
-        path            = {'.vscode/lua-plugin/*.lua', String},
+    hint = {
+        enable          = {false,     Boolean},
+        paramType       = {true,      Boolean},
+        setType         = {false,     Boolean},
+        paramName       = {true,      Boolean},
     },
     intelliSense = {
         searchDepth     = {0,         Integer},
-        fastGlobal      = {true,      Boolean},
     },
+    window              = {
+        statusBar       = {true,      Boolean},
+        progressBar     = {true,      Boolean},
+    },
+    telemetry = {
+        enable          = {true,      Boolean},
+    }
 }
 
 local OtherTemplate = {
     associations = {{}, Hash(String, String)},
-    exclude =      {{}, Hash(String, Boolean)},
+    exclude      = {{}, Hash(String, Boolean)},
+    semantic     = {'', Or(Boolean, String)},
 }
 
-local Config, Other
-
 local function init()
-    if Config then
+    if m.config then
         return
     end
 
-    Config = {}
+    m.config = {}
     for c, t in pairs(ConfigTemplate) do
-        Config[c] = {}
+        m.config[c] = {}
         for k, info in pairs(t) do
-            Config[c][k] = info[1]
+            m.config[c][k] = info[1]
         end
     end
 
-    Other = {}
+    m.other = {}
     for k, info in pairs(OtherTemplate) do
-        Other[k] = info[1]
+        m.other[k] = info[1]
     end
 end
 
-local function setConfig(self, config, other)
+function m.setConfig(config, other)
+    m.version = m.version + 1
     xpcall(function ()
         for c, t in pairs(config) do
             for k, v in pairs(t) do
                 local region = ConfigTemplate[c]
                 if region then
                     local info = region[k]
-                    local suc, v = info[2](v)
-                    if suc then
-                        Config[c][k] = v
-                    else
-                        Config[c][k] = info[1]
+                    if info then
+                        local suc, v = info[2](v)
+                        if suc then
+                            m.config[c][k] = v
+                        else
+                            m.config[c][k] = info[1]
+                        end
                     end
                 end
             end
         end
         for k, v in pairs(other) do
             local info = OtherTemplate[k]
-            local suc, v = info[2](v)
-            if suc then
-                Other[k] = v
-            else
-                Other[k] = info[1]
+            if info then
+                local suc, v = info[2](v)
+                if suc then
+                    m.other[k] = v
+                else
+                    m.other[k] = info[1]
+                end
             end
         end
-        log.debug('Config update: ', table.dump(Config), table.dump(Other))
+        log.debug('Config update: ', util.dump(m.config), util.dump(m.other))
     end, log.error)
 end
 
 init()
 
-return {
-    setConfig = setConfig,
-    config = Config,
-    other = Other,
-}
+return m

@@ -1,8 +1,0 @@
-[GetIDFromBattleNetAccountGUID]
-description = 'Converts a battle.net account GUID to battle.net ID.'
-
-[IsGUIDBattleNetAccountType]
-description = 'Returns whether a GUID is a batle.net account type.'
-
-[IsGUIDRelatedToLocalAccount]
-description = 'Returns whether a GUID is related to the local account.'
