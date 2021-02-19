@@ -6,6 +6,8 @@ https://packagecontrol.io/packages/LSP
 
 Suggested LSP settings:
 `"c:\Users\<UserName>\AppData\Roaming\Sublime Text 3\Packages\User\LSP.sublime-settings" `
+
+Replace UserName with your folder.
 ```json
 {
 	"auto_show_diagnostics_panel": "never",
