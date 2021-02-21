@@ -1,15 +1,15 @@
 --- FontString
---- 
+---
 --- FontStrings are one of the two types of Region that is visible on the screen. It draws a block of text on the screen using the characteristics in an associated FontObject. You can change the text contents of it, set it to use a new FontObject, and set how it handles text that doesn't fit in its normal dimensions, such as how to wrap the text and whether to indent subsequent lines.
 --- FontStrings are used widely through the UI, to display labels on controls, the names of units, keybindings on action buttons, health and mana values, and most other text data.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/FontString
 
 ---@class FontString : FontInstance
 FontString = {};
 
 
---- FontString:GetWrappedWidth() 
+--- FontString:GetWrappedWidth()
 function FontString:GetWrappedWidth() end
 
 --- Returns the height of the text displayed in the font string. This value is based on the text currently displayed; e.g. a long block of text wrapped to several lines results in a greater height than that for a short block of text that fits on fewer lines.
@@ -23,10 +23,10 @@ function  FontString:GetStringHeight() end
 --- A list of values to be included in the formatted string
 function FontString:SetFormattedText(formatString, args) end
 
---- FontString:GetFieldSize() 
+--- FontString:GetFieldSize()
 function FontString:GetFieldSize() end
 
---- FontString:GetNumLines() 
+--- FontString:GetNumLines()
 function FontString:GetNumLines() end
 
 --- Returns true if the text is truncated. When the text is truncated in a font string, part of the text will be cut off and replaced with .... This occurs when the size of the text being displayed is larger than the bounding box of the font string.
@@ -36,7 +36,7 @@ function FontString:IsTruncated() end
 --- @return text
 function  FontString:GetText() end
 
---- FontString:SetShown() 
+--- FontString:SetShown()
 function FontString:SetShown() end
 
 --- Sets the text to be displayed in the font string
@@ -44,7 +44,7 @@ function FontString:SetShown() end
 --- Text to be displayed in the font string
 function FontString:SetText(text) end
 
---- FontString:SetIndentedWordWrap() 
+--- FontString:SetIndentedWordWrap()
 function FontString:SetIndentedWordWrap() end
 
 --- Returns whether long lines of text in the font string can wrap onto subsequent lines
@@ -62,7 +62,7 @@ function  FontString:GetStringWidth() end
 --- Width of the gradient in pixels, or 0 to restore the text to full opacity
 function FontString:SetAlphaGradient(start, length) end
 
---- FontString:GetMaxLines() 
+--- FontString:GetMaxLines()
 function FontString:GetMaxLines() end
 
 --- Sets whether long lines of text in the font string can wrap onto subsequent lines
@@ -75,7 +75,7 @@ function FontString:SetWordWrap(enable) end
 --- Height (point size) to which the text should be scaled (in pixels)
 function FontString:SetTextHeight(height) end
 
---- FontString:SetMaxLines() 
+--- FontString:SetMaxLines()
 function FontString:SetMaxLines() end
 
 --- Sets whether long lines of text will wrap within or between words
@@ -83,5 +83,5 @@ function FontString:SetMaxLines() end
 --- True to wrap long lines of text at any character boundary (i.e possibly in the middle of a word); false to only wrap at whitespace characters (i.e. only between words)
 function FontString:SetNonSpaceWrap(enable) end
 
---- FontString:GetIndentedWordWrap() 
+--- FontString:GetIndentedWordWrap()
 function FontString:GetIndentedWordWrap() end

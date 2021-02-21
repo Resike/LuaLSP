@@ -3,39 +3,39 @@ C_Transmog = {}
 
 function C_Transmog.ClearAllPending() end
 
----@param transmogLocation table 
+---@param transmogLocation table
 function C_Transmog.ClearPending(transmogLocation) end
 
----@param transmogID number 
+---@param transmogID number
 ---@return number categoryID
 function C_Transmog.GetBaseCategory(transmogID) end
 
----@param itemModifiedAppearanceID number 
+---@param itemModifiedAppearanceID number
 ---@return number|nil creatureDisplayID
 function C_Transmog.GetCreatureDisplayIDForSource(itemModifiedAppearanceID) end
 
----@param itemModifiedAppearanceID number 
+---@param itemModifiedAppearanceID number
 ---@return number|nil itemID
 function C_Transmog.GetItemIDForSource(itemModifiedAppearanceID) end
 
----@param inventoryType number 
+---@param inventoryType number
 ---@return number slot
 function C_Transmog.GetSlotForInventoryType(inventoryType) end
 
----@param transmogLocation table 
+---@param transmogLocation table
 ---@return boolean, boolean, boolean, boolean, number, boolean, boolean, number|nil isTransmogrified, hasPending, isPendingCollected, canTransmogrify, cannotTransmogrifyReason, hasUndo, isHideVisual, texture
 function C_Transmog.GetSlotInfo(transmogLocation) end
 
----@param transmogLocation table 
+---@param transmogLocation table
 ---@return number, string errorCode, errorString
 function C_Transmog.GetSlotUseError(transmogLocation) end
 
----@param transmogLocation table 
+---@param transmogLocation table
 ---@return number, number, number, number, number, number, number, number, boolean, boolean, number baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, appliedCategoryID, pendingSourceID, pendingVisualID, pendingCategoryID, hasUndo, isHideVisual, itemSubclass
 function C_Transmog.GetSlotVisualInfo(transmogLocation) end
 
----@param transmogLocation table 
----@param transmogID number 
+---@param transmogLocation table
+---@param transmogID number
 ---@param categoryID number @ [OPTIONAL]
 ---@overload fun(transmogLocation:table, transmogID:number)
 function C_Transmog.SetPending(transmogLocation, transmogID, categoryID) end

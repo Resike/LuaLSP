@@ -1,131 +1,131 @@
 ---@return CorruptionEffectInfo corruptionEffects
 function GetNegativeCorruptionEffectInfo() end
 
----@param unit string 
+---@param unit string
 ---@return number pointIndices
 function GetUnitChargedPowerPoints(unit) end
 
----@param unitToken string 
+---@param unitToken string
 ---@return UnitPowerBarInfo info
 function GetUnitPowerBarInfo(unitToken) end
 
----@param barID number 
+---@param barID number
 ---@return UnitPowerBarInfo info
 function GetUnitPowerBarInfoByID(barID) end
 
----@param unitToken string 
+---@param unitToken string
 ---@return string|nil, string|nil, string|nil name, tooltip, cost
 function GetUnitPowerBarStrings(unitToken) end
 
----@param barID number 
+---@param barID number
 ---@return string|nil, string|nil, string|nil name, tooltip, cost
 function GetUnitPowerBarStringsByID(barID) end
 
----@param unitToken string 
----@param textureIndex number 
+---@param unitToken string
+---@param textureIndex number
 ---@param timerIndex number @ [OPTIONAL]
 ---@overload fun(unitToken:string, textureIndex:number)
 ---@return number, number, number, number, number texture, colorR, colorG, colorB, colorA
 function GetUnitPowerBarTextureInfo(unitToken, textureIndex, timerIndex) end
 
----@param barID number 
----@param textureIndex number 
+---@param barID number
+---@param textureIndex number
 ---@return number, number, number, number, number texture, colorR, colorG, colorB, colorA
 function GetUnitPowerBarTextureInfoByID(barID, textureIndex) end
 
----@param unitToken string 
+---@param unitToken string
 ---@return boolean isReady
 function IsUnitModelReadyForUI(unitToken) end
 
 ---@return boolean vehicleHasComboPoints
 function PlayerVehicleHasComboPoints() end
 
----@param textureObject table 
----@param unitToken string 
+---@param textureObject table
+---@param unitToken string
 function SetPortraitTexture(textureObject, unitToken) end
 
----@param textureObject table 
----@param creatureDisplayID number 
+---@param textureObject table
+---@param creatureDisplayID number
 function SetPortraitTextureFromCreatureDisplayID(textureObject, creatureDisplayID) end
 
----@param unit string 
+---@param unit string
 ---@return boolean, boolean isAlliedRace, hasHeritageArmorUnlocked
 function UnitAlliedRaceInfo(unit) end
 
----@param unit string 
+---@param unit string
 ---@return number ID
 function UnitChromieTimeID(unit) end
 
----@param unit string 
+---@param unit string
 ---@return string, string, number className, classFilename, classID
 function UnitClass(unit) end
 
----@param unit string 
+---@param unit string
 ---@return string, number classFilename, classID
 function UnitClassBase(unit) end
 
----@param unit string 
+---@param unit string
 ---@return boolean inPartyShard
 function UnitInPartyShard(unit) end
 
----@param unit string 
+---@param unit string
 ---@return boolean isConnected
 function UnitIsConnected(unit) end
 
----@param controllingUnit string 
----@param controlledUnit string 
+---@param controllingUnit string
+---@param controlledUnit string
 ---@return boolean unitIsOwnerOrControllerOfUnit
 function UnitIsOwnerOrControllerOfUnit(controllingUnit, controlledUnit) end
 
----@param unit string 
+---@param unit string
 ---@return boolean nameplateShowsWidgetsOnly
 function UnitNameplateShowsWidgetsOnly(unit) end
 
----@param unit string 
+---@param unit string
 ---@return PhaseReason|nil reason
 function UnitPhaseReason(unit) end
 
----@param unitToken string 
----@param powerType PowerType 
----@param unmodified boolean 
+---@param unitToken string
+---@param powerType PowerType
+---@param unmodified boolean
 ---@return number power
 function UnitPower(unitToken, powerType, unmodified) end
 
----@param unitToken string 
+---@param unitToken string
 ---@return number barID
 function UnitPowerBarID(unitToken) end
 
----@param powerType PowerType 
+---@param powerType PowerType
 ---@return number displayMod
 function UnitPowerDisplayMod(powerType) end
 
----@param unitToken string 
----@param powerType PowerType 
----@param unmodified boolean 
+---@param unitToken string
+---@param powerType PowerType
+---@param unmodified boolean
 ---@return number maxPower
 function UnitPowerMax(unitToken, powerType, unmodified) end
 
----@param unit string 
+---@param unit string
 ---@return PvPUnitClassification|nil classification
 function UnitPvpClassification(unit) end
 
----@param unit string 
+---@param unit string
 ---@return number levelRange
 function UnitQuestTrivialLevelRange(unit) end
 
----@param unit string 
+---@param unit string
 ---@return number levelRange
 function UnitQuestTrivialLevelRangeScaling(unit) end
 
----@param unit string 
+---@param unit string
 ---@return number|nil sex
 function UnitSex(unit) end
 
----@param unit string 
+---@param unit string
 ---@return boolean treatAsPlayer
 function UnitTreatAsPlayerForDisplay(unit) end
 
----@param unit string 
+---@param unit string
 ---@return number uiWidgetSet
 function UnitWidgetSet(unit) end
 
@@ -176,27 +176,27 @@ PvPUnitClassification.OrbCarrierOrange = 9
 PvPUnitClassification.OrbCarrierPurple = 10
 
 ---@class CorruptionEffectInfo
----@field name string 
----@field description string 
----@field minCorruption number 
+---@field name string
+---@field description string
+---@field minCorruption number
 local CorruptionEffectInfo = {}
 
 ---@class UnitPowerBarInfo
----@field ID number 
----@field barType number 
----@field minPower number 
----@field startInset number 
----@field endInset number 
----@field smooth bool 
----@field hideFromOthers bool 
----@field showOnRaid bool 
----@field opaqueSpark bool 
----@field opaqueFlash bool 
----@field anchorTop bool 
----@field forcePercentage bool 
----@field sparkUnderFrame bool 
----@field flashAtMinPower bool 
----@field fractionalCounter bool 
----@field animateNumbers bool 
+---@field ID number
+---@field barType number
+---@field minPower number
+---@field startInset number
+---@field endInset number
+---@field smooth bool
+---@field hideFromOthers bool
+---@field showOnRaid bool
+---@field opaqueSpark bool
+---@field opaqueFlash bool
+---@field anchorTop bool
+---@field forcePercentage bool
+---@field sparkUnderFrame bool
+---@field flashAtMinPower bool
+---@field fractionalCounter bool
+---@field animateNumbers bool
 local UnitPowerBarInfo = {}
 

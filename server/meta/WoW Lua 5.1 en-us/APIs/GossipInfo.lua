@@ -24,12 +24,12 @@ function C_GossipInfo.GetNumOptions() end
 ---@return GossipOptionUIInfo info
 function C_GossipInfo.GetOptions() end
 
----@param uiMapID number 
+---@param uiMapID number
 ---@return number|nil gossipPoiID
 function C_GossipInfo.GetPoiForUiMapID(uiMapID) end
 
----@param uiMapID number 
----@param gossipPoiID number 
+---@param uiMapID number
+---@param gossipPoiID number
 ---@return GossipPoiInfo|nil gossipPoiInfo
 function C_GossipInfo.GetPoiInfo(uiMapID, gossipPoiID) end
 
@@ -38,13 +38,13 @@ function C_GossipInfo.GetText() end
 
 function C_GossipInfo.RefreshOptions() end
 
----@param index number 
+---@param index number
 function C_GossipInfo.SelectActiveQuest(index) end
 
----@param index number 
+---@param index number
 function C_GossipInfo.SelectAvailableQuest(index) end
 
----@param index number 
+---@param index number
 ---@param text string @ [OPTIONAL]
 ---@param confirmed boolean @ [OPTIONAL]
 ---@overload fun(index:number, confirmed:bool)
@@ -64,35 +64,35 @@ GossipOptionStatus.Locked = 2
 GossipOptionStatus.AlreadyComplete = 3
 
 ---@class GossipOptionRewardInfo
----@field id number 
----@field quantity number 
----@field rewardType GossipOptionRewardType 
+---@field id number
+---@field quantity number
+---@field rewardType GossipOptionRewardType
 local GossipOptionRewardInfo = {}
 
 ---@class GossipOptionUIInfo
----@field name string 
----@field type string 
----@field rewards table 
----@field status GossipOptionStatus 
----@field spellID number|nil 
+---@field name string
+---@field type string
+---@field rewards table
+---@field status GossipOptionStatus
+---@field spellID number|nil
 local GossipOptionUIInfo = {}
 
 ---@class GossipPoiInfo
----@field name string 
----@field textureIndex number 
----@field position table 
----@field inBattleMap bool 
+---@field name string
+---@field textureIndex number
+---@field position table
+---@field inBattleMap bool
 local GossipPoiInfo = {}
 
 ---@class GossipQuestUIInfo
----@field title string 
----@field questLevel number 
----@field isTrivial bool 
----@field frequency number|nil 
----@field repeatable bool|nil 
----@field isComplete bool|nil 
----@field isLegendary bool 
----@field isIgnored bool 
----@field questID number 
+---@field title string
+---@field questLevel number
+---@field isTrivial bool
+---@field frequency number|nil
+---@field repeatable bool|nil
+---@field isComplete bool|nil
+---@field isLegendary bool
+---@field isIgnored bool
+---@field questID number
 local GossipQuestUIInfo = {}
 

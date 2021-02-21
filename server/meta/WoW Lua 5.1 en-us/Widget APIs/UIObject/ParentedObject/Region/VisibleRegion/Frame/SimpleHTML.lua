@@ -1,9 +1,9 @@
 --- SimpleHTML
---- 
+---
 --- The most sophisticated control over text display is offered by SimpleHTML widgets. When its text is set to a string containing valid HTML markup, a SimpleHTML widget will parse the content into its various blocks and sections, and lay the text out. While it supports most common text commands, a SimpleHTML widget accepts an additional argument to most of these; if provided, the element argument will specify the HTML elements to which the new style information should apply, such as formattedText:SetTextColor("h2", 1, 0.3, 0.1) which will cause all level 2 headers to display in red. If no element name is specified, the settings apply to the SimpleHTML widget's default font.
 --- Like ScrollingMessageFrame, SimpleHTML also provides hyperlink support, including a hook to control the formatting of hyperlinked text with :SetHyperlinkFormat. This function takes a string, which is provided to string.format along with strings representing the hyperlink's address and body text, and produces the appropriate link and color codes along with any other desired formatting.
 --- This widget does not support scrolling by itself, but you can use it as a ScrollChild to support longer blocks of text.  In addition, it is used by the stock UI to display the contents of the books that your character may find lying around inns and libraries.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/SimpleHTML
 
 ---@class SimpleHTML : Frame
@@ -147,7 +147,7 @@ function  SimpleHTML:GetFont(element) end
 --- @return textR, textG, textB, textAlpha
 function  SimpleHTML:GetTextColor(element) end
 
---- Sets the format string used for displaying hyperlinks in the frame. Hyperlinks are specified via HTML in the text input to a SimpleHTML frame, but in order to be handled as hyperlinks by the game's text engine they need to be formatted like the hyperlinks used elsewhere. This property specifies the translation between formats: its default value of |H%s|h%s|h provides minimal formatting, turning (for example) <a href="achievement:892">The Right Stuff</a> into |Hachievement:892|hThe Right Stuff|h. Using a colorString or other formatting may be useful for making hyperlinks distinguishable from other text. 
+--- Sets the format string used for displaying hyperlinks in the frame. Hyperlinks are specified via HTML in the text input to a SimpleHTML frame, but in order to be handled as hyperlinks by the game's text engine they need to be formatted like the hyperlinks used elsewhere. This property specifies the translation between formats: its default value of |H%s|h%s|h provides minimal formatting, turning (for example) <a href="achievement:892">The Right Stuff</a> into |Hachievement:892|hThe Right Stuff|h. Using a colorString or other formatting may be useful for making hyperlinks distinguishable from other text.
 --- @param format string
 --- Format string used for displaying hyperlinks in the frame
 function SimpleHTML:SetHyperlinkFormat(format) end

@@ -90,7 +90,7 @@ m.childMap = {
     ['unary']       = {1},
 
     ['doc']                = {'#'},
-    ['doc.class']          = {'class', 'extends', 'comment'},
+    ['doc.class']          = {'class', '#extends', 'comment'},
     ['doc.type']           = {'#types', '#enums', 'name', 'comment'},
     ['doc.alias']          = {'alias', 'extends', 'comment'},
     ['doc.param']          = {'param', 'extends', 'comment'},
@@ -505,8 +505,10 @@ function m.addChilds(list, obj, map)
             elseif type(key) == 'string'
             and key:sub(1, 1) == '#' then
                 key = key:sub(2)
-                for i = 1, #obj[key] do
-                    list[#list+1] = obj[key][i]
+                if obj[key] then
+                    for i = 1, #obj[key] do
+                        list[#list+1] = obj[key][i]
+                    end
                 end
             end
         end
@@ -1012,6 +1014,20 @@ local function stepRefOfDocType(status, obj, mode)
         local name = obj[1]
         if not name or not status.interface.docType then
             return results
+        end
+        if name == 'nil'
+        or name == 'any'
+        or name == 'boolean'
+        or name == 'string'
+        or name == 'table'
+        or name == 'number'
+        or name == 'integer'
+        or name == 'function'
+        or name == 'table'
+        or name == 'thread'
+        or name == 'userdata'
+        or name == 'lightuserdata' then
+            mode = 'def'
         end
         local docs = status.interface.docType(name)
         for i = 1, #docs do
@@ -1799,9 +1815,11 @@ function m.checkSameSimpleByDoc(status, obj, start, pushQueue, mode)
                 pushQueue(res, start, true)
             end
             if obj.extends then
-                local pieceResult = stepRefOfDocType(status, obj.extends, 'def')
-                for _, res in ipairs(pieceResult) do
-                    pushQueue(res, start, true)
+                for _, ext in ipairs(obj.extends) do
+                    local pieceResult = stepRefOfDocType(status, ext, 'def')
+                    for _, res in ipairs(pieceResult) do
+                        pushQueue(res, start, true)
+                    end
                 end
             end
         end
@@ -2389,12 +2407,17 @@ function m.checkSameSimpleAsKeyOrValueInForParis(status, ref, start, pushQueue)
 end
 
 local function hasTypeName(doc, name)
-    if doc.type ~= 'doc.type' then
-        return false
+    if doc.type == 'doc.type' then
+        for _, tunit in ipairs(doc.types) do
+            if  tunit.type == 'doc.type.name'
+            and tunit[1] == name then
+                return true
+            end
+        end
     end
-    for _, tunit in ipairs(doc.types) do
-        if  tunit.type == 'doc.type.name'
-        and tunit[1] == name then
+    if doc.type == 'doc.type.name'
+    or doc.type == 'doc.class.name' then
+        if doc[1] == name then
             return true
         end
     end
@@ -2405,9 +2428,6 @@ function m.checkSameSimpleInString(status, ref, start, pushQueue, mode)
     -- 特殊处理 ('xxx').xxx 的形式
     if  ref.type ~= 'string'
     and not hasTypeName(ref, 'string') then
-        return
-    end
-    if status.depth > 5 then
         return
     end
     if not status.interface.docType then
@@ -2428,7 +2448,7 @@ function m.checkSameSimpleInString(status, ref, start, pushQueue, mode)
     end
     status.share.markString[marked] = true
     local newStatus = m.status(status)
-    local docs = status.interface.docType('string*')
+    local docs = status.interface.docType('stringlib')
     local mark = {}
     for i = 1, #docs do
         local doc = docs[i]

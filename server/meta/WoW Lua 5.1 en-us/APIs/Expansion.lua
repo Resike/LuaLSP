@@ -13,11 +13,11 @@ function GetClientDisplayExpansionLevel() end
 ---@return string regionName
 function GetCurrentRegionName() end
 
----@param expansionLevel number 
+---@param expansionLevel number
 ---@return ExpansionDisplayInfo|nil info
 function GetExpansionDisplayInfo(expansionLevel) end
 
----@param playerLevel number 
+---@param playerLevel number
 ---@return number expansionLevel
 function GetExpansionForLevel(playerLevel) end
 
@@ -28,7 +28,7 @@ function GetExpansionLevel() end
 function GetExpansionTrialInfo() end
 
 --- Maps an expansion level to a maximum character level for that expansion.
----@param expansionLevel number 
+---@param expansionLevel number
 ---@return number maxLevel
 function GetMaxLevelForExpansionLevel(expansionLevel) end
 
@@ -59,7 +59,7 @@ function IsTrialAccount() end
 ---@return boolean isVeteranTrialAccount
 function IsVeteranTrialAccount() end
 
----@param response SubscriptionInterstitialResponseType 
+---@param response SubscriptionInterstitialResponseType
 function SendSubscriptionInterstitialResponse(response) end
 
 ---@class SubscriptionInterstitialResponseType
@@ -75,13 +75,13 @@ SubscriptionInterstitialType.LeftNpeArea = 1
 SubscriptionInterstitialType.MaxLevel = 2
 
 ---@class ExpansionDisplayInfo
----@field logo number 
----@field banner string 
----@field features table 
+---@field logo number
+---@field banner string
+---@field features table
 local ExpansionDisplayInfo = {}
 
 ---@class ExpansionDisplayInfoFeature
----@field icon number 
----@field text string 
+---@field icon number
+---@field text string
 local ExpansionDisplayInfoFeature = {}
 

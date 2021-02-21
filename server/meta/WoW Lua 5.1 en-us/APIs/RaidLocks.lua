@@ -1,8 +1,8 @@
 ---@class RaidLocks
 C_RaidLocks = {}
 
----@param mapID number 
----@param encounterID number 
+---@param mapID number
+---@param encounterID number
 ---@param difficultyID number @ [OPTIONAL]
 ---@overload fun(mapID:number, encounterID:number)
 ---@return boolean encounterIsComplete

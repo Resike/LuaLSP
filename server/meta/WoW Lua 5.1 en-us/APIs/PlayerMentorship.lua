@@ -7,7 +7,7 @@ function C_PlayerMentorship.GetMentorLevelRequirement() end
 ---@return number achievementIDs
 function C_PlayerMentorship.GetMentorOptionalAchievementIDs() end
 
----@param playerLocation table 
+---@param playerLocation table
 ---@return PlayerMentorshipStatus status
 function C_PlayerMentorship.GetMentorshipStatus(playerLocation) end
 

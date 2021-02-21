@@ -1,9 +1,9 @@
 --- ColorSelect
---- 
+---
 --- ColorSelect is a very specialized type of frame with a specific purpose; to allow the user to interactively select a color, typically to control the appearance of another UI element. Primarily used to allow the player to control the appearance of chat messages in different channels, they are also used when creating a tabard to control the color scheme.
 --- While the ColorSelect type gives you fairly detailed control over the appearance of the color wheel and value slider, the standard Color picker frame as defined in FrameXML/ColorPickerFrame.xml is preconfigured and usually adequate to your needs. You will usually be most interested in the SetColor methods (to load a color you have stored for a particular element) and the GetColor methods (to retrieve the new color chosen by the user). ColorSelect supports both RGB and HSV color descriptions.
---- 
---- 
+---
+---
 --- @See http://wowprogramming.com/docs/widgets/ColorSelect
 
 ---@class ColorSelect : Frame

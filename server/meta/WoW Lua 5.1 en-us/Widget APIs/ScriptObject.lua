@@ -1,8 +1,8 @@
 --- ScriptObject
---- 
+---
 --- ScriptObject is an abstract UI type that provides support for scripts, such as OnLoad, OnEvent and OnFinished.  Scripts can be set to trigger in response to some widget event, or as a result of user interaction.  The specific scripts that are supported vary wildly from object to object, but all objects support setting, hooking and getting of object scripts.
---- 
---- 
+---
+---
 --- @See http://wowprogramming.com/docs/widgets/ScriptObject
 
 ---@class ScriptObject

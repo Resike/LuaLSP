@@ -1,21 +1,21 @@
 --- Button
---- 
---- Of all the various subtypes of Frame in the user interface system, Buttons are the most visible, since users interact with them frequently during game play.  They are the primary means by which the user controls the game and their characters. 
+---
+--- Of all the various subtypes of Frame in the user interface system, Buttons are the most visible, since users interact with them frequently during game play.  They are the primary means by which the user controls the game and their characters.
 --- Buttons have an intrinsic FontString built-in, so they support both the SetText and the GetText methods.  In addition, a button has three special visual states that can be decorated independently: one when the button is disabled, one when the button has been pushed but not yet released, and one when the mouse is over the button.  The changes to the button's presentation happen automatically based on the button's definition.
 --- The most important aspect of a Button is the fact that it can be clicked by the user.  When a button is clicked the PreClick script handler will fire, followed by the OnClick handler, and finally the PostClick handler.  These allow an addon developer lots of flexibility when creating an addon, especially in the presence of the secure environment and tainting system introduced in WoW 2.0.
 --- To create a button, call CreateFrame with "Button" as the first argument, or construct one in an XML file with a <Button> element. Some handy templates for this include UIPanelButtonTemplate (which provides a standard red button), UIPanelCloseButton (a small red square with a yellow X in it) and SecureHandlerClickTemplate.
 --- The most famous Buttons are probably unit frames, which make use of the SecureActionButtonTemplate (or its derivative, SecureUnitButtonTemplate) to control targeting and sometimes spell-casting. There are many insecure buttons as well (or more accurately, buttons which do not require security), such as the micro buttons on the action bar for opening various panels and menus, or the buttons around the minimap for revealing the calendar or displaying the world map.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Button
 
 ---@class Button : Frame
 Button = {};
 
 
---- Button:SetMotionScriptsWhileDisabled(enabled) 
+--- Button:SetMotionScriptsWhileDisabled(enabled)
 function Button:SetMotionScriptsWhileDisabled(enabled) end
 
---- Button:SetText(text) 
+--- Button:SetText(text)
 function Button:SetText(text) end
 
 --- Returns the FontString object used for the button's label text
@@ -82,7 +82,7 @@ function Button:SetHighlightTexture(texture , mode) end
 --- @return texture
 function  Button:GetPushedTexture() end
 
---- Button:SetEnabled() 
+--- Button:SetEnabled()
 function Button:SetEnabled() end
 
 --- Sets the offset for moving the button's label text when pushed. Moving the button's text while it is being clicked can provide an illusion of 3D depth for the button -- in the default UI's standard button templates, this offset matches the apparent movement seen in the difference between the buttons' normal and pushed textures.

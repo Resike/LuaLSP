@@ -1,15 +1,15 @@
 --- QuestPOIFrame
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/QuestPOIFrame
 
 ---@class QuestPOIFrame : Frame
 QuestPOIFrame = {};
 
 
---- QuestPOIFrame:GetTooltipIndex() 
+--- QuestPOIFrame:GetTooltipIndex()
 function QuestPOIFrame:GetTooltipIndex() end
 
---- QuestPOIFrame:DrawNone() 
+--- QuestPOIFrame:DrawNone()
 function QuestPOIFrame:DrawNone() end
 
 --- Set the Border Scalar
@@ -17,16 +17,16 @@ function QuestPOIFrame:DrawNone() end
 --- Set the glow(size) of the border
 function QuestPOIFrame:SetBorderScalar(Scalar) end
 
---- QuestPOIFrame:SetNumSplinePoints() 
+--- QuestPOIFrame:SetNumSplinePoints()
 function QuestPOIFrame:SetNumSplinePoints() end
 
---- QuestPOIFrame:UpdateMouseOverTooltip() 
+--- QuestPOIFrame:UpdateMouseOverTooltip()
 function QuestPOIFrame:UpdateMouseOverTooltip() end
 
---- QuestPOIFrame:SetMergeThreshold() 
+--- QuestPOIFrame:SetMergeThreshold()
 function QuestPOIFrame:SetMergeThreshold() end
 
---- QuestPOIFrame:GetNumTooltips() 
+--- QuestPOIFrame:GetNumTooltips()
 function QuestPOIFrame:GetNumTooltips() end
 
 --- Sets the border Texture for the Blob
@@ -56,7 +56,7 @@ function QuestPOIFrame:SetBorderAlpha(Alpha) end
 --- Path to a texture image
 function QuestPOIFrame:SetFillTexture(Texture) end
 
---- QuestPOIFrame:EnableMerging() 
+--- QuestPOIFrame:EnableMerging()
 function QuestPOIFrame:EnableMerging() end
 
 --- Enables or disables smoothing of quest blobs

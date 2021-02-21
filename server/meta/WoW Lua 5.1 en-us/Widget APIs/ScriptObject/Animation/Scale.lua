@@ -1,25 +1,25 @@
 --- Scale
---- 
+---
 --- Scale is an Animation type that automatically applies an affine scalar transformation to the region being animated as it progresses. You can set both the multiplier by which it scales, and the point from which it is scaled.
 --- Scale animations are not applied to FontStrings.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Scale
 
 ---@class Scale : Animation
 Scale = {};
 
 
---- Scale:GetToScale() 
+--- Scale:GetToScale()
 function Scale:GetToScale() end
 
---- Scale:SetFromScale() 
+--- Scale:SetFromScale()
 function Scale:SetFromScale() end
 
 --- Returns the scale animation's origin point. During a scale animation, the origin point remains in place while the positions of all other points in the scaled region are moved according to the scale factor.
 --- @return point, xOffset, yOffset
 function  Scale:GetOrigin() end
 
---- Scale:SetToScale() 
+--- Scale:SetToScale()
 function Scale:SetToScale() end
 
 --- Sets the animation's scaling factors. At the end of the scale animation, the animated region's dimensions are equal to its initial dimensions multiplied by its scaling factors.

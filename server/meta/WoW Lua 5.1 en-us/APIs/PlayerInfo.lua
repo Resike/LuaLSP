@@ -10,11 +10,11 @@ function C_PlayerInfo.CanPlayerUseAreaLoot() end
 ---@return boolean, string canUseMountEquipment, failureReason
 function C_PlayerInfo.CanPlayerUseMountEquipment() end
 
----@param unitToken string 
+---@param unitToken string
 ---@return RelativeContentDifficulty difficulty
 function C_PlayerInfo.GetContentDifficultyCreatureForPlayer(unitToken) end
 
----@param questID number 
+---@param questID number
 ---@return RelativeContentDifficulty difficulty
 function C_PlayerInfo.GetContentDifficultyQuestForPlayer(questID) end
 

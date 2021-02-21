@@ -1,5 +1,5 @@
 --- Path
---- 
+---
 --- A Path animation combines multiple transitions into a single control path with multiple ControlPoints.  The offsets of each control point are set relative to the origin of the region, rather than relative to the current position of the animation.  The following example will animate the player's portrait in a box to the bottom-right of it's original position:
 ---  local group = PlayerPortrait:CreateAnimationGroup("PortraitBox")
 ---  local path = group:CreateAnimation("Path")
@@ -18,8 +18,8 @@
 ---  d:SetOffset(0, 0)
 ---  d:SetOrder(4)
 ---  PortraitBox:Play()
---- 
---- 
+---
+---
 --- @See http://wowprogramming.com/docs/widgets/Path
 
 ---@class Path : Animation

@@ -1,10 +1,10 @@
 --- StatusBar
---- 
+---
 --- StatusBars are similar to Sliders, but they are generally used for display as they don't offer any tools to receive user input. You define them with a bar texture and an optional color, and they fill a portion of their area in a given direction with that texture according to their value.
 --- StatusBars can be oriented to fill from left to right (HORIZONTAL) or from bottom to top (VERTICAL). If you need to share the same bar texture between horizontal and vertical bars, they offer support for rotating the texture automatically to match. Presently, the StatusBar object does not support right-to-left or top-to-bottom bars.
 --- StatusBars also offer an OnValueChanged handler to update information associated with the bar, such as updating a FontString that displays the bar's value as a number.
 --- The most famous StatusBars in the stock UI are the bars that show your health and mana, and those of your group members and target.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/StatusBar
 
 ---@class StatusBar : Frame
@@ -40,7 +40,7 @@ function StatusBar:SetRotatesTexture(rotate) end
 --- @return reversed
 function  StatusBar:GetReverseFill() end
 
---- StatusBar:GetStatusBarAtlas() 
+--- StatusBar:GetStatusBarAtlas()
 function StatusBar:GetStatusBarAtlas() end
 
 --- Returns the Texture object used for drawing the filled-in portion of the status bar
@@ -56,7 +56,7 @@ function StatusBar:SetReverseFill(reverse) end
 --- @return rotate
 function  StatusBar:GetRotatesTexture() end
 
---- StatusBar:SetStatusBarAtlas() 
+--- StatusBar:SetStatusBarAtlas()
 function StatusBar:SetStatusBarAtlas() end
 
 --- Sets the color shading for the status bar's texture. As with :SetVertexColor(), this color is a shading applied to the texture image.

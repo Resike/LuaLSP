@@ -1,8 +1,8 @@
 --- Rotation
---- 
+---
 --- Rotation is an Animation that automatically applies an affine rotation to the region being animated. You can set the origin around which the rotation is being done, and the angle of rotation in either degrees or radians.
 --- Rotation animations have no effect on FontStrings.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Rotation
 
 ---@class Rotation : Animation

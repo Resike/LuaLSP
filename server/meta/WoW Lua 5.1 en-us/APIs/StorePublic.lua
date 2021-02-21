@@ -1,7 +1,7 @@
 ---@class StorePublic
 C_StorePublic = {}
 
----@param groupID number 
+---@param groupID number
 ---@return boolean hasPurchaseableProducts
 function C_StorePublic.DoesGroupHavePurchaseableProducts(groupID) end
 

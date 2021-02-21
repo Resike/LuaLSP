@@ -1,7 +1,7 @@
 --- LayeredRegion
---- 
+---
 --- LayeredRegion is an abstract UI type that groups together the functionality of layered graphical regions, specifically Textures and FontStrings.  These objects can be moved from one layer to another, or can be suppressed by turning off the layer on the frame to which they are attached.  These layered regions can also be colorized in the graphics engine using the :SetVertexColor() method.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/LayeredRegion
 
 ---@class LayeredRegion : VisibleRegion

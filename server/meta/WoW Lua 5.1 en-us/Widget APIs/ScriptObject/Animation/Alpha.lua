@@ -1,7 +1,7 @@
 --- Alpha
---- 
+---
 --- Alpha is a type of animation that automatically changes the transparency level of its attached region as it progresses. You can set the degree by which it will change the alpha as a fraction; for instance, a change of -1 will fade out a region completely.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Alpha
 
 ---@class Alpha : Animation
@@ -13,7 +13,7 @@ Alpha = {};
 --- Amount by which the region's alpha value should change over the animation's duration (between -1 and 1)
 function Alpha:SetChange(change) end
 
---- Alpha:GetToAlpha() 
+--- Alpha:GetToAlpha()
 function Alpha:GetToAlpha() end
 
 --- Alpha:SetToAlpha()
@@ -24,5 +24,5 @@ function Alpha:SetToAlpha(alphaTo) end
 ---@param alphaFrom number
 function Alpha:SetFromAlpha(alphaFrom) end
 
---- Alpha:GetFromAlpha() 
+--- Alpha:GetFromAlpha()
 function Alpha:GetFromAlpha() end

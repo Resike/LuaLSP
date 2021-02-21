@@ -1,7 +1,7 @@
 --- ControlPoint
---- 
+---
 --- A ControlPoint is a special type of UIObject that represent a point in a Path Animation.  The offset for each control point is from the origin of the animated Region.  See Path for more details.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/ControlPoint
 
 ---@class ControlPoint : ParentedObject

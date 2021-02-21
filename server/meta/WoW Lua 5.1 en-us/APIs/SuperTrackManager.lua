@@ -19,9 +19,9 @@ function C_SuperTrack.IsSuperTrackingQuest() end
 ---@return boolean isSuperTracking
 function C_SuperTrack.IsSuperTrackingUserWaypoint() end
 
----@param questID number 
+---@param questID number
 function C_SuperTrack.SetSuperTrackedQuestID(questID) end
 
----@param superTracked boolean 
+---@param superTracked boolean
 function C_SuperTrack.SetSuperTrackedUserWaypoint(superTracked) end
 

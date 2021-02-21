@@ -9,8 +9,8 @@ function C_Cursor.GetCursorCommunitiesStream() end
 ---@return table item
 function C_Cursor.GetCursorItem() end
 
----@param clubId string 
----@param streamId string 
+---@param clubId string
+---@param streamId string
 function C_Cursor.SetCursorCommunitiesStream(clubId, streamId) end
 
 ---@class UICursorType

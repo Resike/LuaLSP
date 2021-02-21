@@ -1,9 +1,9 @@
 --- GameTooltip
---- 
+---
 --- GameTooltips are used to display explanatory information relevant to a particular element of the game world. They offer almost innumerable methods for setting the specific object, creature or ability the tooltip should describe, and a smaller number of methods for querying what it is that the tooltip is currently describing.
 --- GameTooltips are sufficiently complicated that an entire chapter is dedicated to describing them. In addition to methods for setting their contents, they also support options controlling their positioning and visibility on screen, as well as methods to facilitate adding more text to them (for instance, an addon that displays, in the tooltip for a soul shard created by a warlock, the name of the player or monster from which the shard was collected).
 --- While most of the heavy lifting is done by the frame called simply GameTooltip, there is also one called ItemRefTooltip that does the work of displaying information about items linked in chat when they are clicked.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/GameTooltip
 
 ---@class GameTooltip : Frame
@@ -56,10 +56,10 @@ bLeft, rRight, gRight, bRight)
 end
 
 
---- GameTooltip:AdvanceSecondaryCompareItem() 
+--- GameTooltip:AdvanceSecondaryCompareItem()
 function GameTooltip:AdvanceSecondaryCompareItem() end
 
---- GameTooltip:AddSpellByID() 
+--- GameTooltip:AddSpellByID()
 function GameTooltip:AddSpellByID() end
 
 --- Adds a texture to the last tooltip line. The texture is sized to match the height of the line's text and positioned to the left of the text (indenting the text to provide room).
@@ -119,7 +119,7 @@ function GameTooltip:SetMissingLootItem() end
 --- @return name, unit
 function  GameTooltip:GetUnit() end
 
---- GameTooltip:ResetSecondaryCompareItem() 
+--- GameTooltip:ResetSecondaryCompareItem()
 function GameTooltip:ResetSecondaryCompareItem() end
 
 --- Returns the name and hyperlink for the item displayed in the tooltip
@@ -143,10 +143,10 @@ function  GameTooltip:GetAnchorType() end
 --- Vertical distance from the anchor to the tooltip
 function GameTooltip:SetAnchorType(anchor , xOffset , yOffset) end
 
---- GameTooltip:SetCurrencyTokenByID() 
+--- GameTooltip:SetCurrencyTokenByID()
 function GameTooltip:SetCurrencyTokenByID() end
 
---- GameTooltip:SetAchievementByID() 
+--- GameTooltip:SetAchievementByID()
 function GameTooltip:SetAchievementByID() end
 
 --- Fills the tooltip with information about an equipment set
@@ -184,7 +184,7 @@ function  GameTooltip:IsUnit(unit) end
 --- A currencyID. All currently known currencyIDs can be found at http://www.wowhead.com/currencies
 function GameTooltip:SetCurrencyByID(currencyID) end
 
---- GameTooltip:SetCompareItem() 
+--- GameTooltip:SetCompareItem()
 function GameTooltip:SetCompareItem() end
 
 --- Fills the tooltip with information about an item in the auction house
@@ -206,13 +206,13 @@ function GameTooltip:SetGuildBankItem(tab, slot) end
 --- Index of a currency type in the currency list (between 1 and GetCurrencyListSize())
 function GameTooltip:SetCurrencyToken(index) end
 
---- GameTooltip:SetLootCurrency() 
+--- GameTooltip:SetLootCurrency()
 function GameTooltip:SetLootCurrency() end
 
---- GameTooltip:SetLFGCompletionReward() 
+--- GameTooltip:SetLFGCompletionReward()
 function GameTooltip:SetLFGCompletionReward() end
 
---- GameTooltip:SetInventoryItemByID() 
+--- GameTooltip:SetInventoryItemByID()
 function GameTooltip:SetInventoryItemByID() end
 
 --- Sets the minimum width of the tooltip. Normally, a tooltip is automatically sized to match the width of its shortest line of text; setting a minimum width can be useful if the tooltip also contains non-text frames (such as an amount of money or a status bar).The tooltip is not automatically resized to the new width; to do so, call the tooltip's :Show() method.
@@ -223,10 +223,10 @@ function GameTooltip:SetMinimumWidth(width) end
 ---GameTooltip:SetTradePlayerItem(index)
 function GameTooltip:SetTradePlayerItem(index) end
 
---- GameTooltip:SetLFGDungeonReward() 
+--- GameTooltip:SetLFGDungeonReward()
 function GameTooltip:SetLFGDungeonReward() end
 
---- GameTooltip:SetMountBySpellID() 
+--- GameTooltip:SetMountBySpellID()
 function GameTooltip:SetMountBySpellID() end
 
 ---GameTooltip:SetUnitDebuff(unit, index , filter)
@@ -235,10 +235,10 @@ function GameTooltip:SetUnitDebuff(unit, index , filter) end
 ---GameTooltip:SetVoidDepositItem()
 function GameTooltip:SetVoidDepositItem() end
 
---- GameTooltip:SetLFGDungeonShortageReward() 
+--- GameTooltip:SetLFGDungeonShortageReward()
 function GameTooltip:SetLFGDungeonShortageReward() end
 
---- GameTooltip:SetQuestCurrency() 
+--- GameTooltip:SetQuestCurrency()
 function GameTooltip:SetQuestCurrency() end
 
 --- Fills the tooltip with information about an item available for purchase from a vendor
@@ -316,7 +316,7 @@ function GameTooltip:SetSocketedItem() end
 --- Index of a quest log entry with an associated usable item (between 1 and GetNumQuestLogEntries())
 function GameTooltip:SetQuestLogSpecialItem(questIndex) end
 
---- GameTooltip:SetSpellBookItem() 
+--- GameTooltip:SetSpellBookItem()
 function GameTooltip:SetSpellBookItem() end
 
 --- Fills the tooltip with information about an item created by a trade skill recipe or a reagent in the recipe
@@ -331,7 +331,7 @@ function GameTooltip:SetTradeSkillItem(skillIndex , reagentIndex) end
 --- Which totem to query (number) 1 - Fire (or Death Knight's ghoul)2 - Earth3 - Water4
 function GameTooltip:SetTotem(slot) end
 
---- GameTooltip:SetQuestLogCurrency() 
+--- GameTooltip:SetQuestLogCurrency()
 function GameTooltip:SetQuestLogCurrency() end
 
 --- Fills the tooltip with information about an item related to the selected quest in the quest log
@@ -346,10 +346,10 @@ function GameTooltip:SetQuestLogItem(itemType, index) end
 --- Numeric ID of a spell (number,
 function GameTooltip:SetSpellByID(id) end
 
---- GameTooltip:SetVoidWithdrawalItem() 
+--- GameTooltip:SetVoidWithdrawalItem()
 function GameTooltip:SetVoidWithdrawalItem() end
 
---- GameTooltip:SetToyByItemID() 
+--- GameTooltip:SetToyByItemID()
 function GameTooltip:SetToyByItemID() end
 
 --- Fills the tooltip with information about a trainer service
@@ -375,7 +375,7 @@ function GameTooltip:SetText(text , r , g , b , a) end
 --- A unit to query (string,
 function GameTooltip:SetUnit(unit) end
 
---- GameTooltip:SetTransmogrifyItem() 
+--- GameTooltip:SetTransmogrifyItem()
 function GameTooltip:SetTransmogrifyItem() end
 
 --- Fills the tooltip with information about a gem added to a socket
@@ -383,7 +383,7 @@ function GameTooltip:SetTransmogrifyItem() end
 --- Index of a gem socket (between 1 and GetNumSockets())
 function GameTooltip:SetSocketGem(index) end
 
---- GameTooltip:SetUpgradeItem() 
+--- GameTooltip:SetUpgradeItem()
 function GameTooltip:SetUpgradeItem() end
 
 --- Fills the tooltip with information about a buff or debuff on a unit
@@ -425,10 +425,10 @@ function GameTooltip:FadeOut() end
 --- Which set of talents to edit, if the player has Dual Talent Specialization enabled (number) 1 - Primary Talents2 - Secondary Talentsnil - Currently
 function GameTooltip:SetTalent(tabIndex, talentIndex, inspect, pet, talentGroup) end
 
---- GameTooltip:SetUnitConsolidatedBuff() 
+--- GameTooltip:SetUnitConsolidatedBuff()
 function GameTooltip:SetUnitConsolidatedBuff() end
 
---- GameTooltip:SetVoidItem() 
+--- GameTooltip:SetVoidItem()
 function GameTooltip:SetVoidItem() end
 
 --- Adds text to the first line of the tooltip

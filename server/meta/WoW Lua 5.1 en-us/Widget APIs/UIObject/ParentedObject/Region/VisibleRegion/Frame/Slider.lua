@@ -1,10 +1,10 @@
 --- Slider
---- 
+---
 --- Sliders are elements intended to display or allow the user to choose a value in a range. They are often used for configuration, to choose scale, camera distance, and similar settings.
 --- Like Buttons, Sliders can be enabled or disabled, but unlike Buttons, they include no support for automatically changing appearance when this is done. You can set both their minimum and maximum values (one function returns or accepts both), and the step by which dragging changes their value. Sliders can be oriented either horizontally or vertically.
 --- While you do not have to provide any code to manage the dragging of a slider's "thumb", you do have to provide a texture that will represent it, which the engine will position and draw automatically. In XML, you do this by providing a <ThumbTexture> element as a direct child of the <Slider> element, which can have any of the attributes or children allowed to any <Texture> element.
 --- Sliders come in two common forms: thin tracks with a wide thumb, used for setting scalar options, or scroll bars used for positioning the contents of a frame.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Slider
 
 ---@class Slider : Frame
@@ -14,7 +14,7 @@ Slider = {};
 --- Allows user interaction with the slider
 function Slider:Enable() end
 
---- Slider:SetEnabled() 
+--- Slider:SetEnabled()
 function Slider:SetEnabled() end
 
 --- Returns the minimum increment between allowed slider values
@@ -38,7 +38,7 @@ function Slider:SetOrientation(orientation) end
 --- Upper boundary for values represented by the slider position
 function Slider:SetMinMaxValues(minValue, maxValue) end
 
---- Slider:SetStepsPerPage() 
+--- Slider:SetStepsPerPage()
 function Slider:SetStepsPerPage() end
 
 --- Sets the value representing the position of the slider thumb
@@ -46,14 +46,14 @@ function Slider:SetStepsPerPage() end
 --- Value representing the new position of the slider thumb (between minValue and maxValue, where minValue, maxValue = slider:GetMinMaxValues())
 function Slider:SetValue(value) end
 
---- Slider:GetObeyStepOnDrag() 
+--- Slider:GetObeyStepOnDrag()
 function Slider:GetObeyStepOnDrag() end
 
 --- Returns the value representing the current position of the slider thumb
 --- @return value
 function  Slider:GetValue() end
 
---- Slider:SetObeyStepOnDrag() 
+--- Slider:SetObeyStepOnDrag()
 function Slider:SetObeyStepOnDrag() end
 
 --- Returns the orientation of the slider
@@ -77,7 +77,7 @@ function Slider:SetThumbTexture(texture , layer) end
 --- @return enabled
 function  Slider:IsEnabled() end
 
---- Slider:GetStepsPerPage() 
+--- Slider:GetStepsPerPage()
 function Slider:GetStepsPerPage() end
 
 --- Returns the minimum and maximum values for the slider

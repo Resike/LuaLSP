@@ -1,8 +1,8 @@
 --- TabardModel
---- 
+---
 --- TabardModel is a frame type provided specifically for designing or modifying guild tabards. It provides functions for displaying a character in a sample tabard and cycling through different trim textures, emblems, and color schemes, as well as saving the selected look as your guild's current tabard (this requires that your character have appropriate guild privileges to do so).
 --- Because the stock UI already includes a fairly comprehensive tabard interface using one of these frames, it's fairly unlikely that you'll need to create one of your own.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/TabardModel
 
 ---@class TabardModel : PlayerModel

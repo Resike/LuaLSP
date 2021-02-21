@@ -1,10 +1,10 @@
 --- Animation
---- 
+---
 --- Animations are used to change presentations or other characteristics of a frame or other region over time. The Animation object will take over the work of calling code over time, or when it is done, and tracks how close the animation is to completion.
 --- The Animation type doesn't create any visual effects by itself, but it does provide an OnUpdate handler that you can use to support specialized time-sensitive behaviors that aren't provided by the transformations descended from Animations. In addition to tracking the passage of time through an elapsed argument, you can query the animation's progress as a 0-1 fraction to determine how you should set your behavior.
 --- You can also change how the elapsed time corresponds to the progress by changing the smoothing, which creates acceleration or deceleration, or by adding a delay to the beginning or end of the animation.
 --- You can also use an Animation as a timer, by setting the Animation's OnFinished script to trigger a callback and setting the duration to the desired time.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Animation
 
 ---@class Animation : ScriptObject
@@ -27,7 +27,7 @@ function  Animation:GetEndDelay() end
 --- @return stopped
 function  Animation:IsStopped() end
 
---- Animation:IsForbidden() 
+--- Animation:IsForbidden()
 function Animation:IsForbidden() end
 
 --- Returns whether the animation is currently playing
@@ -46,7 +46,7 @@ function  Animation:IsDone() end
 --- @return order
 function  Animation:GetOrder() end
 
---- Animation:SetSmoothProgress() 
+--- Animation:SetSmoothProgress()
 function Animation:SetSmoothProgress() end
 
 --- Returns the smoothing type for the animation. This setting affects the rate of change in the animation's progress value as it plays.
@@ -58,7 +58,7 @@ function  Animation:GetSmoothing() end
 function  Animation:GetProgress() end
 
 --- Sets the animation to manipulate a particular child member of its host frame. Specifies the key value of a member of the AnimationGroup parent frame that will be manipulated when this animation plays. It is the Lua equivalent of the XML childKey attribute.
---- @param key 
+--- @param key
 --- valid table key of the member of the AnimationGroup's parent object on which this animation will be applied.
 function Animation:SetChildKey(key) end
 
@@ -67,7 +67,7 @@ function Animation:SetChildKey(key) end
 function  Animation:GetRegionParent() end
 
 --- Sets the animation to manipulate a particular child member of its target. Specifies the key value of a member of the animation's target on which the animation will act. It is the Lua equivalent of the targetKey attribute use in animation elements.
---- @param key 
+--- @param key
 --- valid table key of the target member on which this animation will be applied.
 function Animation:SetTargetKey(key) end
 

@@ -1,7 +1,7 @@
 --- VisibleRegion
---- 
+---
 --- VisibleRegion is an abstract UI type used to describe the common functionality of objects that can be placed on the screen, and visible.  In particular, methods exist to show and hide the frame, and change the alpha transparency.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/VisibleRegion
 
 ---@class VisibleRegion : Region

@@ -13,6 +13,12 @@ local guide    = require 'parser.guide'
 local smerger  = require 'string-merger'
 local progress = require "progress"
 
+local unicode
+
+if platform.OS == 'Windows' then
+    unicode  = require 'bee.unicode'
+end
+
 local m = {}
 
 m.openMap        = {}
@@ -152,6 +158,11 @@ function m.setText(uri, text, isTrust)
     local file = m.fileMap[uri]
     if file.trusted and not isTrust then
         return
+    end
+    if not isTrust and unicode then
+        if config.config.runtime.fileEncoding == 'ansi' then
+            text = unicode.a2u(text)
+        end
     end
     if file.originText == text then
         return

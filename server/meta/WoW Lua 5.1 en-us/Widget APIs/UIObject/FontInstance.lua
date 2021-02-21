@@ -1,7 +1,7 @@
 --- FontInstance
---- 
+---
 --- FontInstance is an abstract UI type that groups together the functionality of text-based frames, such as Buttons, MessageFrames, EditBoxes, SimpleHTML frames, and abstract Font objects.  Methods are provided for setting text color and changing other aspects of font display like typeface, size, justification, shadow and spacing.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/FontInstance
 
 ---@class FontInstance : UIObject

@@ -1,7 +1,7 @@
 --- MovieFrame
---- 
+---
 --- MovieFrame is one of the least well-known frame subtypes. To date, it has been used in only one well-known mod, which was an April Fools' Day joke, HighRoller. If you're curious what this mod did, it's still available for download; read the description or try and run it (but keep in mind it's a prank.) It runs the contents of an .avi file, for there are some fairly stringent requirements on the file format supplied.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/MovieFrame
 
 ---@class MovieFrame : Frame

@@ -1,9 +1,9 @@
 --- AnimationGroup
---- 
+---
 --- An AnimationGroup is how various animations are actually applied to a region; this is how different behaviors can be run in sequence or in parallel with each other, automatically. When you pause an AnimationGroup, it tracks which of its child animations were playing and how far advanced they were, and resumes them from that point.
 --- An Animation in a group has an order from 1 to 100, which determines when it plays; once all animations with order 1 have completed, including any delays, the AnimationGroup starts all animations with order 2.
 --- An AnimationGroup can also be set to loop, either repeating from the beginning or playing backward back to the beginning. An AnimationGroup has an OnLoop handler that allows you to call your own code back whenever a loop completes. The :Finish() method stops the animation after the current loop has completed, rather than immediately.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/AnimationGroup
 
 ---@class AnimationGroup : ScriptObject
@@ -14,7 +14,7 @@ AnimationGroup = {};
 --- @return duration
 function  AnimationGroup:GetDuration() end
 
---- AnimationGroup:GetIgnoreFramerateThrottle() 
+--- AnimationGroup:GetIgnoreFramerateThrottle()
 function AnimationGroup:GetIgnoreFramerateThrottle() end
 
 --- Returns the current loop state of the group
@@ -25,14 +25,14 @@ function  AnimationGroup:GetLoopState() end
 --- @return paused
 function  AnimationGroup:IsPaused() end
 
---- AnimationGroup:SetToFinalAlpha() 
+--- AnimationGroup:SetToFinalAlpha()
 function AnimationGroup:SetToFinalAlpha() end
 
 --- Returns whether or not the animation group is pending finish
 --- @return isPending
 function  AnimationGroup:IsPendingFinish() end
 
---- AnimationGroup:IsForbidden() 
+--- AnimationGroup:IsForbidden()
 function AnimationGroup:IsForbidden() end
 
 --- Returns the current state of the animation group's progress
@@ -57,7 +57,7 @@ function  AnimationGroup:GetMaxOrder() end
 --- Pauses animation of the group. Unlike with AnimationGroup:Stop(), the animation is paused at its current progress state (e.g. in a fade-out-fade-in animation, the element will be at partial opacity) instead of reset to the initial state; animation can be resumed with AnimationGroup:Play().
 function AnimationGroup:Pause() end
 
---- AnimationGroup:IsSetToFinalAlpha() 
+--- AnimationGroup:IsSetToFinalAlpha()
 function AnimationGroup:IsSetToFinalAlpha() end
 
 --- Starts animating the group. If the group has been paused, animation resumes from the paused state; otherwise animation begins at the initial state.
@@ -71,7 +71,7 @@ function  AnimationGroup:GetAnimations() end
 --- @return playing
 function  AnimationGroup:IsPlaying() end
 
---- AnimationGroup:SetIgnoreFramerateThrottle() 
+--- AnimationGroup:SetIgnoreFramerateThrottle()
 function AnimationGroup:SetIgnoreFramerateThrottle() end
 
 --- Sets the looping behavior of the group

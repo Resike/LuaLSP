@@ -1,46 +1,46 @@
 --- Browser
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Browser
 
 ---@class Browser : Frame
 Browser = {};
 
 
---- Browser:DeleteCookies() 
+--- Browser:DeleteCookies()
 function Browser:DeleteCookies() end
 
---- Browser:OpenTicket() 
+--- Browser:OpenTicket()
 function Browser:OpenTicket() end
 
---- Browser:CopyExternalLink() 
+--- Browser:CopyExternalLink()
 function Browser:CopyExternalLink() end
 
---- Browser:NavigateHome() 
+--- Browser:NavigateHome()
 function Browser:NavigateHome() end
 
---- Browser:NavigateReload() 
+--- Browser:NavigateReload()
 function Browser:NavigateReload() end
 
---- Browser:SetFocus() 
+--- Browser:SetFocus()
 function Browser:SetFocus() end
 
---- Browser:NavigateForward() 
+--- Browser:NavigateForward()
 function Browser:NavigateForward() end
 
---- Browser:OpenExternalLink() 
+--- Browser:OpenExternalLink()
 function Browser:OpenExternalLink() end
 
---- Browser:NavigateStop() 
+--- Browser:NavigateStop()
 function Browser:NavigateStop() end
 
---- Browser:SetZoom() 
+--- Browser:SetZoom()
 function Browser:SetZoom() end
 
---- Browser:ClearFocus() 
+--- Browser:ClearFocus()
 function Browser:ClearFocus() end
 
---- Browser:NavigateBack() 
+--- Browser:NavigateBack()
 function Browser:NavigateBack() end
 
---- Browser:HasConnection() 
+--- Browser:HasConnection()
 function Browser:HasConnection() end

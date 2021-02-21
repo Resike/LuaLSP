@@ -1,23 +1,23 @@
 --- EditBox
---- 
+---
 --- EditBoxes are used to allow the player to type text into a UI component. They inherit from FontInstance as well as Frame in order to provide the needed support for text display, and add methods for entering text, such as positioning a cursor within text, establishing character limits, controlling whether text should be displayed in password-fashion (with bullets substituted for the characters), manipulating an entry history, or controlling and responding to changes in keyboard focus.
 --- The most common use for an EditBox is to accept chat input from the player, but they are also used for commands, configuration, and confirmation, such as requiring you to type "DELETE" before destroying a valuable item, or entering the name of a new macro.
 --- Most EditBoxes are derived from ChatFrameEditBoxTemplate, or use the same textures to create a visible frame around the editable area.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/EditBox
 
 ---@class EditBox : Frame
 EditBox = {};
 
 
---- EditBox:ClearHistory() 
+--- EditBox:ClearHistory()
 function EditBox:ClearHistory() end
 
 --- Returns the rate at which the text insertion blinks when the edit box is focused
 --- @return duration
 function  EditBox:GetBlinkSpeed() end
 
---- EditBox:Enable() 
+--- EditBox:Enable()
 function EditBox:Enable() end
 
 ---EditBox:SetBlinkSpeed(duration)
@@ -47,14 +47,14 @@ function  EditBox:IsAutoFocus() end
 ---EditBox:SetMaxLetters(maxLetters)
 function EditBox:SetMaxLetters(maxLetters) end
 
---- EditBox:IsEnabled() 
+--- EditBox:IsEnabled()
 function EditBox:IsEnabled() end
 
 --- Returns whether long lines of text are indented when wrapping
 --- @return indent
 function  EditBox:GetIndentedWordWrap() end
 
---- EditBox:IsCountInvisibleLetters() 
+--- EditBox:IsCountInvisibleLetters()
 function EditBox:IsCountInvisibleLetters() end
 
 --- Returns whether or not the editbox's OnHyperlink* scripts will fire or not. If set to true, the OnHyperlinkEnter, OnHyperlinkLeave, and OnHyperlinkClick scripts for the editbox will fire at the appropriate times. Otherwise, these scripts will never fire. Behavior defaults to false.
@@ -83,7 +83,7 @@ function EditBox:HighlightText(start ,endValue) end
 --- @return enabled
 function  EditBox:IsInIMECompositionMode() end
 
---- EditBox:Disable() 
+--- EditBox:Disable()
 function EditBox:Disable() end
 
 --- Returns the currently selected keyboard input language (character set / input method). Applies to keyboard input methods, not in-game languages or client locales.
@@ -98,7 +98,7 @@ function  EditBox:GetText() end
 --- @return multiLine
 function  EditBox:IsMultiLine() end
 
---- EditBox:SetCountInvisibleLetters() 
+--- EditBox:SetCountInvisibleLetters()
 function EditBox:SetCountInvisibleLetters() end
 
 --- Returns the number of text characters in the edit box
@@ -153,7 +153,7 @@ function EditBox:SetPassword(enable) end
 --- Text to be placed in the edit box
 function EditBox:SetText(text) end
 
---- EditBox:SetEnabled() 
+--- EditBox:SetEnabled()
 function EditBox:SetEnabled() end
 
 --- Sets whether long lines of text are indented when wrapping

@@ -1,40 +1,40 @@
 --- ScenarioPOIFrame
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/ScenarioPOIFrame
 
 ---@class ScenarioPOIFrame : Frame
 ScenarioPOIFrame = {};
 
 
---- ScenarioPOIFrame:EnableMerging() 
+--- ScenarioPOIFrame:EnableMerging()
 function ScenarioPOIFrame:EnableMerging() end
 
---- ScenarioPOIFrame:SetBorderScalar() 
+--- ScenarioPOIFrame:SetBorderScalar()
 function ScenarioPOIFrame:SetBorderScalar() end
 
---- ScenarioPOIFrame:EnableSmoothing() 
+--- ScenarioPOIFrame:EnableSmoothing()
 function ScenarioPOIFrame:EnableSmoothing() end
 
---- ScenarioPOIFrame:SetFillTexture() 
+--- ScenarioPOIFrame:SetFillTexture()
 function ScenarioPOIFrame:SetFillTexture() end
 
---- ScenarioPOIFrame:SetMergeThreshold() 
+--- ScenarioPOIFrame:SetMergeThreshold()
 function ScenarioPOIFrame:SetMergeThreshold() end
 
---- ScenarioPOIFrame:SetBorderTexture() 
+--- ScenarioPOIFrame:SetBorderTexture()
 function ScenarioPOIFrame:SetBorderTexture() end
 
---- ScenarioPOIFrame:DrawBlob() 
+--- ScenarioPOIFrame:DrawBlob()
 function ScenarioPOIFrame:DrawBlob() end
 
---- ScenarioPOIFrame:SetNumSplinePoints() 
+--- ScenarioPOIFrame:SetNumSplinePoints()
 function ScenarioPOIFrame:SetNumSplinePoints() end
 
---- ScenarioPOIFrame:SetFillAlpha() 
+--- ScenarioPOIFrame:SetFillAlpha()
 function ScenarioPOIFrame:SetFillAlpha() end
 
---- ScenarioPOIFrame:SetBorderAlpha() 
+--- ScenarioPOIFrame:SetBorderAlpha()
 function ScenarioPOIFrame:SetBorderAlpha() end
 
---- ScenarioPOIFrame:DrawNone() 
+--- ScenarioPOIFrame:DrawNone()
 function ScenarioPOIFrame:DrawNone() end

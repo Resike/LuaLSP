@@ -107,7 +107,7 @@ function loadstring(text, chunkname) end
 ---
 ---Allows a program to traverse all fields of a table. Its first argument is a table and its second argument is an index in this table. A call to `next` returns the next index of the table and its associated value. When called with `nil` as its second argument, `next` returns an initial index and its associated value. When called with the last index, or with `nil` in an empty table, `next` returns `nil`. If the second argument is absent, then it is interpreted as `nil`. In particular, you can use `next(t)` to check whether a table is empty.
 ---
----The order in which the indices are enumerated is not specified, *even for numeric indices*. (To traverse a table in numerical order, use a numerical `for`.)
+---The order in which the indices are enumerated is not specified, *even for numeric indices*. (To traverse a table in numerical order, use a numerical `for`).
 ---
 ---The behavior of `next` is undefined if, during the traversal, you assign any value to a non-existent field in the table. You may however modify existing fields. In particular, you may set existing fields to nil.
 ---
@@ -153,8 +153,8 @@ end
 function pcall(f, arg1, ...) end
 
 ---
----Receives any number of arguments and prints their values to `stdout`, converting each argument to a string following the same rules of [tostring.](http://www.lua.org/manual/5.1/manual.html#pdf-tostring.)
----The function print is not intended for formatted output, but only as a quick way to show a value, for instance for debugging. For complete control over the output, use [string.format](http://www.lua.org/manual/5.1/manual.html#pdf-string.format) and [io.write.](http://www.lua.org/manual/5.1/manual.html#pdf-io.write.)
+---Receives any number of arguments and prints their values to `stdout`, converting each argument to a string following the same rules of [tostring](http://www.lua.org/manual/5.1/manual.html#pdf-tostring).
+---The function print is not intended for formatted output, but only as a quick way to show a value, for instance for debugging. For complete control over the output, use [string.format](http://www.lua.org/manual/5.1/manual.html#pdf-string.format) and [io.write](http://www.lua.org/manual/5.1/manual.html#pdf-io.write).
 ---
 ---[View documents](http://www.lua.org/manual/5.1/manual.html#pdf-print)
 ---
@@ -216,7 +216,7 @@ function setfenv(f, table) end
 ---
 ---This function returns `table`.
 ---
----To change the metatable of other types from Lua code, you must use the debug library ([§6.10](http://www.lua.org/manual/5.1/manual.html#6.10)).
+---To change the metatable of other types from Lua code, you must use the debug library ([§6.10](http://www.lua.org/manual/5.1/manual.html#6.10))
 ---
 ---[View documents](http://www.lua.org/manual/5.1/manual.html#pdf-setmetatable)
 ---
@@ -242,7 +242,7 @@ function tonumber(e, base) end
 ---
 ---If the metatable of `v` has a `__tostring` field, then `tostring` calls the corresponding value with `v` as argument, and uses the result of the call as its result. Otherwise, if the metatable of `v` has a `__name` field with a string value, `tostring` may use that string in its final result.
 ---
----For complete control of how numbers are converted, use [string.format.](http://www.lua.org/manual/5.1/manual.html#pdf-string.format.)
+---For complete control of how numbers are converted, use [string.format](http://www.lua.org/manual/5.1/manual.html#pdf-string.format).
 ---
 ---[View documents](http://www.lua.org/manual/5.1/manual.html#pdf-tostring)
 ---

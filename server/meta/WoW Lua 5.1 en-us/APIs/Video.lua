@@ -5,8 +5,8 @@ C_VideoOptions = {}
 function C_VideoOptions.GetGxAdapterInfo() end
 
 ---@class GxAdapterInfoDetails
----@field name string 
----@field isLowPower bool 
----@field isExternal bool 
+---@field name string
+---@field isLowPower bool
+---@field isExternal bool
 local GxAdapterInfoDetails = {}
 

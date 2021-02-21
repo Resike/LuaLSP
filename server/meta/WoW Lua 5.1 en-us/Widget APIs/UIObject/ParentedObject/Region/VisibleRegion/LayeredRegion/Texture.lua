@@ -1,21 +1,21 @@
 --- Texture
---- 
+---
 --- Textures are visible areas descended from LayeredRegion, that display either a color block, a gradient, or a graphic raster taken from a .tga or .blp file.  Most of their methods relate to setting their appearance or their source information.
 --- Textures are created as children of Frame elements in XML, or by calling Frame:CreateTexture() from Lua. They cannot be reassigned from one frame to another, although you can create another texture on another frame that has the same source. They can also be created in XML with the virtual tag, allowing several similar textures to be created easily.
 --- The WoW client only loads those files that existed when the client was first opened.  If you add texture files to your addon's directory, you will need to restart your client in order for those textures to be loadable by the client.  Changes to existing files do not have this same restriction.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Texture
 
 ---@class Texture : LayeredRegion
 Texture = {};
 
 
---- Texture:GetHorizTile() 
+--- Texture:GetHorizTile()
 function Texture:GetHorizTile() end
 
 --- Rotates the texture image. This is an efficient shorthand for the more complex Texture:SetTexCoord().
 --- @param radians number
---- Amount by which the texture image should be rotated (in radians; positive values for counter-clockwise rotation, negative for clockwise) 
+--- Amount by which the texture image should be rotated (in radians; positive values for counter-clockwise rotation, negative for clockwise)
 function Texture:SetRotation(radians) end
 
 --- Sets whether the texture object loads its image file in the background. Texture loading is normally synchronous, so that UI objects are not shown partially textured while loading; however, non-blocking (asynchronous) texture loading may be desirable in some cases where large numbers of textures need to be loaded in a short time. This feature is used in the default UI's icon chooser window for macros and equipment sets, allowing a large number of icon textures to be loaded without causing the game's frame rate to stagger.
@@ -33,7 +33,7 @@ function Texture:SetMask(maskName) end
 --- @return nonBlocking
 function  Texture:GetNonBlocking() end
 
---- Texture:SetShown() 
+--- Texture:SetShown()
 function Texture:SetShown() end
 
 --- Returns the blend mode of the texture
@@ -59,7 +59,7 @@ function  Texture:SetTexture(texture) end
 --- Unique atlas name.
 function Texture:SetAtlas(name) end
 
---- Texture:SetVertTile() 
+--- Texture:SetVertTile()
 function Texture:SetVertTile() end
 
 --- Sets corner coordinates for scaling or cropping the texture image. See example for details.
@@ -90,7 +90,7 @@ function Texture:SetVertTile() end
 ---@overload fun(ULx number, ULy number, LLx number, LLy number, URx number, URy number, LRx number, LRy number)
 function Texture:SetTexCoord(left, right, top, bottom) end
 
---- Texture:SetHorizTile() 
+--- Texture:SetHorizTile()
 function Texture:SetHorizTile() end
 
 --- Sets a gradient color shading for the texture (including opacity in the gradient). Gradient color shading does not change the underlying color of the texture image, but acts as a filter: see LayeredRegion:SetVertexColor() for details.
@@ -143,7 +143,7 @@ function  Texture:IsDesaturated() end
 --- @return texture
 function  Texture:GetTexture() end
 
---- Texture:GetVertTile() 
+--- Texture:GetVertTile()
 function Texture:GetVertTile() end
 
 --- Returns corner coordinates for scaling or cropping the texture image. See Texture:SetTexCoord() example for details.

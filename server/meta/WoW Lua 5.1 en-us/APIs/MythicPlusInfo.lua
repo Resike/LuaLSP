@@ -16,24 +16,24 @@ function C_MythicPlus.GetOwnedKeystoneChallengeMapID() end
 ---@return number keyStoneLevel
 function C_MythicPlus.GetOwnedKeystoneLevel() end
 
----@param difficultyLevel number 
+---@param difficultyLevel number
 ---@return number, number weeklyRewardLevel, endOfRunRewardLevel
 function C_MythicPlus.GetRewardLevelForDifficultyLevel(difficultyLevel) end
 
----@param keystoneLevel number 
+---@param keystoneLevel number
 ---@return number|nil rewardLevel
 function C_MythicPlus.GetRewardLevelFromKeystoneLevel(keystoneLevel) end
 
----@param includePreviousWeeks boolean 
----@param includeIncompleteRuns boolean 
+---@param includePreviousWeeks boolean
+---@param includeIncompleteRuns boolean
 ---@return MythicPlusRunInfo runs
 function C_MythicPlus.GetRunHistory(includePreviousWeeks, includeIncompleteRuns) end
 
----@param mapChallengeModeID number 
+---@param mapChallengeModeID number
 ---@return MapSeasonBestInfo|nil, MapSeasonBestInfo|nil intimeInfo, overtimeInfo
 function C_MythicPlus.GetSeasonBestForMap(mapChallengeModeID) end
 
----@param mapChallengeModeID number 
+---@param mapChallengeModeID number
 ---@return number, number, MythicPlusDate, number, MythicPlusMember durationSec, level, completionDate, affixIDs, members
 function C_MythicPlus.GetWeeklyBestForMap(mapChallengeModeID) end
 
@@ -53,36 +53,36 @@ function C_MythicPlus.RequestMapInfo() end
 function C_MythicPlus.RequestRewards() end
 
 ---@class MapSeasonBestInfo
----@field durationSec number 
----@field level number 
----@field completionDate MythicPlusDate 
----@field affixIDs table 
----@field members table 
+---@field durationSec number
+---@field level number
+---@field completionDate MythicPlusDate
+---@field affixIDs table
+---@field members table
 local MapSeasonBestInfo = {}
 
 ---@class MythicPlusDate
----@field year number 
----@field month number 
----@field day number 
----@field hour number 
----@field minute number 
+---@field year number
+---@field month number
+---@field day number
+---@field hour number
+---@field minute number
 local MythicPlusDate = {}
 
 ---@class MythicPlusKeystoneAffix
----@field id number 
----@field seasonID number 
+---@field id number
+---@field seasonID number
 local MythicPlusKeystoneAffix = {}
 
 ---@class MythicPlusMember
----@field name string|nil 
----@field specID number 
----@field classID number 
+---@field name string|nil
+---@field specID number
+---@field classID number
 local MythicPlusMember = {}
 
 ---@class MythicPlusRunInfo
----@field mapChallengeModeID number 
----@field level number 
----@field thisWeek bool 
----@field completed bool 
+---@field mapChallengeModeID number
+---@field level number
+---@field thisWeek bool
+---@field completed bool
 local MythicPlusRunInfo = {}
 

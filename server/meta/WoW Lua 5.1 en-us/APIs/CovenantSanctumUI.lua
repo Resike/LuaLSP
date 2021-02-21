@@ -23,12 +23,12 @@ function C_CovenantSanctumUI.GetFeatures() end
 ---@return number level
 function C_CovenantSanctumUI.GetRenownLevel() end
 
----@param covenantID number 
+---@param covenantID number
 ---@return CovenantSanctumRenownLevelInfo levels
 function C_CovenantSanctumUI.GetRenownLevels(covenantID) end
 
----@param covenantID number 
----@param renownLevel number 
+---@param covenantID number
+---@param renownLevel number
 ---@return CovenantSanctumRenownRewardInfo rewards
 function C_CovenantSanctumUI.GetRenownRewardsForLevel(covenantID, renownLevel) end
 
@@ -39,31 +39,31 @@ function C_CovenantSanctumUI.GetSanctumType() end
 function C_CovenantSanctumUI.GetSoulCurrencies() end
 
 ---@class CovenantSanctumFeatureInfo
----@field garrTalentTreeID number 
----@field featureType number 
----@field uiOrder number 
+---@field garrTalentTreeID number
+---@field featureType number
+---@field uiOrder number
 local CovenantSanctumFeatureInfo = {}
 
 ---@class CovenantSanctumRenownLevelInfo
----@field level number 
----@field locked bool 
----@field isMilestone bool 
----@field isCapstone bool 
+---@field level number
+---@field locked bool
+---@field isMilestone bool
+---@field isCapstone bool
 local CovenantSanctumRenownLevelInfo = {}
 
 ---@class CovenantSanctumRenownRewardInfo
----@field uiOrder number 
----@field itemID number|nil 
----@field spellID number|nil 
----@field mountID number|nil 
----@field transmogID number|nil 
----@field transmogSetID number|nil 
----@field titleMaskID number|nil 
----@field garrFollowerID number|nil 
----@field transmogIllusionSourceID number|nil 
----@field icon number|nil 
----@field name string|nil 
----@field description string|nil 
----@field toastDescription string|nil 
+---@field uiOrder number
+---@field itemID number|nil
+---@field spellID number|nil
+---@field mountID number|nil
+---@field transmogID number|nil
+---@field transmogSetID number|nil
+---@field titleMaskID number|nil
+---@field garrFollowerID number|nil
+---@field transmogIllusionSourceID number|nil
+---@field icon number|nil
+---@field name string|nil
+---@field description string|nil
+---@field toastDescription string|nil
 local CovenantSanctumRenownRewardInfo = {}
 

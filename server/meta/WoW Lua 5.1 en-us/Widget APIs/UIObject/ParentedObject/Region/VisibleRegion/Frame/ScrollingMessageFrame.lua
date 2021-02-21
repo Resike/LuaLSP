@@ -1,9 +1,9 @@
 --- ScrollingMessageFrame
---- 
+---
 --- ScrollingMessageFrame expands on MessageFrame with the ability to store a much longer series of messages, and to move up and down through them by setting horizontal and vertical scroll values, or by using PageUp and PageDown methods.
 --- ScrollingMessageFrames also support hyperlinks—such as the links posted in trade chat by people with items they want to sell—and provides an OnHyperlinkClicked script for displaying information related to the contents of the link.
 --- The most common ScrollingMessageFrame in the stock UI is simply the chat frame, as well as the combat log. The raid warning and boss emote messages are presented in a ScrollingMessageFrame. The Guild Bank UI also uses one to display the transaction history.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/ScrollingMessageFrame
 
 ---@class ScrollingMessageFrame : Frame
@@ -22,7 +22,7 @@ function  ScrollingMessageFrame:GetFadeDuration() end
 --- @return atBottom
 function  ScrollingMessageFrame:AtBottom() end
 
---- ScrollingMessageFrame:RemoveMessagesByAccessID() 
+--- ScrollingMessageFrame:RemoveMessagesByAccessID()
 function ScrollingMessageFrame:RemoveMessagesByAccessID() end
 
 --- Scrolls the message frame's contents up by two lines
@@ -58,7 +58,7 @@ function ScrollingMessageFrame:UpdateColorByID(id, red, green, blue) end
 --- Scrolls the message frame's contents down by one page. One "page" is slightly less than the number of lines displayed in the frame.
 function ScrollingMessageFrame:PageDown() end
 
---- ScrollingMessageFrame:RemoveMessagesByExtraData() 
+--- ScrollingMessageFrame:RemoveMessagesByExtraData()
 function ScrollingMessageFrame:RemoveMessagesByExtraData() end
 
 --- Returns whether messages added to the frame automatically fade out after a period of time

@@ -1,0 +1,303 @@
+[03:31:43.863][info] [#0:main:51]: Lua Lsp startup, root: 	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server
+[03:31:43.863][debug][#0:main:52]: ROOT:	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server
+[03:31:43.863][debug][#0:main:53]: LOGPATH:	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/log
+[03:31:43.863][debug][#0:main:54]: METAPATH:	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/meta
+[03:31:43.863][info] [#0:script.service.telemetry:16]: Telemetry Token:	07EF15005AF1B11B
+[03:31:43.895][info] [#0:script.pub.pub:48]: Create brave:	1
+[03:31:43.895][info] [#0:script.pub.pub:48]: Create brave:	2
+[03:31:43.895][info] [#0:script.pub.pub:48]: Create brave:	3
+[03:31:43.895][info] [#0:script.pub.pub:48]: Create brave:	4
+[03:31:43.895][debug][#0:script.service.service:136]: 
+========= Medical Examination Report =========
+    --------------- Memory ---------------
+        Total: 1.699 MB
+        # 00 : 1.699 MB
+        # 01 : 0.000 MB
+        # 02 : 0.000 MB
+        # 03 : 0.000 MB
+        # 04 : 0.000 MB
+    --------------- Coroutine ---------------
+        Total:     0
+        Running:   0
+        Suspended: 0
+        Normal:    0
+        Dead:      0
+    --------------- Cache ---------------
+        Total: 1
+        Dead:  0
+    --------------- Proto ---------------
+        Holdon:   0
+        Waiting:  0
+==============================================
+[03:31:43.941][debug][#0:script.provider.client:32]: Client init	{
+    capabilities = {
+        experimental = {
+        },
+        general = {
+            regularExpressions = {
+                engine = "ECMAScript",
+            },
+        },
+        textDocument = {
+            codeAction = {
+                codeActionLiteralSupport = {
+                    codeActionKind = {
+                        valueSet = {
+                            [1] = "quickfix",
+                            [2] = "refactor",
+                            [3] = "refactor.extract",
+                            [4] = "refactor.inline",
+                            [5] = "refactor.rewrite",
+                            [6] = "source.organizeImports",
+                        },
+                    },
+                },
+                dataSupport = true,
+                dynamicRegistration = true,
+                resolveSupport = {
+                    properties = {
+                        [1] = "edit",
+                    },
+                },
+            },
+            codeLens = {
+                dynamicRegistration = true,
+            },
+            colorProvider = {
+                dynamicRegistration = true,
+            },
+            completion = {
+                completionItem = {
+                    deprecatedSupport = true,
+                    documentationFormat = {
+                        [1] = "markdown",
+                        [2] = "plaintext",
+                    },
+                    snippetSupport = true,
+                    tagSupport = {
+                        valueSet = {
+                            [1] = 1,
+                        },
+                    },
+                },
+                completionItemKind = {
+                    valueSet = {
+                        [01] = 1,
+                        [02] = 2,
+                        [03] = 3,
+                        [04] = 4,
+                        [05] = 5,
+                        [06] = 6,
+                        [07] = 7,
+                        [08] = 8,
+                        [09] = 9,
+                        [10] = 10,
+                        [11] = 11,
+                        [12] = 12,
+                        [13] = 13,
+                        [14] = 14,
+                        [15] = 15,
+                        [16] = 16,
+                        [17] = 17,
+                        [18] = 18,
+                        [19] = 19,
+                        [20] = 20,
+                        [21] = 21,
+                        [22] = 22,
+                        [23] = 23,
+                        [24] = 24,
+                        [25] = 25,
+                    },
+                },
+                dynamicRegistration = true,
+            },
+            declaration = {
+                dynamicRegistration = true,
+                linkSupport = true,
+            },
+            definition = {
+                dynamicRegistration = true,
+                linkSupport = true,
+            },
+            documentHighlight = {
+                dynamicRegistration = true,
+            },
+            documentSymbol = {
+                dynamicRegistration = true,
+                hierarchicalDocumentSymbolSupport = true,
+                symbolKind = {
+                    valueSet = {
+                        [01] = 1,
+                        [02] = 2,
+                        [03] = 3,
+                        [04] = 4,
+                        [05] = 5,
+                        [06] = 6,
+                        [07] = 7,
+                        [08] = 8,
+                        [09] = 9,
+                        [10] = 10,
+                        [11] = 11,
+                        [12] = 12,
+                        [13] = 13,
+                        [14] = 14,
+                        [15] = 15,
+                        [16] = 16,
+                        [17] = 17,
+                        [18] = 18,
+                        [19] = 19,
+                        [20] = 20,
+                        [21] = 21,
+                        [22] = 22,
+                        [23] = 23,
+                        [24] = 24,
+                        [25] = 25,
+                        [26] = 26,
+                    },
+                },
+                tagSupport = {
+                    valueSet = {
+                        [1] = 1,
+                    },
+                },
+            },
+            formatting = {
+                dynamicRegistration = true,
+            },
+            hover = {
+                contentFormat = {
+                    [1] = "markdown",
+                    [2] = "plaintext",
+                },
+                dynamicRegistration = true,
+            },
+            implementation = {
+                dynamicRegistration = true,
+                linkSupport = true,
+            },
+            publishDiagnostics = {
+                codeDescriptionSupport = true,
+                dataSupport = true,
+                relatedInformation = true,
+                versionSupport = true,
+            },
+            rangeFormatting = {
+                dynamicRegistration = true,
+            },
+            references = {
+                dynamicRegistration = true,
+            },
+            rename = {
+                dynamicRegistration = true,
+                prepareSupport = true,
+            },
+            selectionRange = {
+                dynamicRegistration = true,
+            },
+            signatureHelp = {
+                dynamicRegistration = true,
+                signatureInformation = {
+                    documentationFormat = {
+                        [1] = "markdown",
+                        [2] = "plaintext",
+                    },
+                    parameterInformation = {
+                        labelOffsetSupport = true,
+                    },
+                },
+            },
+            synchronization = {
+                didSave = true,
+                dynamicRegistration = true,
+                willSave = true,
+                willSaveWaitUntil = true,
+            },
+            typeDefinition = {
+                dynamicRegistration = true,
+                linkSupport = true,
+            },
+        },
+        window = {
+            showDocument = {
+                support = true,
+            },
+            showMessage = {
+                messageActionItem = {
+                    additionalPropertiesSupport = true,
+                },
+            },
+            workDoneProgress = true,
+        },
+        workspace = {
+            applyEdit = true,
+            configuration = true,
+            didChangeConfiguration = {
+                dynamicRegistration = true,
+            },
+            executeCommand = {
+            },
+            symbol = {
+                dynamicRegistration = true,
+                symbolKind = {
+                    valueSet = {
+                        [01] = 1,
+                        [02] = 2,
+                        [03] = 3,
+                        [04] = 4,
+                        [05] = 5,
+                        [06] = 6,
+                        [07] = 7,
+                        [08] = 8,
+                        [09] = 9,
+                        [10] = 10,
+                        [11] = 11,
+                        [12] = 12,
+                        [13] = 13,
+                        [14] = 14,
+                        [15] = 15,
+                        [16] = 16,
+                        [17] = 17,
+                        [18] = 18,
+                        [19] = 19,
+                        [20] = 20,
+                        [21] = 21,
+                        [22] = 22,
+                        [23] = 23,
+                        [24] = 24,
+                        [25] = 25,
+                        [26] = 26,
+                    },
+                },
+                tagSupport = {
+                    valueSet = {
+                        [1] = 1,
+                    },
+                },
+            },
+            workspaceEdit = {
+                documentChanges = true,
+                failureHandling = "abort",
+            },
+            workspaceFolders = true,
+        },
+    },
+    clientInfo = {
+        name = "Sublime Text LSP",
+        version = "1.2.11",
+    },
+    initializationOptions = {
+    },
+    processId = 6708,
+    rootPath = "C:\\World of Warcraft\\_retail_\\Interface\\AddOns\\TradeSkillMaster",
+    rootUri = "file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster",
+    workspaceFolders = {
+        [1] = {
+            name = "TradeSkillMaster",
+            uri = "file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster",
+        },
+    },
+}
+[03:31:43.941][info] [#0:script.language:135]: VSC language: nil
+[03:31:43.941][info] [#0:script.language:136]: LS  language: en-us
+[03:31:43.941][info] [#0:script.workspace.workspace:30]: Workspace inited: 	file:///C:/World%20of%20Warcraft/_retail_/Interface/AddOns/TradeSkillMaster
+[03:31:43.941][info] [#0:script.workspace.workspace:37]: Log path: 	c:/Users/Resike/AppData/Roaming/Sublime Text 3/Packages/LuaLSP/server/log/file_C_World%20of%20Warcraft__retail__Interface_AddOns_TradeSkillMaster.log

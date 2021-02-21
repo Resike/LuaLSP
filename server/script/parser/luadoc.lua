@@ -208,8 +208,7 @@ local function parseClass(parent)
     if not peekToken() then
         return result
     end
-    nextToken()
-    if not checkToken('symbol', ':') then
+    if not checkToken('symbol', ':', 1) then
         pushError {
             type   = 'LUADOC_MISS_EXTENDS_SYMBOL',
             start  = result.finish + 1,
@@ -217,16 +216,27 @@ local function parseClass(parent)
         }
         return result
     end
-    result.extends = parseName('doc.extends.name', result)
-    if not result.extends then
-        pushError {
-            type   = 'LUADOC_MISS_CLASS_EXTENDS_NAME',
-            start  = getFinish(),
-            finish = getFinish(),
-        }
-        return result
+    nextToken()
+
+    result.extends = {}
+
+    while true do
+        local extend = parseName('doc.extends.name', result)
+        if not extend then
+            pushError {
+                type   = 'LUADOC_MISS_CLASS_EXTENDS_NAME',
+                start  = getFinish(),
+                finish = getFinish(),
+            }
+            return result
+        end
+        result.extends[#result.extends+1] = extend
+        result.finish = getFinish()
+        if not checkToken('symbol', ',', 1) then
+            break
+        end
+        nextToken()
     end
-    result.finish = getFinish()
     return result
 end
 
@@ -285,7 +295,7 @@ local function parseTypeUnitTable(parent, node)
         return nil
     end
     nextSymbolOrError('>')
-    
+
     node.parent = result;
     result.finish = getFinish()
     result.key = key
@@ -530,6 +540,7 @@ function parseType(parent)
         nextToken()
     end
     result.finish = getFinish()
+    result.firstFinish = result.finish
 
     while true do
         local nextComm = NextComment('peek')
@@ -615,6 +626,7 @@ local function parseParam()
         return result
     end
     result.finish = getFinish()
+    result.firstFinish = result.extends.firstFinish
     return result
 end
 
@@ -915,7 +927,7 @@ end
 
 local function buildLuaDoc(comment)
     local text = comment.text
-    local _, startPos = text:find('^%-?%s*@')
+    local _, startPos = text:find('^%-%s*@')
     if not startPos then
         return {
             type    = 'doc.comment',
@@ -932,7 +944,7 @@ local function buildLuaDoc(comment)
     local result = convertTokens()
     if result then
         result.range = comment.finish
-        local cstart = text:find('%S', result.finish - comment.start + 2)
+        local cstart = text:find('%S', (result.firstFinish or result.finish) - comment.start + 2)
         if cstart and cstart < comment.finish then
             result.comment = {
                 type   = 'doc.tailcomment',

@@ -1,7 +1,7 @@
 ---@class KeyBindings
 C_KeyBindings = {}
 
----@param bindingIndex number 
+---@param bindingIndex number
 ---@return CustomBindingType|nil customBindingType
 function C_KeyBindings.GetCustomBindingType(bindingIndex) end
 

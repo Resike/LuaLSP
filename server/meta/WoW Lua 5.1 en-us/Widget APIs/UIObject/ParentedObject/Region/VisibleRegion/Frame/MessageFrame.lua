@@ -1,8 +1,8 @@
 --- MessageFrame
---- 
+---
 --- MessageFrames are used to present series of messages or other lines of text, usually stacked on top of each other. Like most widgets relating to text display, MessageFrame inherits from FontInstance as well as Frame to provide methods for setting up text characteristics. Once the text settings for the frame are configured to your liking, you can add new messages to the frame with :AddMessage(). MessageFrame also supports methods for multi-line text display such as indented lines, as well as options for controlling how long messages should be displayed and how quickly they fade out when their time is up.
 --- The stock UI uses the basic message frame for only one purpose, but it gets a lot of use; UIErrorsFrame, which displays messages like "Spell not ready yet" or "You're too far away", is a MessageFrame. MessageFrame also forms the basis for another, more sophisticated type, ScrollingMessageFrame.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/MessageFrame
 
 ---@class MessageFrame : Frame

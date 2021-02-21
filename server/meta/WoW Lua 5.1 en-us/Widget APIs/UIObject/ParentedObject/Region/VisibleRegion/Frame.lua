@@ -1,5 +1,5 @@
 --- Frame
---- 
+---
 --- Frame is in many ways the most fundamental widget object. Other types of widget derivatives such as FontStrings, Textures and Animations can only be created attached to a Frame or other derivative of a Frame.  Frames provide the basis for interaction with the user, and registering and responding to game events.
 --- When an addon needs to respond to game events or state changes and needs no visible components, this is typically accomplished using a Frame. Visibly, widgets that display game information such as threat or cooldowns and aren't directly interactive beyond being draggable are typically Frames. They are also commonly used as ways to group other related frames, either visibly (such as the way the Talents pane groups the buttons representing your character's talents) or invisibly (such as the way MultiBarRight groups twelve action buttons).
 --- You create a plain frame by specifying "Frame" as the first argument to CreateFrame, or with a <Frame> element in an XML file:
@@ -8,9 +8,9 @@
 ---  <Frame name="FunWidget" parent="UIParent">
 ---    <!-- insert anchors, scripts, children and other components here in XML -->
 ---  </Frame>
---- 
+---
 --- Frames in the FrameXML include the action bars (the frames that group the action buttons together), the panels that display information like your character status and quest log, and the grand-daddy of the rest of the UI, UIParent.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/Frame
 
 ---@class Frame : VisibleRegion
@@ -44,7 +44,7 @@ function  Frame:CanChangeAttribute() end
 --- Frame:IsEventRegistered(event)
 function  Frame:IsEventRegistered(event) end
 
---- Frame:GetDontSavePosition() 
+--- Frame:GetDontSavePosition()
 function Frame:GetDontSavePosition() end
 
 --- Enables or disables joystick interactivity. Joystick interactivity must be enabled in order for a frame's joystick-related script handlers to be run.(As of this writing, joystick support is partially implemented but not enabled in the current version of World of Warcraft.)
@@ -146,7 +146,7 @@ function  Frame:GetChildren() end
 --- @return numChildren
 function  Frame:GetNumChildren() end
 
---- Frame:GetPropagateKeyboardInput() 
+--- Frame:GetPropagateKeyboardInput()
 function Frame:GetPropagateKeyboardInput() end
 
 --- Returns whether joystick interactivity is enabled for the frame. (As of this writing, joystick support is partially implemented but not enabled in the current version of World of Warcraft.)
@@ -238,13 +238,13 @@ function Frame:SetResizable(enable) end
 --- True to limit the frame's boundaries to those of the screen; false to allow the frame to be moved/resized without such limits
 function Frame:SetClampedToScreen(enable) end
 
---- Frame:SetDontSavePosition() 
+--- Frame:SetDontSavePosition()
 function Frame:SetDontSavePosition() end
 
---- Frame:RegisterUnitEvent() 
+--- Frame:RegisterUnitEvent()
 function Frame:RegisterUnitEvent() end
 
---- Frame:SetShown() 
+--- Frame:SetShown()
 function Frame:SetShown() end
 
 --- Sets the minimum size of the frame for user resizing. Applies when resizing the frame with the mouse via :StartSizing().
@@ -286,7 +286,7 @@ function Frame:SetID(id) end
 --- Token identifying the strata in which the frame should be layered (string,
 function Frame:SetFrameStrata(strata) end
 
---- Frame:SetPropagateKeyboardInput() 
+--- Frame:SetPropagateKeyboardInput()
 function Frame:SetPropagateKeyboardInput() end
 
 --- Unregisters the frame from any events for which it is registered
@@ -311,7 +311,7 @@ function Frame:SetHitRectInsets(left, right, top, bottom) end
 --- True to enable automatic saving and restoration of the frame's position and dimensions; false to disable
 function Frame:SetUserPlaced(enable) end
 
---- Sets whether the frame can be moved by the user. Enabling this property does not automatically implement behaviors allowing the frame to be dragged by the user -- such behavior must be implemented in the frame's mouse script handlers. If this property is not enabled, Frame:StartMoving() causes a Lua error. This property must be enabled before PLAYER_LOGIN fires in order for a previously saved frame position to be applied.For simple automatic frame dragging behavior, see Frame:CreateTitleRegion(). 
+--- Sets whether the frame can be moved by the user. Enabling this property does not automatically implement behaviors allowing the frame to be dragged by the user -- such behavior must be implemented in the frame's mouse script handlers. If this property is not enabled, Frame:StartMoving() causes a Lua error. This property must be enabled before PLAYER_LOGIN fires in order for a previously saved frame position to be applied.For simple automatic frame dragging behavior, see Frame:CreateTitleRegion().
 --- @param enable boolean
 --- True to allow the frame to be moved by the user; false to disable
 function Frame:SetMovable(enable) end

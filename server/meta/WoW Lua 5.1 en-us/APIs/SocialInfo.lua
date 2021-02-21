@@ -13,11 +13,11 @@ function C_Social.GetLastScreenshotIndex() end
 ---@return number maxTweetLength
 function C_Social.GetMaxTweetLength() end
 
----@param index number 
+---@param index number
 ---@return number, number screenWidth, screenHeight
 function C_Social.GetScreenshotInfoByIndex(index) end
 
----@param tweetText string 
+---@param tweetText string
 ---@return number tweetLength
 function C_Social.GetTweetLength(tweetText) end
 
@@ -37,6 +37,6 @@ function C_Social.TwitterDisconnect() end
 function C_Social.TwitterGetMSTillCanPost() end
 
 --- Not allowed to be called by addons
----@param message string 
+---@param message string
 function C_Social.TwitterPostMessage(message) end
 

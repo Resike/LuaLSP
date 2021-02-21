@@ -24,22 +24,22 @@ ScriptedAnimationTrajectory.CurveRandom = 5
 ScriptedAnimationTrajectory.HalfwayBetween = 6
 
 ---@class ScriptedAnimationEffect
----@field id number 
----@field visual number 
----@field visualScale number 
----@field duration number 
----@field trajectory ScriptedAnimationTrajectory 
----@field yawRadians number 
----@field pitchRadians number 
----@field rollRadians number 
----@field offsetX number 
----@field offsetY number 
----@field offsetZ number 
----@field animationSpeed number 
----@field startBehavior ScriptedAnimationBehavior|nil 
----@field startSoundKitID number|nil 
----@field finishEffectID number|nil 
----@field finishBehavior ScriptedAnimationBehavior|nil 
----@field finishSoundKitID number|nil 
+---@field id number
+---@field visual number
+---@field visualScale number
+---@field duration number
+---@field trajectory ScriptedAnimationTrajectory
+---@field yawRadians number
+---@field pitchRadians number
+---@field rollRadians number
+---@field offsetX number
+---@field offsetY number
+---@field offsetZ number
+---@field animationSpeed number
+---@field startBehavior ScriptedAnimationBehavior|nil
+---@field startSoundKitID number|nil
+---@field finishEffectID number|nil
+---@field finishBehavior ScriptedAnimationBehavior|nil
+---@field finishSoundKitID number|nil
 local ScriptedAnimationEffect = {}
 

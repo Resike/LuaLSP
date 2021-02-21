@@ -1,7 +1,7 @@
 ---@class ScenarioInfo
 C_ScenarioInfo = {}
 
----@param runType JailersTowerType 
+---@param runType JailersTowerType
 ---@return string|nil typeString
 function C_ScenarioInfo.GetJailersTowerTypeString(runType) end
 

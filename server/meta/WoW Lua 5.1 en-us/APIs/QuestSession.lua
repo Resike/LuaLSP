@@ -35,15 +35,15 @@ function C_QuestSession.RequestSessionStart() end
 
 function C_QuestSession.RequestSessionStop() end
 
----@param beginSession boolean 
+---@param beginSession boolean
 function C_QuestSession.SendSessionBeginResponse(beginSession) end
 
----@param questID number 
----@param superTrack boolean 
+---@param questID number
+---@param superTrack boolean
 function C_QuestSession.SetQuestIsSuperTracked(questID, superTrack) end
 
 ---@class QuestSessionPlayerDetails
----@field name string 
----@field guid string 
+---@field name string
+---@field guid string
 local QuestSessionPlayerDetails = {}
 

@@ -29,16 +29,16 @@ local ItemInteractionFrameType = {}
 ItemInteractionFrameType.CleanseCorruption = 0
 
 ---@class ItemInteractionFrameInfo
----@field textureKit string 
----@field openSoundKitID number 
----@field closeSoundKitID number 
----@field titleText string 
----@field tutorialText string 
----@field buttonText string 
----@field frameType ItemInteractionFrameType 
----@field description string|nil 
----@field cost number|nil 
----@field currencyTypeId number|nil 
----@field dropInSlotSoundKitId number|nil 
+---@field textureKit string
+---@field openSoundKitID number
+---@field closeSoundKitID number
+---@field titleText string
+---@field tutorialText string
+---@field buttonText string
+---@field frameType ItemInteractionFrameType
+---@field description string|nil
+---@field cost number|nil
+---@field currencyTypeId number|nil
+---@field dropInSlotSoundKitId number|nil
 local ItemInteractionFrameInfo = {}
 

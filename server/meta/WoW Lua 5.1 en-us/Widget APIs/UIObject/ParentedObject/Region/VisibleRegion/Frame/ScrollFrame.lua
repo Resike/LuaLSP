@@ -1,11 +1,11 @@
 --- ScrollFrame
---- 
+---
 --- ScrollFrame is how a large body of content can be displayed through a small window. The ScrollFrame is the size of the "window" through which you want to see the larger content, and it has another frame set as a "ScrollChild" containing the full content. The proportion by which the ScrollChild is larger than the ScrollFrame automatically determines the horizontal and vertical scroll range of the ScrollFrame. You can get these ranges or position the ScrollChild "behind" the ScrollFrame within those ranges using ScrollFrame's methods. It also allows you to set a new frame as the ScrollChild.
 --- When a ScrollFrame is used for repetitive content, such as the buttons for assigning key bindings or the friends in your social frame, it is often implemented as a "FauxScrollFrame," which contains enough of these subframes in the ScrollChild to fill the ScrollFrame, plus one. It then saves an offset and maps which of the elements in an internal list are displayed.
 --- To create a ScrollFrame's ScrollChild in XML, include a <ScrollChild> element as a direct child of the <ScrollFrame> element. The <ScrollChild> element should have one child, of any type descended from <Frame>.  To create the scroll child in Lua, create the frame using CreateFrame(), and then attach the child to the scroll frame using ScrollFrame:SetScrollChild(child). The child frame must always have an absolute size set with <AbsDimension> in XML or using both SetWidth() and SetHeight() in Lua.
 --- A ScrollFrame does not automatically include an element that sets the scroll range. Typically, you add a Slider as a child of a ScrollFrame, with an OnValueChanged handler that sets the scroll value.
 --- ScrollFrames are common throughout the UI, used for quest text, readable items, lists of friends and guild members, and similar applications.
---- 
+---
 --- @See http://wowprogramming.com/docs/widgets/ScrollFrame
 
 ---@class ScrollFrame : Frame
