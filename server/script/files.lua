@@ -39,6 +39,9 @@ m.astMap         = setmetatable({}, { __mode = 'v' })
 
 local uriMap = {}
 local function getUriKey(uri)
+    if not uri then
+        return nil
+    end
     if not uriMap[uri] then
         if platform.OS == 'Windows' then
             uriMap[uri] = uri:lower()
@@ -179,6 +182,7 @@ function m.setText(uri, text, isTrust)
     file.version = file.version + 1
     m.globalVersion = m.globalVersion + 1
     await.close('files.version')
+    await.close('compile:' .. uri)
     if create then
         m.onWatch('create', originUri)
     end
@@ -263,6 +267,7 @@ end
 
 --- 移除所有文件
 function m.removeAll()
+    local ws = require 'workspace.workspace'
     m.globalVersion = m.globalVersion + 1
     await.close('files.version')
     m._pairsCache = nil
@@ -275,6 +280,7 @@ function m.removeAll()
             m.onWatch('remove', uri)
         end
     end
+    ws.flushCache()
     --m.notifyCache = {}
 end
 
@@ -341,6 +347,7 @@ function m.eachDll()
 end
 
 function m.compileAst(uri, text)
+    await.setID('compile:' .. uri)
     local ws = require 'workspace'
     if not m.isOpen(uri) and #text >= config.config.workspace.preloadFileSize * 1000 then
         if not m.notifyCache['preloadFileSize'] then
@@ -373,12 +380,14 @@ function m.compileAst(uri, text)
             special           = config.config.runtime.special,
             unicodeName       = config.config.runtime.unicodeName,
             nonstandardSymbol = config.config.runtime.nonstandardSymbol,
+            delay             = await.delay,
         }
     )
     local passed = os.clock() - clock
     if passed > 0.1 then
         log.warn(('Compile [%s] takes [%.3f] sec, size [%.3f] kb.'):format(uri, passed, #text / 1000))
     end
+    --await.delay()
     if state then
         state.uri = uri
         state.ast.uri = uri
@@ -420,7 +429,7 @@ function m.getAst(uri)
     if not ast then
         ast = m.compileAst(uri, file.text)
         m.astMap[uri] = ast
-        await.delay()
+        --await.delay()
     end
     file.cacheActiveTime = timer.clock()
     return ast
@@ -533,7 +542,7 @@ function m.offset(uri, position, isFinish)
     local start  = guide.lineRange(lines, row)
     local offset
     if start <= 0 or start > #text then
-        offset = #text
+        offset = math.maxinteger
     else
         offset = utf8.offset(text, position.character + 1, start) or #text
     end
@@ -567,7 +576,7 @@ function m.offsetOfWord(uri, position)
     local start  = guide.lineRange(lines, row)
     local offset
     if start <= 0 or start > #text then
-        offset = #text
+        offset = math.maxinteger
     else
         offset = utf8.offset(text, position.character + 1, start) or #text
     end

@@ -7,7 +7,7 @@
 ---
 --- @See http://wowprogramming.com/docs/widgets/Animation
 
----@class Animation : ScriptObject
+---@class Animation : ParentedObject, ScriptObject
 Animation = {};
 
 

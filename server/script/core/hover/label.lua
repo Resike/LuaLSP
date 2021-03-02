@@ -48,7 +48,9 @@ local function asValue(source, title)
     local class   = vm.getClass(source, 0)
     local literal = vm.getInferLiteral(source, 0)
     local cont
-    if not vm.hasInferType(source, 'string', 0) and not type:find('%[%]$') then
+    if  not vm.hasInferType(source, 'string', 0)
+    and not type:find('%[%]$')
+    and not type:find('%w%<') then
         if #vm.getFields(source, 0) > 0
         or vm.hasInferType(source, 'table', 0) then
             cont = buildTable(source)
@@ -57,7 +59,10 @@ local function asValue(source, title)
     local pack = {}
     pack[#pack+1] = title
     pack[#pack+1] = name .. ':'
-    if cont and type == 'table' then
+    if  cont
+    and (  type == 'table'
+        or type == 'any'
+        or type == 'nil') then
         type = nil
     end
     if class then
@@ -127,10 +132,8 @@ local function asDocField(source)
         end
     end
     local infers = {}
-    for _, ext in ipairs(source.extends) do
-        for _, infer in ipairs(vm.getInfers(ext) or {}) do
-            infers[#infers+1] = infer
-        end
+    for _, infer in ipairs(vm.getInfers(source.extends) or {}) do
+        infers[#infers+1] = infer
     end
     if not class then
         return ('field ?.%s: %s'):format(

@@ -101,6 +101,14 @@ local function findSymbol(text, offset)
     return nil
 end
 
+local function findNearestSource(ast, offset)
+    local source
+    guide.eachSourceContain(ast.ast, offset, function (src)
+        source = src
+    end)
+    return source
+end
+
 local function findTargetSymbol(text, offset, symbol)
     offset = skipSpace(text, offset)
     for i = offset, 1, -1 do
@@ -245,12 +253,10 @@ local function buildDesc(source)
     local hover = getHover.get(source)
     local md = markdown()
     md:add('lua', hover.label)
+    md:splitLine()
     md:add('md',  hover.description)
-    local snip = getSnip(source)
-    if snip then
-        md:add('md', '-------------')
-        md:add('lua', snip)
-    end
+    md:splitLine()
+    md:add('lua', getSnip(source))
     return md:string()
 end
 
@@ -868,9 +874,6 @@ local function checkUri(ast, text, offset, results)
                 if files.eq(myUri, uri) then
                     goto CONTINUE
                 end
-                if vm.isMetaFile(uri) then
-                    --goto CONTINUE
-                end
                 local path = workspace.getRelativePath(uri)
                 local infos = rpath.getVisiblePath(path, config.config.runtime.path)
                 for _, info in ipairs(infos) do
@@ -884,11 +887,15 @@ local function checkUri(ast, text, offset, results)
                                 }
                             }
                         end
-                        collect[info.expect][#collect[info.expect]+1] = ([=[* [%s](%s) %s]=]):format(
-                            path,
-                            uri,
-                            lang.script('HOVER_USE_LUA_PATH', info.searcher)
-                        )
+                        if vm.isMetaFile(uri) then
+                            collect[info.expect][#collect[info.expect]+1] = ('* [[meta]](%s)'):format(uri)
+                        else
+                            collect[info.expect][#collect[info.expect]+1] = ([=[* [%s](%s) %s]=]):format(
+                                path,
+                                uri,
+                                lang.script('HOVER_USE_LUA_PATH', info.searcher)
+                            )
+                        end
                     end
                 end
                 ::CONTINUE::
@@ -1096,22 +1103,12 @@ local function checkEqualEnum(ast, text, offset, results)
         eqOrNeq = true
     end
     start = skipSpace(text, start - 1)
-    local source = guide.eachSourceContain(ast.ast, start, function (source)
-        if source.finish ~= start then
-            return
-        end
-        if source.type == 'getlocal'
-        or source.type == 'setlocal'
-        or source.type == 'local'
-        or source.type == 'getglobal'
-        or source.type == 'getfield'
-        or source.type == 'getindex'
-        or source.type == 'call' then
-            return source
-        end
-    end)
+    local source = findNearestSource(ast, start)
     if not source then
         return
+    end
+    if source.type == 'callargs' then
+        source = source.parent
     end
     if source.type == 'call' and not eqOrNeq then
         return
@@ -1337,14 +1334,6 @@ local function getCallArgInfo(call, text, offset)
     return #call.args + 1, nil
 end
 
-local function findNearestSource(ast, offset)
-    local source
-    guide.eachSourceContain(ast.ast, offset, function (src)
-        source = src
-    end)
-    return source
-end
-
 local function getFuncParamByCallIndex(func, index)
     if not func.args or #func.args == 0 then
         return nil
@@ -1358,7 +1347,7 @@ end
 local function checkTableLiteralField(ast, text, offset, call, funcs, index, results)
     local source = findNearestSource(ast, offset)
     if  source.type ~= 'table'
-    and source.parent.type ~= 'table' then
+    and (not source.parent or source.parent.type ~= 'table') then
         return
     end
     if call.node and call.node.type == 'getmethod' then
@@ -1370,9 +1359,14 @@ local function checkTableLiteralField(ast, text, offset, call, funcs, index, res
     if source.type ~= 'table' then
         tbl = source.parent
     end
+    if tbl.parent ~= call.args then
+        return
+    end
     for _, field in ipairs(vm.getDefFields(tbl, 0)) do
         local name = guide.getKeyName(field)
-        mark[name] = true
+        if name then
+            mark[name] = true
+        end
     end
     for _, func in ipairs(funcs) do
         local param = getFuncParamByCallIndex(func, index)
@@ -1382,7 +1376,7 @@ local function checkTableLiteralField(ast, text, offset, call, funcs, index, res
         local defs = vm.getDefFields(param, 0)
         for _, field in ipairs(defs) do
             local name = guide.getKeyName(field)
-            if not mark[name] then
+            if name and not mark[name] then
                 mark[name] = true
                 fields[#fields+1] = field
             end
@@ -1401,7 +1395,7 @@ local function checkTableLiteralField(ast, text, offset, call, funcs, index, res
                 results[#results+1] = {
                     label = guide.getKeyName(field),
                     kind  = define.CompletionItemKind.Property,
-                    insertText = ('%s = $0,'):format(guide.getKeyName(field)),
+                    insertText = ('%s = $0'):format(guide.getKeyName(field)),
                     id    = stack(function ()
                         return {
                             detail      = buildDetail(field),
@@ -1833,15 +1827,19 @@ local function clearCache()
 end
 
 local function completion(uri, offset)
+    tracy.ZoneBeginN 'completion cache'
     local results = getCache(uri, offset)
+    tracy.ZoneEnd()
     if results then
         return results
     end
+    tracy.ZoneBeginN 'completion #1'
     local ast = files.getAst(uri)
     local text = files.getText(uri)
     results = {}
     clearStack()
-    tracy.ZoneBeginN 'completion'
+    tracy.ZoneEnd()
+    tracy.ZoneBeginN 'completion #2'
     if ast then
         if getComment(ast, offset) then
             tryLuaDoc(ast, text, offset, results)
@@ -1866,7 +1864,9 @@ local function completion(uri, offset)
         return nil
     end
 
+    tracy.ZoneBeginN 'completion #3'
     makeCache(uri, offset, results)
+    tracy.ZoneEnd()
     return results
 end
 

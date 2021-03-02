@@ -13,11 +13,11 @@
 ---
 --- @See http://wowprogramming.com/docs/widgets/Frame
 
----@class Frame : VisibleRegion
+---@class Frame : VisibleRegion, ScriptObject
 Frame = {};
 
 
----Frame:IgnoreDepth(enable)
+--- Frame:IgnoreDepth(enable)
 function Frame:IgnoreDepth(enable) end
 
 --- Frame:IsMouseEnabled()

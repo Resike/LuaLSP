@@ -13,8 +13,7 @@ UIObject = {};
 function UIObject:GetObjectType() end
 
 --- Returns whether the object belongs to a given widget type
---- @param type string
---- Name of an object type (e.g. Frame, Button, FontString, etc.)
+--- @param type string @ Name of an object type (e.g. Frame, Button, FontString, etc.)
 --- @return isType
 function UIObject:IsObjectType(type) end
 
@@ -29,4 +28,3 @@ function UIObject:IsForbidden() end
 
 --- Returns whether the object is loaded
 function UIObject:IsObjectLoaded() end
-

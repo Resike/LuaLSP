@@ -452,6 +452,8 @@ proto.on('textDocument/completion', function (params)
     if not result then
         return nil
     end
+    tracy.ZoneBeginN 'completion make'
+    local _ <close> = tracy.ZoneEnd
     local easy = false
     local items = {}
     for i, res in ipairs(result) do
@@ -564,7 +566,7 @@ proto.on('textDocument/signatureHelp', function (params)
     end
     await.close('signatureHelp')
     await.setID('signatureHelp')
-    local offset = files.offsetOfWord(uri, params.position)
+    local offset = files.offset(uri, params.position)
     local core = require 'core.signature'
     local results = core(uri, offset - 1)
     if not results then
@@ -719,7 +721,6 @@ proto.on('textDocument/semanticTokens/full', function (params)
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_SEMANTIC_FULL, 0.5)
     local core = require 'core.semantic-tokens'
     local uri = params.textDocument.uri
-    log.debug('semanticTokens/full', uri)
     local text  = files.getText(uri)
     while not text do
         await.sleep(0.1)
@@ -736,7 +737,6 @@ proto.on('textDocument/semanticTokens/range', function (params)
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_SEMANTIC_RANGE, 0.5)
     local core = require 'core.semantic-tokens'
     local uri = params.textDocument.uri
-    log.debug('semanticTokens/range', uri)
     while not files.exists(uri) do
         await.sleep(0.1)
     end
@@ -824,6 +824,7 @@ do
     files.watch(function (ev, uri)
         if ev == 'update'
         or ev == 'updateVisible' then
+            await.delay()
             await.call(function ()
                 updateHint(uri)
             end)

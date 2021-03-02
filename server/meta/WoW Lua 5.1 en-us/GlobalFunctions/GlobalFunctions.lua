@@ -1,4 +1,4 @@
----@class unknown @ unknown type
+---@meta
 
 ---The player abandons a skill.
 ---@param skillLineID number @ The Skill Line ID (can be found with API GetProfessionInfo())

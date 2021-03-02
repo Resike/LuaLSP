@@ -68,12 +68,14 @@ m.DiagnosticDefaultSeverity = {
     ['lowercase-global']        = 'Information',
     ['undefined-env-child']     = 'Information',
     ['duplicate-index']         = 'Warning',
+    ['duplicate-set-field']     = 'Warning',
     ['empty-block']             = 'Hint',
     ['redundant-value']         = 'Hint',
     ['code-after-break']        = 'Hint',
     ['unbalanced-assignments']  = 'Warning',
     ['close-non-object']        = 'Warning',
     ['count-down-loop']         = 'Warning',
+    ['no-implicit-any']         = 'Information',
 
     ['duplicate-doc-class']     = 'Warning',
     ['undefined-doc-class']     = 'Warning',
@@ -88,6 +90,7 @@ m.DiagnosticDefaultSeverity = {
 ---@alias DiagnosticDefaultNeededFileStatus
 ---| '"Any"'
 ---| '"Opened"'
+---| '"None"'
 
 -- 文件状态
 m.FileStatus = {
@@ -114,12 +117,14 @@ m.DiagnosticDefaultNeededFileStatus = {
     ['lowercase-global']        = 'Any',
     ['undefined-env-child']     = 'Any',
     ['duplicate-index']         = 'Any',
+    ['duplicate-set-field']     = 'Any',
     ['empty-block']             = 'Opened',
     ['redundant-value']         = 'Opened',
     ['code-after-break']        = 'Opened',
     ['unbalanced-assignments']  = 'Any',
     ['close-non-object']        = 'Any',
     ['count-down-loop']         = 'Any',
+    ['no-implicit-any']         = 'None',
 
     ['duplicate-doc-class']     = 'Any',
     ['undefined-doc-class']     = 'Any',

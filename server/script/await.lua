@@ -69,6 +69,9 @@ end
 --- 设置一个id，用于批量关闭任务
 function m.setID(id, co)
     co = co or coroutine.running()
+    if not coroutine.isyieldable(co) then
+        return
+    end
     if not m.idMap[id] then
         m.idMap[id] = setmetatable({}, { __mode = 'k' })
     end
@@ -81,13 +84,10 @@ function m.close(id)
     if not map then
         return
     end
-    local count = 0
     for co in pairs(map) do
         map[co] = nil
         coroutine.close(co)
-        count = count + 1
     end
-    --log.debug('Close await:', id, count)
 end
 
 function m.hasID(id, co)

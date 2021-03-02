@@ -19,6 +19,7 @@ m.type = 'workspace'
 m.nativeVersion  = -1
 m.libraryVersion = -1
 m.nativeMatcher  = nil
+m.waitingReady   = {}
 m.requireCache   = {}
 m.cache          = {}
 m.matchOption    = {
@@ -120,6 +121,9 @@ function m.getNativeMatcher()
     end
     -- config.workspace.library
     for path in pairs(config.config.workspace.library) do
+        path = path:gsub('${(.-)}', {
+            meta = (ROOT / 'meta' / '3rd'):string(),
+        })
         log.info('Ignore by library:', path)
         pattern[#pattern+1] = path
     end
@@ -138,6 +142,9 @@ function m.getLibraryMatchers()
 
     local librarys = {}
     for path in pairs(config.config.workspace.library) do
+        path = path:gsub('${(.-)}', {
+            meta = (ROOT / 'meta' / '3rd'):string(),
+        })
         librarys[m.normalize(path)] = true
     end
     if library.metaPath then
@@ -435,6 +442,9 @@ function m.getRelativePath(uri)
 end
 
 function m.isWorkspaceUri(uri)
+    if not m.uri then
+        return false
+    end
     local luri = files.getUri(uri)
     local ruri = files.getUri(m.uri)
     return luri:sub(1, #ruri) == ruri
@@ -468,13 +478,21 @@ function m.awaitReload()
     plugin.init()
     m.awaitPreload()
     m.ready = true
+    local waiting = m.waitingReady
+    m.waitingReady = {}
+    for _, waker in ipairs(waiting) do
+        waker()
+    end
 end
 
 ---等待工作目录加载完成
 function m.awaitReady()
-    while not m.ready do
-        await.sleep(0.1)
+    if m.isReady() then
+        return
     end
+    await.wait(function (waker)
+        m.waitingReady[#m.waitingReady+1] = waker
+    end)
 end
 
 function m.isReady()
