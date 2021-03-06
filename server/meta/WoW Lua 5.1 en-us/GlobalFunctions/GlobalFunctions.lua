@@ -240,13 +240,12 @@ function BNGetBlockedInfo() end
 function BNGetDisplayName() end
 
 ---Returns information about the specified friend of a RealID friend
----@param presenceID number @ The presenceID for the RealID friend for whom you are requesting friend info.
 ---@param mutual boolean @ Should the list include mutual friends (I.e. people who you and the person referenced by presenceID are both friends with).
 ---@param nonMutual boolean @ Should the list include non-mutual friends.
 ---@param index number @ The index of the entry in the list to retrieve (1 to BNGetNumFOF(...))
----@return number presenceIDstring givenNamestring surnameboolean isFriend
+---@return number friendID, string accountName, boolean isMutual
 ---[View Documents](https://wow.gamepedia.com/API_BNGetFOFInfo)
-function BNGetFOFInfo(presenceID, mutual, nonMutual, index) end
+function BNGetFOFInfo(mutual, nonMutual, index) end
 
 ---Returns the index in the friend frame of the given Battle.net friend.
 ---@param presenceID number @ A unique numeric identifier for the friend's battle.net account during this session.
@@ -256,12 +255,12 @@ function BNGetFriendIndex(presenceID) end
 
 ---Returns information about a Battle.net friend invite.
 ---@param inviteIndex number @ Ranging from 1 to BNGetNumFriendInvites()
----@return number inviteIDnumber accountNameboolean isBattleTagunknown unknownnumber sentTime
+---@return number inviteID, number accountName, boolean isBattleTag, unknown unknown, number sentTime
 ---[View Documents](https://wow.gamepedia.com/API_BNGetFriendInviteInfo)
 function BNGetFriendInviteInfo(inviteIndex) end
 
 ---Returns information about the player
----@return number presenceIDstring battleTagnumber toonIDstring currentBroadcastboolean bnetAFKboolean bnetDNDboolean isRIDEnabled
+---@return number presenceID, string battleTag, number toonID, string currentBroadcast, boolean bnetAFK, boolean bnetDND, boolean isRIDEnabled
 ---[View Documents](https://wow.gamepedia.com/API_BNGetInfo)
 function BNGetInfo() end
 
@@ -278,7 +277,7 @@ function BNGetNumFOF() end
 function BNGetNumFriendInvites() end
 
 ---Returns info about how much Battle.net friends are added to the friendslist and how much of them are currently online.
----@return number numBNetTotalnumber numBNetOnlinenumber numBNetFavoritenumber numBNetFavoriteOnline
+---@return number numBNetTotal, number numBNetOnline, number numBNetFavorite, number numBNetFavoriteOnline
 ---[View Documents](https://wow.gamepedia.com/API_BNGetNumFriends)
 function BNGetNumFriends() end
 
@@ -461,7 +460,7 @@ function BuyGuildCharter(guildName) end
 
 ---Buys the specified item.
 ---@param index number @ The index of the item in the merchant's inventory
----@param quantity number @ Optional) - Quantity to buy.
+---@param quantity number @ ?Optional. Could be nil. - Quantity to buy.
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_BuyMerchantItem)
 function BuyMerchantItem(index, quantity) end
@@ -666,7 +665,7 @@ function CanScanResearchSite() end
 ---[View Documents](https://wow.gamepedia.com/API_CanShowAchievementUI)
 function CanShowAchievementUI() end
 
----Returns whether or not the player is allowed to reset instances at the moment.
+---Returns true if the player can reset instances now.
 ---@return boolean canReset
 ---[View Documents](https://wow.gamepedia.com/API_CanShowResetInstances)
 function CanShowResetInstances() end
@@ -1029,7 +1028,7 @@ function ClearVoidTransferDepositSlot(slotIndex) end
 
 ---Places or picks up an item from the send mail frame. Can also clear an item rather than picking it up.
 ---@param itemIndex number @ The index of the item (1-ATTACHMENTS_MAX_SEND(12))
----@param clearItem boolean @ Clear the item already in this slot. (Done by right clicking an item)
+---@param clearItem boolean @ ?Optional. Could be nil. - Clear the item already in this slot. (Done by right clicking an item)
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_ClickSendMailItemButton)
 function ClickSendMailItemButton(itemIndex, clearItem) end
@@ -1047,8 +1046,8 @@ function ClickTargetTradeButton() end
 function ClickTradeButton() end
 
 ---Clicks the specified Void Storage slot [1]
----@param slotIndex number @ Index ranging from 1 to 80 (VOID_STORAGE_MAX)
----@param isRightClick boolean @ Whether the button was right-clicked
+---@param slotIndex number @ Index ranging from 1 to 80 (VOID_STORAGE_MAX). The index starts from top to bottom first (vertically), then left to right (horizontally); This is similar to the Guild Bank frame
+---@param isRightClick boolean @ ?Optional. Could be nil. - Whether the button was right-clicked
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_ClickVoidStorageSlot)
 function ClickVoidStorageSlot(slotIndex, isRightClick) end
@@ -1169,7 +1168,7 @@ function ClosestGameObjectPosition() end
 
 ---Returns the unit position of the closest creature by ID. Only works for mobs in the starting zones.
 ---@param creatureID number @ NPC ID of a GUID of a creature.
----@return number xnumber ynumber distance
+---@return number x, number y, number distance
 ---[View Documents](https://wow.gamepedia.com/API_ClosestUnitPosition)
 function ClosestUnitPosition(creatureID) end
 
@@ -1238,9 +1237,12 @@ function CombatLogSetCurrentEntry() end
 ---[View Documents](https://wow.gamepedia.com/API_CombatLogSetRetentionTime)
 function CombatLogSetRetentionTime() end
 
----@return void
+---Compares two UnitFlag bitfields.
+---@param flag1 number @ UnitFlag bitfield, typically a sourceFlags or destFlags paramater from COMBAT_LOG_EVENT.
+---@param flag2 number @ UnitFlag bitfield, typically a COMBATLOG_FILTER constant.
+---@return number flag1, number flag2
 ---[View Documents](https://wow.gamepedia.com/API_CombatLog_Object_IsA)
-function CombatLog_Object_IsA() end
+function CombatLog_Object_IsA(flag1, flag2) end
 
 ---Alters the entity for which the COMBAT_TEXT_UPDATE event fires.
 ---@param unit string @ UnitId of the entity you want receive notifications for.
@@ -1310,7 +1312,7 @@ function ConfirmNoRefundOnUse() end
 function ConfirmOnUse() end
 
 ---Sends a response to a raid ready check
----@param isReady number @ if the player is ready, nil if the player is not ready
+---@param isReady number @ ?Optional. Could be nil. - 1 if the player is ready, nil if the player is not ready
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_ConfirmReadyCheck)
 function ConfirmReadyCheck(isReady) end
@@ -1361,9 +1363,9 @@ function CreateFrame(frameType, name, parent, template, id) end
 
 ---Creates a new macro command/button.
 ---@param name string @ The name of the macro to be displayed in the UI. The current UI imposes a 16-character limit.
----@param iconFileID number @ |string - A FileID or string identifying the icon texture to use
----@param body string @ optional) - The macro commands to be executed. If this string is longer than 255 characters, only the first 255 will be saved.
----@param perCharacter boolean @ optional) - true to create a per-character macro, nil to create a general macro available to all characters.
+---@param iconFileID number @ |string - A FileID or string identifying the icon texture to use. The available icons can be retrieved by calling GetMacroIcons() and GetMacroItemIcons(); other textures inside Interface\ICONS may also be used.
+---@param body string @ ?Optional. Could be nil. - The macro commands to be executed. If this string is longer than 255 characters, only the first 255 will be saved.
+---@param perCharacter boolean @ ?Optional. Could be nil. - true to create a per-character macro, nil to create a general macro available to all characters.
 ---@return number macroId
 ---[View Documents](https://wow.gamepedia.com/API_CreateMacro)
 function CreateMacro(name, iconFileID, body, perCharacter) end
@@ -1601,7 +1603,7 @@ function EJ_GetContentTuningID() end
 ---Returns encounter boss info.
 ---@param index number @ creature index, up to nine for encounters with multiple bosses.
 ---@param encounterID number @ optional) - if omitted this will default to the currently viewed encounter.
----@return number idstring namestring descriptionnumber displayInfonumber iconImagenumber uiModelSceneID
+---@return number id, string name, string description, number displayInfo, number iconImage, number uiModelSceneID
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetCreatureInfo)
 function EJ_GetCreatureInfo(index, encounterID) end
 
@@ -1617,7 +1619,7 @@ function EJ_GetDifficulty() end
 
 ---Returns encounter info from the journal.
 ---@param encounterID number
----@return string namestring descriptionnumber bossIDnumber rootSectionIDstring linknumber journalInstanceIDnumber dungeonEncounterIDnumber instanceID
+---@return string name, string description, number bossID, number rootSectionID, string link, number journalInstanceID, number dungeonEncounterID, number instanceID
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetEncounterInfo)
 function EJ_GetEncounterInfo(encounterID) end
 
@@ -1628,7 +1630,7 @@ function EJ_GetEncounterInfoByIndex() end
 ---Returns instance info for the Encounter Journal.
 ---@param index number
 ---@param isRaid boolean @ whether to return raid or normal instances.
----@return unknown instanceIDunknown nameunknown descriptionunknown bgImageunknown buttonImage1unknown loreImageunknown buttonImage2unknown dungeonAreaMapIDunknown linkunknown shouldDisplayDifficulty
+---@return unknown instanceID, unknown name, unknown description, unknown bgImage, unknown buttonImage1, unknown loreImage, unknown buttonImage2, unknown dungeonAreaMapID, unknown link, unknown shouldDisplayDifficulty
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetInstanceByIndex)
 function EJ_GetInstanceByIndex(index, isRaid) end
 
@@ -1640,7 +1642,7 @@ function EJ_GetInstanceForMap(mapID) end
 
 ---Returns instance info for the Encounter Journal.
 ---@param instanceID number @ optional) - if omitted, this will default to the currently selected instance per EJ_SelectInstance.
----@return unknown nameunknown descriptionunknown bgImageunknown buttonImage1unknown loreImageunknown buttonImage2unknown dungeonAreaMapIDunknown linkunknown shouldDisplayDifficulty
+---@return unknown name, unknown description, unknown bgImage, unknown buttonImage1, unknown loreImage, unknown buttonImage2, unknown dungeonAreaMapID, unknown link, unknown shouldDisplayDifficulty
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetInstanceInfo)
 function EJ_GetInstanceInfo(instanceID) end
 
@@ -1651,7 +1653,7 @@ function EJ_GetInstanceInfo(instanceID) end
 function EJ_GetInvTypeSortOrder(invType) end
 
 ---Returns the currently used loot filter.
----@return number classIDnumber specID
+---@return number classID, number specID
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetLootFilter)
 function EJ_GetLootFilter() end
 
@@ -1659,7 +1661,7 @@ function EJ_GetLootFilter() end
 ---@param mapID unknown
 ---@param index number @ index of the boss pins.
 ---@param fromJournal boolean @ optional) - this function seems to only return results when passing true.
----@return number xnumber ynumber instanceIDstring namestring descriptionnumber encounterIDnumber rootSectionIDstring link
+---@return number x, number y, number instanceID, string name, string description, number encounterID, number rootSectionID, string link
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetMapEncounter)
 function EJ_GetMapEncounter(mapID, index, fromJournal) end
 
@@ -1691,7 +1693,7 @@ function EJ_GetSearchProgress() end
 
 ---Returns search results for the Encounter Journal.
 ---@param index number @ search result index, ascending from 1 to EJ_GetNumSearchResults().
----@return number idnumber stypenumber difficultyIDnumber instanceIDnumber encounterIDstring itemLink
+---@return number id, number stype, number difficultyID, number instanceID, number encounterID, string itemLink
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetSearchResult)
 function EJ_GetSearchResult(index) end
 
@@ -1702,20 +1704,20 @@ function EJ_GetSearchSize() end
 
 ---Returns the parent Section ID if available.
 ---@param sectionID number
----@return number sectionIDnumber parentSectionIDnumber grandParentSectionID
+---@return number sectionID, number parentSectionID, number grandParentSectionID
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetSectionPath)
 function EJ_GetSectionPath(sectionID) end
 
 ---Get some information about the encounter journal tier for index.
 ---@param index number @ The index of the tier. Ranging from 1 to EJ_GetNumTiers(). See below for details.
----@return string namestring link
+---@return string name, string link
 ---[View Documents](https://wow.gamepedia.com/API_EJ_GetTierInfo)
 function EJ_GetTierInfo(index) end
 
 ---Returns the supplementary instance and encounter ID for an encounter or section ID.
 ---@param jtype number @ journal type
 ---@param id number @ depending on journal type; 0=instanceID, 1=encounterID, 2=sectionID
----@return number instanceIDnumber encounterIDnumber sectionIDunknown tierIndex
+---@return number instanceID, number encounterID, number sectionID, unknown tierIndex
 ---[View Documents](https://wow.gamepedia.com/API_EJ_HandleLinkPath)
 function EJ_HandleLinkPath(jtype, id) end
 
@@ -1826,7 +1828,7 @@ function EndRefund() end
 function EnumerateFrames(currentFrame) end
 
 ---Retrieves all available server channels (zone dependent).
----@return unknown channel1unknown channel2unknown ...
+---@return unknown channel1, unknown channel2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_EnumerateServerChannels)
 function EnumerateServerChannels() end
 
@@ -2044,7 +2046,7 @@ function GetAchievementCategory(achievementID) end
 
 ---Returns information about the comparison unit's achievements.
 ---@param achievementID number @ ID of the achievement to retrieve information for.
----@return boolean completednumber monthnumber daynumber year
+---@return boolean completed, number month, number day, number year
 ---[View Documents](https://wow.gamepedia.com/API_GetAchievementComparisonInfo)
 function GetAchievementComparisonInfo(achievementID) end
 
@@ -2067,7 +2069,7 @@ function GetAchievementGuildRep() end
 ---Returns information about the given Achievement.
 ---@param achievementID_or_categoryID unknown
 ---@param index number @ An offset into the achievement category, between 1 and GetCategoryNumAchievements(categoryID)
----@return unknown idunknown nameunknown pointsunknown completedunknown monthunknown dayunknown yearunknown descriptionunknown flagsunknown iconunknown rewardTextunknown isGuildunknown wasEarnedByMeunknown earnedBy
+---@return unknown id, unknown name, unknown points, unknown completed, unknown month, unknown day, unknown year, unknown description, unknown flags, unknown icon, unknown rewardText, unknown isGuild, unknown wasEarnedByMe, unknown earnedBy
 ---[View Documents](https://wow.gamepedia.com/API_GetAchievementInfo)
 function GetAchievementInfo(achievementID_or_categoryID, index) end
 
@@ -2109,19 +2111,19 @@ function GetActionAutocast() end
 function GetActionBarPage() end
 
 ---Gets the toggle states of the extra action bars.
----@return number bottomLeftStatenumber bottomRightStatenumber sideRightStatenumber sideRight2State
+---@return number bottomLeftState, number bottomRightState, number sideRightState, number sideRight2State
 ---[View Documents](https://wow.gamepedia.com/API_GetActionBarToggles)
 function GetActionBarToggles() end
 
 ---Returns information about the charges of a charge-accumulating player ability.
 ---@param slot number @ The action slot to retrieve data from.
----@return number currentChargesnumber maxChargesnumber cooldownStartnumber cooldownDurationnumber chargeModRate
+---@return number currentCharges, number maxCharges, number cooldownStart, number cooldownDuration, number chargeModRate
 ---[View Documents](https://wow.gamepedia.com/API_GetActionCharges)
 function GetActionCharges(slot) end
 
 ---Retrieves the cooldown data of the action specified.
 ---@param slot number @ The action slot to retrieve data from.
----@return number startnumber durationnumber enablenumber modRate
+---@return number start, number duration, number enable, number modRate
 ---[View Documents](https://wow.gamepedia.com/API_GetActionCooldown)
 function GetActionCooldown(slot) end
 
@@ -2133,13 +2135,13 @@ function GetActionCount(actionSlot) end
 
 ---Returns information about a specific action.
 ---@param slot number @ Action slot to retrieve information about.
----@return string actionTypeunknown idunknown subType
+---@return string actionType, unknown id, unknown subType
 ---[View Documents](https://wow.gamepedia.com/API_GetActionInfo)
 function GetActionInfo(slot) end
 
 ---Returns information about a loss-of-control cooldown affecting an action.
 ---@param slot number @ action slot to query information about.
----@return number startnumber duration
+---@return number start, number duration
 ---[View Documents](https://wow.gamepedia.com/API_GetActionLossOfControlCooldown)
 function GetActionLossOfControlCooldown(slot) end
 
@@ -2158,7 +2160,7 @@ function GetActionTexture(actionSlot) end
 ---Returns the information for a specific race's active artifact.
 ---@param raceIndex unknown
 ---@param artifactIndex number
----@return string artifactNamestring artifactDescriptionstring artifactRaritystring artifactIconstring hoverDescriptionnumber keystoneCountstring bgTexture
+---@return string artifactName, string artifactDescription, string artifactRarity, string artifactIcon, string hoverDescription, number keystoneCount, string bgTexture
 ---[View Documents](https://wow.gamepedia.com/API_GetActiveArtifactByRace)
 function GetActiveArtifactByRace(raceIndex, artifactIndex) end
 
@@ -2192,7 +2194,7 @@ function GetAddOnCPUUsage(index_or_name) end
 
 ---Get the required dependencies for an AddOn.
 ---@param index_or_name unknown
----@return unknown dep1unknown dep2unknown dep3unknown ...
+---@return unknown dep1, unknown dep2, unknown dep3, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetAddOnDependencies)
 function GetAddOnDependencies(index_or_name) end
 
@@ -2205,7 +2207,7 @@ function GetAddOnEnableState(character, addonIndex_or_AddOnName) end
 
 ---Get information about an AddOn.
 ---@param index_or_name unknown
----@return string namestring titlestring notesboolean loadablestring reasonstring securityboolean newVersion
+---@return string name, string title, string notes, boolean loadable, string reason, string security, boolean newVersion
 ---[View Documents](https://wow.gamepedia.com/API_GetAddOnInfo)
 function GetAddOnInfo(index_or_name) end
 
@@ -2239,13 +2241,13 @@ function GetArchaeologyInfo() end
 
 ---Returns the information for a specific race used in Archaeology.
 ---@param raceIndex number @ Index of the race to query, between 1 and GetNumArchaeologyRaces().
----@return string raceNamenumber raceTexturenumber raceItemIDnumber numFragmentsCollectednumber numFragmentsRequirednumber maxFragments
+---@return string raceName, number raceTexture, number raceItemID, number numFragmentsCollected, number numFragmentsRequired, number maxFragments
 ---[View Documents](https://wow.gamepedia.com/API_GetArchaeologyRaceInfo)
 function GetArchaeologyRaceInfo(raceIndex) end
 
 ---Returns information about a branch of Archaeology.
 ---@param branchID number @ ID of the research branch (race) to query. The following are the valid IDs:
----@return string raceNamenumber raceTextureIDnumber raceItemIDnumber numFragmentsCollectednumber numFragmentsRequirednumber maxFragments
+---@return string raceName, number raceTextureID, number raceItemID, number numFragmentsCollected, number numFragmentsRequired, number maxFragments
 ---[View Documents](https://wow.gamepedia.com/API_GetArchaeologyRaceInfoByID)
 function GetArchaeologyRaceInfoByID(branchID) end
 
@@ -2266,12 +2268,12 @@ function GetArenaOpponentSpec() end
 ---Returns the information for a specific race's artifact.
 ---@param raceIndex number @ Index of the race to pick the artifact from.
 ---@param artifactIndex number @ Index of the artifact.
----@return string artifactNamestring artifactDescriptionnumber artifactRaritystring artifactIconstring hoverDescriptionnumber keystoneCountstring bgTexturenumber firstCompletionTimenumber completionCount
+---@return string artifactName, string artifactDescription, number artifactRarity, string artifactIcon, string hoverDescription, number keystoneCount, string bgTexture, number firstCompletionTime, number completionCount
 ---[View Documents](https://wow.gamepedia.com/API_GetArtifactInfoByRace)
 function GetArtifactInfoByRace(raceIndex, artifactIndex) end
 
 ---Returns information about current used fragments for the selected artifact.
----@return number numFragmentsCollectednumber numFragmentsAddednumber numFragmentsRequired
+---@return number numFragmentsCollected, number numFragmentsAdded, number numFragmentsRequired
 ---[View Documents](https://wow.gamepedia.com/API_GetArtifactProgress)
 function GetArtifactProgress() end
 
@@ -2298,7 +2300,7 @@ function GetAutoCompleteRealms(realmNames) end
 ---@param exclude number @ bit mask of filters that the results must not match any of.
 ---@param maxResults number @ number of results desired.
 ---@param cursorPosition number @ position of the cursor within the editbox (i.e. how much of the text string should be matching).
----@return unknown nick1unknown nick2unknown ...
+---@return unknown nick1, unknown nick2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetAutoCompleteResults)
 function GetAutoCompleteResults(text, include, exclude, maxResults, cursorPosition) end
 
@@ -2309,7 +2311,7 @@ function GetAutoDeclineGuildInvites() end
 
 ---Returns information about a popup quest notification.
 ---@param index number @ which popup to get information about, between 1 and GetNumAutoQuestPopUps()
----@return number questIDstring type
+---@return number questID, string type
 ---[View Documents](https://wow.gamepedia.com/API_GetAutoQuestPopUp)
 function GetAutoQuestPopUp(index) end
 
@@ -2327,13 +2329,13 @@ function GetAvailableLocaleInfo() end
 
 ---Two functions return lists of the available locales:
 ---@param ignoreLocalRestrictions boolean @ Returns the complete list, not only those locales which the game client might use in the current region (NA, Europe, etc.)
----@return unknown aaAAunknown bbBBunknown ccCCunknown ...
+---@return unknown aaAA, unknown bbBB, unknown ccCC, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetAvailableLocales)
 function GetAvailableLocales(ignoreLocalRestrictions) end
 
 ---Returns information about the type of an available quest.
 ---@param index number @ Index of the available quest to query, starting from 1.
----@return boolean isTrivialnumber frequencyboolean isRepeatableboolean isLegendary
+---@return boolean isTrivial, number frequency, boolean isRepeatable, boolean isLegendary
 ---[View Documents](https://wow.gamepedia.com/API_GetAvailableQuestInfo)
 function GetAvailableQuestInfo(index) end
 
@@ -2342,7 +2344,7 @@ function GetAvailableQuestInfo(index) end
 function GetAvailableTitle() end
 
 ---Returns the average item level of the player's character and average item level equipped.
----@return number avgItemLevelnumber avgItemLevelEquippednumber avgItemLevelPvp
+---@return number avgItemLevel, number avgItemLevelEquipped, number avgItemLevelPvp
 ---[View Documents](https://wow.gamepedia.com/API_GetAverageItemLevel)
 function GetAverageItemLevel() end
 
@@ -2384,7 +2386,7 @@ function GetBankSlotCost(numSlots) end
 
 ---Returns information about the current selection for a barber shop customization.
 ---@param catId number @ Ascending index of the customization category to retrieve information for.
----@return string nameunknown unknownunknown unknownnumber isCurrent
+---@return string name, unknown unknown, unknown unknown, number isCurrent
 ---[View Documents](https://wow.gamepedia.com/API_GetBarberShopStyleInfo)
 function GetBarberShopStyleInfo(catId) end
 
@@ -2405,7 +2407,7 @@ function GetBattlefieldEstimatedWaitTime() end
 
 ---Used to position the flag icon on the world map and the battlefield minimap.
 ---@param index number @ Index to get the flag position from
----@return number flagXnumber flagYstring flagToken
+---@return number flagX, number flagY, string flagToken
 ---[View Documents](https://wow.gamepedia.com/API_GetBattlefieldFlagPosition)
 function GetBattlefieldFlagPosition(index) end
 
@@ -2430,7 +2432,7 @@ function GetBattlefieldPortExpiration(index) end
 
 ---Returns information about a player's score in battlegrounds.
 ---@param index number @ The characters index in battlegrounds, going from 1 to GetNumBattlefieldScores().
----@return string namenumber killingBlowsnumber honorableKillsnumber deathsnumber honorGainednumber factionstring racestring classstring classTokennumber damageDonenumber healingDoneunknown bgRatingunknown ratingChangeunknown preMatchMMRunknown mmrChangestring talentSpec
+---@return string name, number killingBlows, number honorableKills, number deaths, number honorGained, number faction, string race, string class, string classToken, number damageDone, number healingDone, unknown bgRating, unknown ratingChange, unknown preMatchMMR, unknown mmrChange, string talentSpec
 ---[View Documents](https://wow.gamepedia.com/API_GetBattlefieldScore)
 function GetBattlefieldScore(index) end
 
@@ -2443,13 +2445,13 @@ function GetBattlefieldStatData(playerIndex, slotIndex) end
 
 ---Get the status of the arena, battleground, or wargame that the player is either queued for or inside.
 ---@param index number @ Index of the battlefield you wish to view, in the range of 1 to GetMaxBattlefieldID()
----@return string statusstring mapNamenumber teamSizenumber registeredMatchunknown suspendedQueuestring queueTypestring gameTypestring roleunknown asGroupstring shortDescriptionstring longDescription
+---@return string status, string mapName, number teamSize, number registeredMatch, unknown suspendedQueue, string queueType, string gameType, string role, unknown asGroup, string shortDescription, string longDescription
 ---[View Documents](https://wow.gamepedia.com/API_GetBattlefieldStatus)
 function GetBattlefieldStatus(index) end
 
 ---Returns information regarding an Arena team
 ---@param index number @ Which team to get information on, 0 is Green team and 1 is Gold Team
----@return string teamNamenumber oldTeamRatingnumber newTeamRatingnumber teamRating
+---@return string teamName, number oldTeamRating, number newTeamRating, number teamRating
 ---[View Documents](https://wow.gamepedia.com/API_GetBattlefieldTeamInfo)
 function GetBattlefieldTeamInfo(index) end
 
@@ -2466,13 +2468,13 @@ function GetBattlefieldWinner() end
 
 ---Returns information about a battleground type.
 ---@param index number @ battleground type index, 1 to GetNumBattlegroundTypes().
----@return string namenumber canEnternumber isHolidaynumber isRandomnumber battleGroundIDstring info
+---@return string name, number canEnter, number isHoliday, number isRandom, number battleGroundID, string info
 ---[View Documents](https://wow.gamepedia.com/API_GetBattlegroundInfo)
 function GetBattlegroundInfo(index) end
 
 ---[NYI] Returns battlegrounds points earned by a team.
 ---@param team number @ team to query the points of; 0 for Horde, 1 for Alliance.
----@return number currentPointsnumber maxPoints
+---@return number currentPoints, number maxPoints
 ---[View Documents](https://wow.gamepedia.com/API_GetBattlegroundPoints)
 function GetBattlegroundPoints(team) end
 
@@ -2499,7 +2501,7 @@ function GetBindLocation() end
 ---Returns the command name and all keys currently bound to the specified binding.
 ---@param index number @ index of the binding to query, from 1 to GetNumBindings().
 ---@param mode number @ optional, defaults to 1) - ?
----@return string commandstring categoryunknown key1unknown key2unknown ...
+---@return string command, string category, unknown key1, unknown key2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetBinding)
 function GetBinding(index, mode) end
 
@@ -2518,7 +2520,7 @@ function GetBindingByKey(key) end
 
 ---Returns all keys currently bound to the command specified by command. This function is almost identical to GetBinding(index) except it takes the command name as an argument instead of the index and doesn't return the command name along with the key bindings.
 ---@param command unknown @ The name of the command to get key bindings for (e.g. MOVEFORWARD, TOGGLEFRIENDSTAB)
----@return unknown key1unknown key2
+---@return unknown key1, unknown key2
 ---[View Documents](https://wow.gamepedia.com/API_GetBindingKey)
 function GetBindingKey(command) end
 
@@ -2530,7 +2532,8 @@ function GetBindingKey(command) end
 ---[View Documents](https://wow.gamepedia.com/API_GetBindingText)
 function GetBindingText(key, prefix, abbreviate) end
 
----@return void
+---Returns the Player's block chance in percentage.
+---@return number blockChance
 ---[View Documents](https://wow.gamepedia.com/API_GetBlockChance)
 function GetBlockChance() end
 
@@ -2544,13 +2547,13 @@ function GetBonusBarIndex() end
 function GetBonusBarOffset() end
 
 ---Returns information about the current client build.
----@return string versionstring buildstring datenumber tocversion
+---@return string version, string build, string date, number tocversion
 ---[View Documents](https://wow.gamepedia.com/API_GetBuildInfo)
 function GetBuildInfo() end
 
 ---Return information about an item that can be bought back from a merchant.
 ---@param slotIndex number @ The index of a slot in the merchant's buyback inventory, between 1 and GetNumBuybackItems()
----@return string namenumber iconnumber pricenumber quantity
+---@return string name, number icon, number price, number quantity
 ---[View Documents](https://wow.gamepedia.com/API_GetBuybackItemInfo)
 function GetBuybackItemInfo(slotIndex) end
 
@@ -2560,7 +2563,7 @@ function GetBuybackItemLink() end
 
 ---Returns information on a console variable.
 ---@param name string @ name of the CVar to query the value of. Only accepts console variables (i.e. not console commands)
----@return string valuestring defaultValueboolean accountboolean characterboolean unknown5boolean setCvarOnlyboolean readOnly
+---@return string value, string defaultValue, boolean account, boolean character, boolean unknown5, boolean setCvarOnly, boolean readOnly
 ---[View Documents](https://wow.gamepedia.com/API_GetCVarInfo)
 function GetCVarInfo(name) end
 
@@ -2583,7 +2586,7 @@ function GetCategoryAchievementPoints() end
 
 ---Returns information about the given category.
 ---@param categoryID number
----@return string titlenumber parentCategoryIDnumber flags
+---@return string title, number parentCategoryID, number flags
 ---[View Documents](https://wow.gamepedia.com/API_GetCategoryInfo)
 function GetCategoryInfo(categoryID) end
 
@@ -2595,7 +2598,7 @@ function GetCategoryList() end
 ---Returns the total, completed and incompleted number of achievements in a specific category.
 ---@param categoryId number @ Achievement category ID, as returned by GetCategoryList.
 ---@param includeAll boolean @ If true-equivalent, include all achievements, otherwise, only includes those currently visible
----@return number totalnumber completednumber incompleted
+---@return number total, number completed, number incompleted
 ---[View Documents](https://wow.gamepedia.com/API_GetCategoryNumAchievements)
 function GetCategoryNumAchievements(categoryId, includeAll) end
 
@@ -2605,17 +2608,18 @@ function GetCemeteryPreference() end
 
 ---Retrieves channels (and category headers) that would be displayed in Blizzards ChannelFrame.
 ---@param i unknown
----@return unknown nameunknown headerunknown collapsedunknown channelNumberunknown countunknown activeunknown categoryunknown voiceEnabledunknown voiceActive
+---@return unknown name, unknown header, unknown collapsed, unknown channelNumber, unknown count, unknown active, unknown category, unknown voiceEnabled, unknown voiceActive
 ---[View Documents](https://wow.gamepedia.com/API_GetChannelDisplayInfo)
 function GetChannelDisplayInfo(i) end
 
----@return unknown id1unknown name1unknown disabled1unknown id2unknown name2unknown disabled2unknown ...
+---Retrieves joined channels, the return list can be of variable length so the 4th return is id2 and so on. (see Blizzard_TradeSkillUI.lua TradeSkillUIMixin:InitLinkToMenu())
+---@return number id, string name, boolean disabled, number ...
 ---[View Documents](https://wow.gamepedia.com/API_GetChannelList)
 function GetChannelList() end
 
 ---Returns information about the specified channel.
 ---@param id_or_name unknown
----@return number idstring namenumber instanceIDboolean isCommunitiesChannel
+---@return number id, string name, number instanceID, boolean isCommunitiesChannel
 ---[View Documents](https://wow.gamepedia.com/API_GetChannelName)
 function GetChannelName(id_or_name) end
 
@@ -2627,19 +2631,19 @@ function GetChatTypeIndex(typeCode) end
 
 ---Get the channels received by a chat window.
 ---@param frameId number @ The frame number of the chat frame to be queried (starts at 1).
----@return string name1number zone1string name2number zone2unknown ...
+---@return string name1, number zone1, string name2, number zone2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetChatWindowChannels)
 function GetChatWindowChannels(frameId) end
 
 ---Retrieves configuration information about a chat window.
 ---@param frameIndex number @ The index of the chat window to get information for (starts at 1).
----@return string namenumber fontSizenumber rnumber gnumber bnumber alphanumber shownnumber lockednumber dockedunknown uninteractable
+---@return string name, number fontSize, number r, number g, number b, number alpha, number shown, number locked, number docked, unknown uninteractable
 ---[View Documents](https://wow.gamepedia.com/API_GetChatWindowInfo)
 function GetChatWindowInfo(frameIndex) end
 
 ---Returns chat types received by a chat window.
 ---@param index number @ Chat window index, ascending from 1.
----@return unknown type1unknown ...
+---@return unknown type1, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetChatWindowMessages)
 function GetChatWindowMessages(index) end
 
@@ -2653,7 +2657,7 @@ function GetChatWindowSavedPosition() end
 
 ---Returns information about a class.
 ---@param classIndex number @ a number between 1 and GetNumClasses()
----@return string classNamestring classFilenumber classID
+---@return string className, string classFile, number classID
 ---[View Documents](https://wow.gamepedia.com/API_GetClassInfo)
 function GetClassInfo(classIndex) end
 
@@ -2674,7 +2678,7 @@ function GetCoinIcon(amount) end
 
 ---Breaks down an amount of money into gold/silver/copper, inserts separator strings, and returns the resulting string.
 ---@param amount number @ the amount of money in copper (for example, the return value from GetMoney)
----@param separator unknown
+---@param separator string @ ?Optional. Could be nil. - a string to insert between the formatted amounts of currency, if there is more than one type
 ---@return string formattedAmount
 ---[View Documents](https://wow.gamepedia.com/API_GetCoinText)
 function GetCoinText(amount, separator) end
@@ -2712,7 +2716,7 @@ function GetComboPoints(unit, target) end
 ---Returns information about the companions you have.
 ---@param type string @ Companion type to query: CRITTER or MOUNT.
 ---@param id number @ Index of the slot to query. Starting at 1 and going up to GetNumCompanions(type).
----@return number creatureIDstring creatureNamenumber creatureSpellIDstring iconnumber issummonednumber mountType
+---@return number creatureID, string creatureName, number creatureSpellID, string icon, number issummoned, number mountType
 ---[View Documents](https://wow.gamepedia.com/API_GetCompanionInfo)
 function GetCompanionInfo(type, id) end
 
@@ -2740,14 +2744,14 @@ function GetContainerFreeSlots(index, returnTable) end
 ---Returns cooldown information for an item in your inventory
 ---@param bagID number @ number of the bag the item is in, 0 is your backpack, 1-4 are the four additional bags
 ---@param slot number @ slot number of the bag item you want the info for.
----@return unknown startTimeunknown durationunknown isEnabled
+---@return unknown startTime, unknown duration, unknown isEnabled
 ---[View Documents](https://wow.gamepedia.com/API_GetContainerItemCooldown)
 function GetContainerItemCooldown(bagID, slot) end
 
 ---Returns current and maximum durability of an item in the character's bags.
 ---@param bag number @ Index of the bag slot the bag storing the item is in.
 ---@param slot number @ Index of the bag slot containing the item to query durability of.
----@return number currentnumber maximum
+---@return number current, number maximum
 ---[View Documents](https://wow.gamepedia.com/API_GetContainerItemDurability)
 function GetContainerItemDurability(bag, slot) end
 
@@ -2765,7 +2769,7 @@ function GetContainerItemID(bag, slot) end
 ---Returns information about an item in a container slot.
 ---@param bagID number @ bagID) - number of the bag the item is in, e.g. 0 for your backpack.
 ---@param slot number @ index of the slot inside the bag to look up.
----@return unknown iconunknown itemCountunknown lockedunknown qualityunknown readableunknown lootableunknown itemLinkunknown isFilteredunknown noValueunknown itemID
+---@return unknown icon, unknown itemCount, unknown locked, unknown quality, unknown readable, unknown lootable, unknown itemLink, unknown isFiltered, unknown noValue, unknown itemID
 ---[View Documents](https://wow.gamepedia.com/API_GetContainerItemInfo)
 function GetContainerItemInfo(bagID, slot) end
 
@@ -2791,13 +2795,13 @@ function GetContainerItemPurchaseItem() end
 ---Returns whether the item in the slot is a quest item.
 ---@param bag number @ BagID) - Index of the bag to query.
 ---@param slot number @ Index of the slot within the bag (ascending from 1) to query.
----@return number isQuestItemnumber questIdnumber isActive
+---@return number isQuestItem, number questId, number isActive
 ---[View Documents](https://wow.gamepedia.com/API_GetContainerItemQuestInfo)
 function GetContainerItemQuestInfo(bag, slot) end
 
 ---Returns the total number of free slots in the bag an the type of items that can go into it specified by the index.
 ---@param bagID number @ the slot containing the bag, e.g. 0 for backpack, etc.
----@return number numberOfFreeSlotsnumber bagType
+---@return number numberOfFreeSlots, number bagType
 ---[View Documents](https://wow.gamepedia.com/API_GetContainerNumFreeSlots)
 function GetContainerNumFreeSlots(bagID) end
 
@@ -2906,7 +2910,7 @@ function GetCurrentTitle() end
 function GetCursorDelta() end
 
 ---Returns information about what the mouse cursor is holding.
----@return unknown infoTypeunknown ...
+---@return unknown infoType, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetCursorInfo)
 function GetCursorInfo() end
 
@@ -2916,7 +2920,7 @@ function GetCursorInfo() end
 function GetCursorMoney() end
 
 ---Returns the cursor's position on the screen.
----@return number xnumber y
+---@return number x, number y
 ---[View Documents](https://wow.gamepedia.com/API_GetCursorPosition)
 function GetCursorPosition() end
 
@@ -2939,7 +2943,7 @@ function GetDeathRecapLink(recapID) end
 function GetDefaultGraphicsQuality() end
 
 ---Returns the player's default language.
----@return string languagenumber languageID
+---@return string language, number languageID
 ---[View Documents](https://wow.gamepedia.com/API_GetDefaultLanguage)
 function GetDefaultLanguage() end
 
@@ -2965,17 +2969,18 @@ function GetDemotionRank() end
 
 ---Returns detailed item level information about a given item.
 ---@param itemID_or_itemString_or_itemName_or_itemLink unknown
----@return number effectiveILvlboolean isPreviewnumber baseILvl
+---@return number effectiveILvl, boolean isPreview, number baseILvl
 ---[View Documents](https://wow.gamepedia.com/API_GetDetailedItemLevelInfo)
 function GetDetailedItemLevelInfo(itemID_or_itemString_or_itemName_or_itemLink) end
 
 ---Returns information about a difficulty.
 ---@param id number @ difficulty ID to query, ascending from 1.
----@return string namestring groupTypeboolean isHeroicboolean isChallengeModeboolean displayHeroicboolean displayMythicnumber toggleDifficultyID
+---@return string name, string groupType, boolean isHeroic, boolean isChallengeMode, boolean displayHeroic, boolean displayMythic, number toggleDifficultyID
 ---[View Documents](https://wow.gamepedia.com/API_GetDifficultyInfo)
 function GetDifficultyInfo(id) end
 
----@return void
+---Returns the Player's dodge chance in percentage.
+---@return number dodgeChance
 ---[View Documents](https://wow.gamepedia.com/API_GetDodgeChance)
 function GetDodgeChance() end
 
@@ -3038,12 +3043,12 @@ function GetExpansionForLevel(playerLevel) end
 function GetExpansionLevel() end
 
 ---Needs summary.
----@return boolean isExpansionTrialAccountnumber expansionTrialRemainingSeconds
+---@return boolean isExpansionTrialAccount, number expansionTrialRemainingSeconds
 ---[View Documents](https://wow.gamepedia.com/API_GetExpansionTrialInfo)
 function GetExpansionTrialInfo() end
 
 ---Returns the player's expertise percentage for main hand, offhand and ranged attacks.
----@return number expertisenumber offhandExpertisenumber rangedExpertise
+---@return number expertise, number offhandExpertise, number rangedExpertise
 ---[View Documents](https://wow.gamepedia.com/API_GetExpertise)
 function GetExpertise() end
 
@@ -3054,7 +3059,7 @@ function GetExtraBarIndex() end
 
 ---Returns information about the specified faction or faction header in the player's reputation pane.
 ---@param factionIndex number @ Index of the faction to query. Indices correspond to the rows currently displayed in the player's reptuation pane, and include headers, but do not include factions that are not currently displayed because their parent header is collapsed.
----@return number isCollapsednumber hasRepnumber isWatchednumber isChildnumber factionIDunknown hasBonusRepGainunknown canBeLFGBonus
+---@return number isCollapsed, number hasRep, number isWatched, number isChild, number factionID, unknown hasBonusRepGain, unknown canBeLFGBonus
 ---[View Documents](https://wow.gamepedia.com/API_GetFactionInfo)
 function GetFactionInfo(factionIndex) end
 
@@ -3117,7 +3122,7 @@ function GetFonts() end
 ---Returns the total time used by and number of calls of a frame's event handlers.
 ---@param frame Frame @ Specifies the frame.
 ---@param includeChildren boolean @ If false, only event handlers of the specified frame are considered. If true or omitted, the values returned will include the handlers for all of the frame's children as well.
----@return number timenumber count
+---@return number time, number count
 ---[View Documents](https://wow.gamepedia.com/API_GetFrameCPUUsage)
 function GetFrameCPUUsage(frame, includeChildren) end
 
@@ -3128,19 +3133,19 @@ function GetFramerate() end
 
 ---Returns all frames registered for the specified event, in dispatch order.
 ---@param event string @ Event for which to return registered frames, e.g. PLAYER_LOGOUT
----@return unknown frame1unknown frame2unknown ...
+---@return unknown frame1, unknown frame2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetFramesRegisteredForEvent)
 function GetFramesRegisteredForEvent(event) end
 
 ---Returns information about the specified friendship in the player's reputation pane.
 ---@param factionID number @ ID of the friendship to retrieve information for, provided by GetFactionInfo (14th return).
----@return number friendIDnumber friendRepnumber friendMaxRepstring friendNamestring friendTextnumber friendTexturestring friendTextLevelnumber friendThresholdnumber nextFriendThreshold
+---@return number friendID, number friendRep, number friendMaxRep, string friendName, string friendText, number friendTexture, string friendTextLevel, number friendThreshold, number nextFriendThreshold
 ---[View Documents](https://wow.gamepedia.com/API_GetFriendshipReputation)
 function GetFriendshipReputation(factionID) end
 
 ---Returns friendship rank indices. [1]
 ---@param factionID number @ provided by GetFactionInfo (14th return); defaults to the currently interacting NPC if omitted
----@return number currentRanknumber maxRank
+---@return number currentRank, number maxRank
 ---[View Documents](https://wow.gamepedia.com/API_GetFriendshipReputationRanks)
 function GetFriendshipReputationRanks(factionID) end
 
@@ -3161,12 +3166,12 @@ function GetGMTicket() end
 function GetGameMessageInfo() end
 
 ---Returns the realm's current time in hours and minutes.
----@return number hoursnumber minutes
+---@return number hours, number minutes
 ---[View Documents](https://wow.gamepedia.com/API_GetGameTime)
 function GetGameTime() end
 
 ---Returns the supported graphics APIs for the system, D3D11_LEGACY, D3D11, D3D12, etc.
----@return string cvarValuesunknown ...
+---@return string cvarValues, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetGraphicsAPIs)
 function GetGraphicsAPIs() end
 
@@ -3196,7 +3201,7 @@ function GetGuildAchievementNumMembers() end
 
 ---Returns information about the given selected guild applicant.
 ---@param selectionID number @ The index of the selected applicant (from 1 to GetNumGuildApplicants()).
----@return unknown namenumber levelstring classboolean bQuestboolean bDungeonboolean bRaidboolean bPvPboolean bRPboolean bWeekdaysunknown bWeekendsboolean bTankboolean bHealerboolean bDamagestring commentnumber timeSincenumber timeLeft
+---@return unknown name, number level, string class, boolean bQuest, boolean bDungeon, boolean bRaid, boolean bPvP, boolean bRP, boolean bWeekdays, unknown bWeekends, boolean bTank, boolean bHealer, boolean bDamage, string comment, number timeSince, number timeLeft
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildApplicantInfo)
 function GetGuildApplicantInfo(selectionID) end
 
@@ -3211,7 +3216,7 @@ function GetGuildBankBonusDepositMoney() end
 ---Gets information about an item slot from the guild bank.
 ---@param tab number @ The index of the tab in the guild bank
 ---@param slot number @ The index of the slot in the chosen tab.
----@return number texturenumber itemCountboolean lockedboolean isFilterednumber quality
+---@return number texture, number itemCount, boolean locked, boolean isFiltered, number quality
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildBankItemInfo)
 function GetGuildBankItemInfo(tab, slot) end
 
@@ -3227,7 +3232,7 @@ function GetGuildBankMoney() end
 
 ---gets a specific money transaction from the guild bank
 ---@param index number @ The index of the transaction to select. From 1 to GetNumGuildBankMoneyTransactions().
----@return string typeunknown namenumber amountnumber yearsnumber monthsnumber daysnumber hours
+---@return string type, unknown name, number amount, number years, number months, number days, number hours
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildBankMoneyTransaction)
 function GetGuildBankMoneyTransaction(index) end
 
@@ -3237,12 +3242,12 @@ function GetGuildBankTabCost() end
 
 ---Gets display / player's access information regarding a guild bank tab.
 ---@param tab number @ The index of the guild bank tab. (result of GetCurrentGuildBankTab())
----@return string namestring iconboolean isViewableboolean canDepositnumber numWithdrawalsnumber remainingWithdrawalsboolean filtered
+---@return string name, string icon, boolean isViewable, boolean canDeposit, number numWithdrawals, number remainingWithdrawals, boolean filtered
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildBankTabInfo)
 function GetGuildBankTabInfo(tab) end
 
 ---@param tab number @ guild bank tab number
----@return boolean canViewboolean canDepositboolean canEditnumber stacksPerDay
+---@return boolean canView, boolean canDeposit, boolean canEdit, number stacksPerDay
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildBankTabPermissions)
 function GetGuildBankTabPermissions(tab) end
 
@@ -3253,7 +3258,7 @@ function GetGuildBankText() end
 ---Get information for specific item transaction from Guild Bank.
 ---@param tab number @ Tab number, ascending from 1 to GetNumGuildBankTabs().
 ---@param index number @ Transaction index, ascending from 1 to GetNumGuildBankTransactions(tab). Higher indices correspond to more recent entries.
----@return string typestring namestring itemLinknumber countnumber tab1number tab2number yearnumber monthnumber daynumber hour
+---@return string type, string name, string itemLink, number count, number tab1, number tab2, number year, number month, number day, number hour
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildBankTransaction)
 function GetGuildBankTransaction(tab, index) end
 
@@ -3292,13 +3297,13 @@ function GetGuildExpirationTime() end
 function GetGuildFactionGroup() end
 
 ---Returns the guild name and faction standing of the player.
----@return string guildNamestring descriptionnumber standingIDnumber barMinnumber barMaxnumber barValue
+---@return string guildName, string description, number standingID, number barMin, number barMax, number barValue
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildFactionInfo)
 function GetGuildFactionInfo() end
 
 ---Returns guild-related information about a unit.
 ---@param unit string @ The unitId whose guild information you wish to query.
----@return string guildNamestring guildRankNamenumber guildRankIndexstring realm
+---@return string guildName, string guildRankName, number guildRankIndex, string realm
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildInfo)
 function GetGuildInfo(unit) end
 
@@ -3339,13 +3344,13 @@ function GetGuildNewsSort() end
 function GetGuildPerkInfo() end
 
 ---This function returns information about the last tradeskill you were looking at when you clicked View Crafters on a guild listing.
----@return number professionIDnumber recipeIDunknown unknown
+---@return number professionID, number recipeID, unknown unknown
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildRecipeInfoPostQuery)
 function GetGuildRecipeInfoPostQuery() end
 
 ---Renders the name and online status of a guild member having a certain recipe.
 ---@param index number @ index, beginning with 1, of a list of members who can craft the recipe
----@return string nameboolean online
+---@return string name, boolean online
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildRecipeMember)
 function GetGuildRecipeMember(index) end
 
@@ -3367,7 +3372,7 @@ function GetGuildRewardInfo() end
 
 ---Returns information about a character in your current guild.
 ---@param index number @ From 1 to GetNumGuildMembers()
----@return string namestring rankNamenumber rankIndexnumber levelstring classDisplayNamestring zonestring publicNotestring officerNoteboolean isOnlinenumber statusstring classnumber achievementPointsnumber achievementRankboolean isMobileboolean canSoRnumber repStandingstring GUID
+---@return string name, string rankName, number rankIndex, number level, string classDisplayName, string zone, string publicNote, string officerNote, boolean isOnline, number status, string class, number achievementPoints, number achievementRank, boolean isMobile, boolean canSoR, number repStanding, string GUID
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildRosterInfo)
 function GetGuildRosterInfo(index) end
 
@@ -3377,7 +3382,7 @@ function GetGuildRosterLargestAchievementPoints() end
 
 ---Returns a specific guild member's last seen time.
 ---@param index number @ index of the guild roster entry you wish to query.
----@return number yearsOfflinenumber monthsOfflinenumber daysOfflinenumber hoursOffline
+---@return number yearsOffline, number monthsOffline, number daysOffline, number hoursOffline
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildRosterLastOnline)
 function GetGuildRosterLastOnline(index) end
 
@@ -3397,13 +3402,13 @@ function GetGuildRosterSelection() end
 function GetGuildRosterShowOffline() end
 
 ---Returns File IDs of tabard textures used in guild bank logo.
----@return number tabardBackgroundUppernumber tabardBackgroundLowernumber tabardEmblemUppernumber tabardEmblemLowernumber tabardBorderUppernumber tabardBorderLower
+---@return number tabardBackgroundUpper, number tabardBackgroundLower, number tabardEmblemUpper, number tabardEmblemLower, number tabardBorderUpper, number tabardBorderLower
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildTabardFiles)
 function GetGuildTabardFiles() end
 
 ---Returns information about a guild tradeskill
 ---@param index number @ The index of the tradeskill from GetNumGuildTradeSkill().
----@return number skillIDboolean isCollapsedstring iconTexturestring headerNamenumber numOnlinenumber numVisiblenumber numPlayersstring playerNamestring playerNameWithRealmstring classboolean onlinestring zonenumber skillstring classFileNameboolean isMobilenumber isAway
+---@return number skillID, boolean isCollapsed, string iconTexture, string headerName, number numOnline, number numVisible, number numPlayers, string playerName, string playerNameWithRealm, string class, boolean online, string zone, number skill, string classFileName, boolean isMobile, number isAway
 ---[View Documents](https://wow.gamepedia.com/API_GetGuildTradeSkillInfo)
 function GetGuildTradeSkillInfo(index) end
 
@@ -3424,20 +3429,20 @@ function GetHomePartyInfo(homePlayers) end
 
 ---Returns information about a message in the mailbox.
 ---@param index number @ the index of the message (ascending from 1).
----@return number textCreatednumber canReplynumber isGM
+---@return number textCreated, number canReply, number isGM
 ---[View Documents](https://wow.gamepedia.com/API_GetInboxHeaderInfo)
 function GetInboxHeaderInfo(index) end
 
 ---Returns information about an auction house invoice.
 ---@param index number @ the index of the message (1 is the first message)
----@return string invoiceTypestring itemNamestring playerNamenumber bidnumber buyoutnumber depositnumber consignment
+---@return string invoiceType, string itemName, string playerName, number bid, number buyout, number deposit, number consignment
 ---[View Documents](https://wow.gamepedia.com/API_GetInboxInvoiceInfo)
 function GetInboxInvoiceInfo(index) end
 
 ---Provides information about an item attached to a message in the player's mailbox.
 ---@param index number @ The index of the message to query, in the range [1,GetInboxNumItems()]
 ---@param itemIndex number @ The index of the item to query, in the range [1,ATTACHMENTS_MAX_RECEIVE]
----@return string namenumber itemIDstring texturenumber countnumber qualitynumber canUse
+---@return string name, number itemID, string texture, number count, number quality, number canUse
 ---[View Documents](https://wow.gamepedia.com/API_GetInboxItem)
 function GetInboxItem(index, itemIndex) end
 
@@ -3448,13 +3453,13 @@ function GetInboxItem(index, itemIndex) end
 ---[View Documents](https://wow.gamepedia.com/API_GetInboxItemLink)
 function GetInboxItemLink(message, attachment) end
 
----@return unknown numItemsunknown totalItems
+---@return unknown numItems, unknown totalItems
 ---[View Documents](https://wow.gamepedia.com/API_GetInboxNumItems)
 function GetInboxNumItems() end
 
 ---Returns information about a mailbox item.
 ---@param index number @ the index of the message (1 is the first message)
----@return string bodyTextstring stationaryMiddlestring stationaryEdgeboolean isTakeableboolean isInvoice
+---@return string bodyText, string stationaryMiddle, string stationaryEdge, boolean isTakeable, boolean isInvoice
 ---[View Documents](https://wow.gamepedia.com/API_GetInboxText)
 function GetInboxText(index) end
 
@@ -3464,7 +3469,7 @@ function GetInsertItemsLeftToRight() end
 
 ---Returns the inspected unit's rated PvP stats.
 ---@param bracketId number @ rated PvP bracket to query, ascending from 1 for 2v2, 3v3, and 5v5 arenas, and Rated Battlegrounds respectively.
----@return number ratingnumber seasonPlayednumber seasonWonnumber weeklyPlayednumber weeklyWon
+---@return number rating, number seasonPlayed, number seasonWon, number weeklyPlayed, number weeklyWon
 ---[View Documents](https://wow.gamepedia.com/API_GetInspectArenaData)
 function GetInspectArenaData(bracketId) end
 
@@ -3473,7 +3478,7 @@ function GetInspectArenaData(bracketId) end
 function GetInspectGuildInfo() end
 
 ---Get the honor information about the inspected unit.
----@return number todayHKnumber todayHonornumber yesterdayHKnumber yesterdayHonornumber lifetimeHKnumber lifetimeRank
+---@return number todayHK, number todayHonor, number yesterdayHK, number yesterdayHonor, number lifetimeHK, number lifetimeRank
 ---[View Documents](https://wow.gamepedia.com/API_GetInspectHonorData)
 function GetInspectHonorData() end
 
@@ -3496,18 +3501,18 @@ function GetInspectTalent() end
 function GetInstanceBootTimeRemaining() end
 
 ---Returns information about the map instance the player is currently in.
----@return unknown nameunknown instanceTypeunknown difficultyIDunknown difficultyNameunknown maxPlayersunknown dynamicDifficultyunknown isDynamicunknown instanceIDunknown instanceGroupSizeunknown LfgDungeonID
+---@return unknown name, unknown instanceType, unknown difficultyID, unknown difficultyName, unknown maxPlayers, unknown dynamicDifficulty, unknown isDynamic, unknown instanceID, unknown instanceGroupSize, unknown LfgDungeonID
 ---[View Documents](https://wow.gamepedia.com/API_GetInstanceInfo)
 function GetInstanceInfo() end
 
 ---Returns information about the instance lock timer for the current instance.
----@return number lockTimeleftboolean isPreviousInstancenumber encountersTotalnumber encountersComplete
+---@return number lockTimeleft, boolean isPreviousInstance, number encountersTotal, number encountersComplete
 ---[View Documents](https://wow.gamepedia.com/API_GetInstanceLockTimeRemaining)
 function GetInstanceLockTimeRemaining() end
 
 ---Returns information about bosses in the instance the player is about to be saved to.
 ---@param id number @ Index of the boss to query, ascending from 1 to encountersTotal return value from GetInstanceLockTimeRemaining.
----@return string bossNamestring textureboolean isKilled
+---@return string bossName, string texture, boolean isKilled
 ---[View Documents](https://wow.gamepedia.com/API_GetInstanceLockTimeRemainingEncounter)
 function GetInstanceLockTimeRemainingEncounter(id) end
 
@@ -3527,7 +3532,7 @@ function GetInventoryItemBroken(unit, slotId) end
 ---Get cooldown information for an inventory item.
 ---@param unit string @ The UnitId of the unit whose inventory is to be queried.
 ---@param slotId number @ The inventory slot to be queried, obtained via GetInventorySlotInfo.
----@return number startnumber durationnumber enable
+---@return number start, number duration, number enable
 ---[View Documents](https://wow.gamepedia.com/API_GetInventoryItemCooldown)
 function GetInventoryItemCooldown(unit, slotId) end
 
@@ -3540,7 +3545,7 @@ function GetInventoryItemCount(unit, slotId) end
 
 ---Returns current and maximum durability of an equipped item.
 ---@param slot number @ Inventory slot index to query durability of.
----@return number currentnumber maximum
+---@return number current, number maximum
 ---[View Documents](https://wow.gamepedia.com/API_GetInventoryItemDurability)
 function GetInventoryItemDurability(slot) end
 
@@ -3551,7 +3556,7 @@ function GetInventoryItemEquippedUnusable() end
 ---Returns the item id of the item in the specified inventory slot
 ---@param unit string @ The UnitId of the unit whose inventory is to be queried.
 ---@param invSlot number @ InventorySlotId) - index of the inventory slot to query.
----@return number itemIdnumber unknown
+---@return number itemId, number unknown
 ---[View Documents](https://wow.gamepedia.com/API_GetInventoryItemID)
 function GetInventoryItemID(unit, invSlot) end
 
@@ -3582,13 +3587,13 @@ function GetInventoryItemsForSlot() end
 
 ---Return information about a specific inventory slot
 ---@param slotName string @ InventorySlotName to query (e.g. HEADSLOT).
----@return number slotIdstring textureNameboolean checkRelic
+---@return number slotId, string textureName, boolean checkRelic
 ---[View Documents](https://wow.gamepedia.com/API_GetInventorySlotInfo)
 function GetInventorySlotInfo(slotName) end
 
 ---Retrieves information about a player that could be invited.
 ---@param invite unknown @ unknown - return value of function GetNextPendingInviteConfirmation
----@return number confirmationTypestring namestring guidboolean rolesInvalidboolean willConvertToRaidnumber levelnumber specnumber itemLevel
+---@return number confirmationType, string name, string guid, boolean rolesInvalid, boolean willConvertToRaid, number level, number spec, number itemLevel
 ---[View Documents](https://wow.gamepedia.com/API_GetInviteConfirmationInfo)
 function GetInviteConfirmationInfo(invite) end
 
@@ -3604,7 +3609,7 @@ function GetItemClassInfo(classID) end
 
 ---Returns cooldown information for the item.
 ---@param itemID number @ The numeric ID of the item. ie. 12345
----@return number startTimenumber durationnumber enable
+---@return number startTime, number duration, number enable
 ---[View Documents](https://wow.gamepedia.com/API_GetItemCooldown)
 function GetItemCooldown(itemID) end
 
@@ -3626,12 +3631,12 @@ function GetItemCreationContext() end
 ---[View Documents](https://wow.gamepedia.com/API_GetItemFamily)
 function GetItemFamily(itemId_or_itemName_or_itemLink) end
 
----Takes an item with a gem in it, and an index from 1-3, and returns the name and link for the gem at that index.
----@param name_or_itemlink unknown
----@param index number @ The index of the desired gem. 1, 2, or 3
----@return string itemNamestring itemLink
+---Returns the gem for a socketed equipment item.
+---@param item string @ The name of the equipment item (the item must be equipped or in your inventory for this to work) or the ItemLink
+---@param index number @ The index of the desired gem: 1, 2, or 3
+---@return string itemName, string itemLink
 ---[View Documents](https://wow.gamepedia.com/API_GetItemGem)
-function GetItemGem(name_or_itemlink, index) end
+function GetItemGem(item, index) end
 
 ---Returns an item's icon texture.
 ---@param itemID number @ The numeric ID of the item to query e.g. 23405 for [Farstrider's Tunic].
@@ -3647,7 +3652,7 @@ function GetItemInfo(itemInfo) end
 
 ---Returns instantly-available information about a specific item.
 ---@param itemID_or_itemString_or_itemName_or_itemLink unknown
----@return number itemIDunknown itemTypeunknown itemSubTypeunknown itemEquipLocunknown iconunknown itemClassIDunknown itemSubClassID
+---@return number itemID, unknown itemType, unknown itemSubType, unknown itemEquipLoc, unknown icon, unknown itemClassID, unknown itemSubClassID
 ---[View Documents](https://wow.gamepedia.com/API_GetItemInfoInstant)
 function GetItemInfoInstant(itemID_or_itemString_or_itemName_or_itemLink) end
 
@@ -3666,7 +3671,7 @@ function GetItemLevelIncrement() end
 
 ---Returns RGB color codes for an item quality.
 ---@param quality number @ Enum.ItemQuality
----@return number rnumber gnumber bstring hex
+---@return number r, number g, number b, string hex
 ---[View Documents](https://wow.gamepedia.com/API_GetItemQualityColor)
 function GetItemQualityColor(quality) end
 
@@ -3683,7 +3688,7 @@ function GetItemSpecInfo(itemLink_or_itemID_or_itemName, specTable) end
 
 ---Return spell information about a specific item.
 ---@param itemID_or_itemString_or_itemName_or_itemLink unknown
----@return string spellNamenumber spellID
+---@return string spellName, number spellID
 ---[View Documents](https://wow.gamepedia.com/API_GetItemSpell)
 function GetItemSpell(itemID_or_itemString_or_itemName_or_itemLink) end
 
@@ -3701,7 +3706,7 @@ function GetItemStats(itemLink, statTable) end
 ---Returns the name of the item subtype.
 ---@param classID number @ ID of the ItemType
 ---@param subClassID number @ ID of the item subtype
----@return string nameboolean isArmorType
+---@return string name, boolean isArmorType
 ---[View Documents](https://wow.gamepedia.com/API_GetItemSubClassInfo)
 function GetItemSubClassInfo(classID, subClassID) end
 
@@ -3716,7 +3721,7 @@ function GetItemUpdateLevel() end
 
 ---Returns the effect of upgrading an item on one of its effects.
 ---@param effectIndex number @ Index of the effect to query, ascending from 1 to GetNumItemUpgradeEffects().
----@return string leftTextstring rightText
+---@return string leftText, string rightText
 ---[View Documents](https://wow.gamepedia.com/API_GetItemUpgradeEffect)
 function GetItemUpgradeEffect(effectIndex) end
 
@@ -3766,7 +3771,7 @@ function GetLFDRoleLockInfo() end
 function GetLFDRoleRestrictions() end
 
 ---Returns information about an LFG Kick vote currently in progress.
----@return number totalVotesnumber bootVotesnumber timeLeftstring reason
+---@return number totalVotes, number bootVotes, number timeLeft, string reason
 ---[View Documents](https://wow.gamepedia.com/API_GetLFGBootProposal)
 function GetLFGBootProposal() end
 
@@ -3794,25 +3799,25 @@ function GetLFGDeserterExpiration() end
 ---Returns info about a specific encounter in an LFG/RF dungeon.
 ---@param dungeonID number @ Ranging from 1 to around 2000 in patch 8.1.5
 ---@param encounterIndex number @ Index from 1 to GetLFGDungeonNumEncounters(). For multi-part raids, many bosses will never be accessible to players because they were in an earlier 'wing'.
----@return string bossNamestring textureboolean isKilledboolean unknown4
+---@return string bossName, string texture, boolean isKilled, boolean unknown4
 ---[View Documents](https://wow.gamepedia.com/API_GetLFGDungeonEncounterInfo)
 function GetLFGDungeonEncounterInfo(dungeonID, encounterIndex) end
 
 ---Retrieves specific dungeon information, not limited by player level and all dungeons can be looked up.
 ---@param dungeonID number @ Numeric ID to uniquely identify each dungeon
----@return unknown nameunknown typeIDunknown subtypeIDunknown minLevelunknown maxLevelunknown recLevelunknown minRecLevelunknown maxRecLevelunknown expansionLevelunknown groupIDunknown textureFilenameunknown difficultyunknown maxPlayersunknown descriptionunknown isHolidayunknown bonusRepAmountunknown minPlayersunknown isTimeWalkerunknown name2unknown minGearLevel
+---@return unknown name, unknown typeID, unknown subtypeID, unknown minLevel, unknown maxLevel, unknown recLevel, unknown minRecLevel, unknown maxRecLevel, unknown expansionLevel, unknown groupID, unknown textureFilename, unknown difficulty, unknown maxPlayers, unknown description, unknown isHoliday, unknown bonusRepAmount, unknown minPlayers, unknown isTimeWalker, unknown name2, unknown minGearLevel
 ---[View Documents](https://wow.gamepedia.com/API_GetLFGDungeonInfo)
 function GetLFGDungeonInfo(dungeonID) end
 
 ---Returns the number of encounters and number of completed encounters for a specified dungeon ID.
 ---@param dungeonID number @ Ranging from 1 to around 2000 in patch 8.1.5
----@return number numEncountersnumber numCompleted
+---@return number numEncounters, number numCompleted
 ---[View Documents](https://wow.gamepedia.com/API_GetLFGDungeonNumEncounters)
 function GetLFGDungeonNumEncounters(dungeonID) end
 
 ---Retrieves information on the weekly limits for currency rewards from the dungeon system (i.e. Valor Point Cap)
 ---@param VALOR_TIER1_LFG_ID number @ id of the dungeon type for which information is being sought (currently 301)
----@return number currencyIDnumber DungeonIDnumber Quantitynumber Limitnumber overallQuantitynumber overallLimitnumber periodPurseQuantitynumber periodPurseLimitnumber purseQuantitynumber purseLimit
+---@return number currencyID, number DungeonID, number Quantity, number Limit, number overallQuantity, number overallLimit, number periodPurseQuantity, number periodPurseLimit, number purseQuantity, number purseLimit
 ---[View Documents](https://wow.gamepedia.com/API_GetLFGDungeonRewardCapBarInfo)
 function GetLFGDungeonRewardCapBarInfo(VALOR_TIER1_LFG_ID) end
 
@@ -3853,7 +3858,7 @@ function GetLFGInviteRoleAvailability() end
 function GetLFGInviteRoleRestrictions() end
 
 ---Returns information about the current LFD group invite.
----@return number completedEncountersnumber numMembersboolean isLeaderboolean isHolidaynumber proposalCategory
+---@return number completedEncounters, number numMembers, boolean isLeader, boolean isHoliday, number proposalCategory
 ---[View Documents](https://wow.gamepedia.com/API_GetLFGProposal)
 function GetLFGProposal() end
 
@@ -3896,7 +3901,7 @@ function GetLFGReadyCheckUpdateBattlegroundInfo() end
 ---Return information concerning the LFG Call to Arms rewards.
 ---@param dungeonID number @ LfgDungeonID - The type of the dungeons to queue for. See table below.
 ---@param shortageSeverity number @ A number from 1 to LFG_ROLE_NUM_SHORTAGE_TYPES. See below for specific shortage types.
----@return boolean eligibleboolean forTankboolean forHealerboolean forDamagenumber itemCountnumber moneynumber xp
+---@return boolean eligible, boolean forTank, boolean forHealer, boolean forDamage, number itemCount, number money, number xp
 ---[View Documents](https://wow.gamepedia.com/API_GetLFGRoleShortageRewards)
 function GetLFGRoleShortageRewards(dungeonID, shortageSeverity) end
 
@@ -3919,7 +3924,7 @@ function GetLFGRoleUpdateMember() end
 function GetLFGRoleUpdateSlot() end
 
 ---Returns what roles you signed up as in the Dungeon Finder.
----@return boolean isLeaderboolean isTankboolean isHealerboolean isDPS
+---@return boolean isLeader, boolean isTank, boolean isHealer, boolean isDPS
 ---[View Documents](https://wow.gamepedia.com/API_GetLFGRoles)
 function GetLFGRoles() end
 
@@ -3935,7 +3940,7 @@ function GetLFRChoiceOrder(LFRRaidList) end
 
 ---Returns the language specified by the index that your character can speak.
 ---@param index number @ Ranging from 1 up to GetNumLanguages()
----@return string languagenumber languageID
+---@return string language, number languageID
 ---[View Documents](https://wow.gamepedia.com/API_GetLanguageByIndex)
 function GetLanguageByIndex(index) end
 
@@ -3948,7 +3953,7 @@ function GetLatestCompletedAchievements() end
 function GetLatestCompletedComparisonAchievements() end
 
 ---Returns up to three names of senders of unread mail in the character's inbox.
----@return unknown sender1unknown sender2unknown sender3
+---@return unknown sender1, unknown sender2, unknown sender3
 ---[View Documents](https://wow.gamepedia.com/API_GetLatestThreeSenders)
 function GetLatestThreeSenders() end
 
@@ -3967,7 +3972,7 @@ function GetLegacyRaidDifficultyID() end
 ---Returns a list of dungeon/raid IDs that are advertised as available at a given level.
 ---@param level number @ level at which to list newly-available instances.
 ---@param isRaid boolean @ true to list raid instances, false to list dungeons.
----@return unknown id1unknown id2unknown ...
+---@return unknown id1, unknown id2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetLevelUpInstances)
 function GetLevelUpInstances(level, isRaid) end
 
@@ -4007,13 +4012,13 @@ function GetLooseMacroItemIcons() end
 function GetLootInfo() end
 
 ---Retrieves the Loot Method and (if applicable) Master Looter idenity.
----@return string lootmethodnumber masterlooterPartyIDnumber masterlooterRaidID
+---@return string lootmethod, number masterlooterPartyID, number masterlooterRaidID
 ---[View Documents](https://wow.gamepedia.com/API_GetLootMethod)
 function GetLootMethod() end
 
 ---Returns information about the loot event with rollID.
 ---@param rollID number @ The number increments by 1 for each new roll. The count is not reset by reloading the UI.
----@return string texturestring namenumber countnumber qualitynumber bindOnPickUpnumber canNeednumber canGreednumber canDisenchantnumber reasonNeednumber reasonGreednumber reasonDisenchantnumber deSkillRequired
+---@return string texture, string name, number count, number quality, number bindOnPickUp, number canNeed, number canGreed, number canDisenchant, number reasonNeed, number reasonGreed, number reasonDisenchant, number deSkillRequired
 ---[View Documents](https://wow.gamepedia.com/API_GetLootRollItemInfo)
 function GetLootRollItemInfo(rollID) end
 
@@ -4029,7 +4034,7 @@ function GetLootRollTimeLeft() end
 
 ---Returns information about the contents of a loot slot.
 ---@param slot number @ the index of the loot (1 is the first item, typically coin)
----@return string lootIconstring lootNamenumber lootQuantitynumber currencyIDnumber lootQualityboolean lockedboolean isQuestItemnumber questIDboolean isActive
+---@return string lootIcon, string lootName, number lootQuantity, number currencyID, number lootQuality, boolean locked, boolean isQuestItem, number questID, boolean isActive
 ---[View Documents](https://wow.gamepedia.com/API_GetLootSlotInfo)
 function GetLootSlotInfo(slot) end
 
@@ -4047,7 +4052,7 @@ function GetLootSlotType(slotIndex) end
 
 ---Returns information about the source of the objects in a loot slot.
 ---@param lootSlot number @ index of the loot slot, ascending from 1 up to GetNumLootItems()
----@return unknown guid1unknown quant1unknown guid2unknown quant2unknown ...
+---@return unknown guid1, unknown quant1, unknown guid2, unknown quant2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetLootSourceInfo)
 function GetLootSourceInfo(lootSlot) end
 
@@ -4079,7 +4084,7 @@ function GetMacroIndexByName(name) end
 
 ---Return information about a macro.
 ---@param name_or_macroSlot unknown
----@return string namenumber iconstring bodynumber isLocal
+---@return string name, number icon, string body, number isLocal
 ---[View Documents](https://wow.gamepedia.com/API_GetMacroInfo)
 function GetMacroInfo(name_or_macroSlot) end
 
@@ -4098,7 +4103,7 @@ function GetMacroItemIcons() end
 function GetMacroSpell(slot_or_macroName) end
 
 ---Gets the player's current mana regeneration rates (in mana per 1 seconds).
----@return number basenumber casting
+---@return number base, number casting
 ---[View Documents](https://wow.gamepedia.com/API_GetManaRegen)
 function GetManaRegen() end
 
@@ -4115,7 +4120,7 @@ function GetMasterLootCandidate(slot, index) end
 function GetMastery() end
 
 ---Returns the effect of player's current Mastery.
----@return number masterynumber coefficient
+---@return number mastery, number coefficient
 ---[View Documents](https://wow.gamepedia.com/API_GetMasteryEffect)
 function GetMasteryEffect() end
 
@@ -4203,7 +4208,7 @@ function GetMerchantItemCostInfo(index) end
 ---Returns information about an item's token/currency cost.
 ---@param index number @ Slot in the merchant's inventory to query.
 ---@param itemIndex number @ The index for the required item cost type, ascending from 1 to itemCount returned by GetMerchantItemCostInfo.
----@return string itemTexturenumber itemValuestring itemLinkstring currencyName
+---@return string itemTexture, number itemValue, string itemLink, string currencyName
 ---[View Documents](https://wow.gamepedia.com/API_GetMerchantItemCostItem)
 function GetMerchantItemCostItem(index, itemIndex) end
 
@@ -4213,7 +4218,7 @@ function GetMerchantItemID() end
 
 ---Returns information about a merchant's item.
 ---@param index number @ The index of the item in the merchant's inventory
----@return string namestring texturenumber pricenumber quantitynumber numAvailableunknown isPurchasablenumber isUsablenumber extendedCost
+---@return string name, string texture, number price, number quantity, number numAvailable, unknown isPurchasable, number isUsable, number extendedCost
 ---[View Documents](https://wow.gamepedia.com/API_GetMerchantItemInfo)
 function GetMerchantItemInfo(index) end
 
@@ -4250,7 +4255,7 @@ function GetMinimumExpansionLevel() end
 
 ---Gives information about the mirror bar. (Spirit release, exhaustion/fatigue, etc)
 ---@param id number @ timer index, from 1 to MIRRORTIMER_NUMTIMERS (3 as of 3.2). In general, the following correspondence holds: 1 = Fatigue, 2 = Breath, 3 = Feign Death.
----@return string timernumber initialnumber maxvaluenumber scalenumber pausedstring label
+---@return string timer, number initial, number maxvalue, number scale, number paused, string label
 ---[View Documents](https://wow.gamepedia.com/API_GetMirrorTimerInfo)
 function GetMirrorTimerInfo(id) end
 
@@ -4323,7 +4328,7 @@ function GetMultiCastBarIndex() end
 
 ---Returns a list of valid totem spells for the specified totem bar slot.
 ---@param slot number @ The totem bar slot number:
----@return number totem1number totem2number totem3number totem4number totem5number totem6number totem7
+---@return number totem1, number totem2, number totem3, number totem4, number totem5, number totem6, number totem7
 ---[View Documents](https://wow.gamepedia.com/API_GetMultiCastTotemSpells)
 function GetMultiCastTotemSpells(slot) end
 
@@ -4337,7 +4342,7 @@ function GetNegativeCorruptionEffectInfo() end
 function GetNetIpTypes() end
 
 ---Returns various network statistics.
----@return number bandwidthInnumber bandwidthOutnumber latencyHomenumber latencyWorld
+---@return number bandwidthIn, number bandwidthOut, number latencyHome, number latencyWorld
 ---[View Documents](https://wow.gamepedia.com/API_GetNetStats)
 function GetNetStats() end
 
@@ -4405,7 +4410,7 @@ function GetNumAutoQuestPopUps() end
 function GetNumAvailableQuests() end
 
 ---Returns information about the number of purchased bank bag slots.
----@return number numSlotsnumber full
+---@return number numSlots, number full
 ---[View Documents](https://wow.gamepedia.com/API_GetNumBankSlots)
 function GetNumBankSlots() end
 
@@ -4457,7 +4462,7 @@ function GetNumCompanions(type) end
 function GetNumComparisonCompletedAchievements() end
 
 ---Return the total number of Achievements, and number completed.
----@return number totalnumber completed
+---@return number total, number completed
 ---[View Documents](https://wow.gamepedia.com/API_GetNumCompletedAchievements)
 function GetNumCompletedAchievements() end
 
@@ -4538,7 +4543,7 @@ function GetNumGuildChallenges() end
 function GetNumGuildEvents() end
 
 ---Returns the number of guild members.
----@return number numTotalGuildMembersnumber numOnlineGuildMembersnumber numOnlineAndMobileMembers
+---@return number numTotalGuildMembers, number numOnlineGuildMembers, number numOnlineAndMobileMembers
 ---[View Documents](https://wow.gamepedia.com/API_GetNumGuildMembers)
 function GetNumGuildMembers() end
 
@@ -4572,13 +4577,13 @@ function GetNumItemUpgradeEffects() end
 ---[View Documents](https://wow.gamepedia.com/API_GetNumLanguages)
 function GetNumLanguages() end
 
----Returns the slot number of the last item in the loot window (the item window must be opened).
+---Returns the slot number of the last item in the loot window (the item window must be opened). So it may be more than the number of items remaining, if one or more items have already been taken.
 ---@return number numLootItems
 ---[View Documents](https://wow.gamepedia.com/API_GetNumLootItems)
 function GetNumLootItems() end
 
 ---Return the number of macros the player has.
----@return number globalnumber perChar
+---@return number global, number perChar
 ---[View Documents](https://wow.gamepedia.com/API_GetNumMacros)
 function GetNumMacros() end
 
@@ -4620,9 +4625,11 @@ function GetNumQuestItems() end
 function GetNumQuestLeaderBoards(questID) end
 
 ---Returns the number of options someone has when getting a quest item.
+---@param questID number
+---@param includeCurrencies boolean @ ?Optional. Could be nil.
 ---@return number numQuestChoices
 ---[View Documents](https://wow.gamepedia.com/API_GetNumQuestLogChoices)
-function GetNumQuestLogChoices() end
+function GetNumQuestLogChoices(questID, includeCurrencies) end
 
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_GetNumQuestLogRewardCurrencies)
@@ -4799,7 +4806,7 @@ function GetOSLocale() end
 
 ---Returns texture coordinates of an object icon.
 ---@param objectIcon number @ index of the object icon to retrieve texture coordinates for, ascending from -2.
----@return number leftnumber rightnumber topnumber bottom
+---@return number left, number right, number top, number bottom
 ---[View Documents](https://wow.gamepedia.com/API_GetObjectIconTextureCoords)
 function GetObjectIconTextureCoords(objectIcon) end
 
@@ -4842,17 +4849,17 @@ function GetPVPDesired() end
 function GetPVPGearStatRules() end
 
 ---Gets the statistics about your lifetime PVP contributions.
----@return number honorableKillsnumber dishonorableKillsnumber highestRank
+---@return number honorableKills, number dishonorableKills, number highestRank
 ---[View Documents](https://wow.gamepedia.com/API_GetPVPLifetimeStats)
 function GetPVPLifetimeStats() end
 
 ---Returns which roles the player is willing to perform in PvP battlegrounds.
----@return boolean tankboolean healerboolean dps
+---@return boolean tank, boolean healer, boolean dps
 ---[View Documents](https://wow.gamepedia.com/API_GetPVPRoles)
 function GetPVPRoles() end
 
 ---Gets the amount of honorable kills and honor points you have for the current session ( today ).
----@return number hknumber hp
+---@return number hk, number hp
 ---[View Documents](https://wow.gamepedia.com/API_GetPVPSessionStats)
 function GetPVPSessionStats() end
 
@@ -4862,11 +4869,12 @@ function GetPVPSessionStats() end
 function GetPVPTimer() end
 
 ---Gets the player's PVP contribution statistics for the previous day.
----@return number hknumber dknumber contribution
+---@return number hk, number dk, number contribution
 ---[View Documents](https://wow.gamepedia.com/API_GetPVPYesterdayStats)
 function GetPVPYesterdayStats() end
 
----@return void
+---Returns the Player's parry chance in percentage.
+---@return number parryChance
 ---[View Documents](https://wow.gamepedia.com/API_GetParryChance)
 function GetParryChance() end
 
@@ -4878,7 +4886,7 @@ function GetParryChanceFromAttribute() end
 ---@param assignment string @ The role to search, either MAINTANK or MAINASSIST (not case-sensitive).
 ---@param raidmember string @ UnitId
 ---@param exactMatch boolean
----@return number raidIndex1number raidIndex2
+---@return number raidIndex1, number raidIndex2
 ---[View Documents](https://wow.gamepedia.com/API_GetPartyAssignment)
 function GetPartyAssignment(assignment, raidmember, exactMatch) end
 
@@ -4900,19 +4908,19 @@ function GetPendingInviteConfirmations() end
 
 ---Returns information about the player's personal PvP rating in a specific bracket.
 ---@param index number @ PvP bracket index ascending from 1 for 2v2, 3v3, 5v5 and 10v10 rated battlegrounds.
----@return number ratingnumber seasonBestnumber weeklyBestnumber seasonPlayednumber seasonWonnumber weeklyPlayednumber weeklyWonnumber cap
+---@return number rating, number seasonBest, number weeklyBest, number seasonPlayed, number seasonWon, number weeklyPlayed, number weeklyWon, number cap
 ---[View Documents](https://wow.gamepedia.com/API_GetPersonalRatedInfo)
 function GetPersonalRatedInfo(index) end
 
 ---Returns cooldown information for the pet action in the specified pet action bar slot.
 ---@param index number @ The index of the pet action button you want to query for cooldown info.
----@return number startTimenumber durationboolean enable
+---@return number startTime, number duration, boolean enable
 ---[View Documents](https://wow.gamepedia.com/API_GetPetActionCooldown)
 function GetPetActionCooldown(index) end
 
 ---Returns information on the specified pet action.
 ---@param index number @ The index of the pet action button you want to query.
----@return string namestring subtextstring textureboolean isTokenboolean isActiveboolean autoCastAllowedboolean autoCastEnabled
+---@return string name, string subtext, string texture, boolean isToken, boolean isActive, boolean autoCastAllowed, boolean autoCastEnabled
 ---[View Documents](https://wow.gamepedia.com/API_GetPetActionInfo)
 function GetPetActionInfo(index) end
 
@@ -4925,7 +4933,7 @@ function GetPetActionSlotUsable() end
 function GetPetActionsUsable() end
 
 ---Returns the pet's current XP total, and the XP total required for the next level.
----@return number currXPnumber nextXP
+---@return number currXP, number nextXP
 ---[View Documents](https://wow.gamepedia.com/API_GetPetExperience)
 function GetPetExperience() end
 
@@ -4955,7 +4963,7 @@ function GetPetTalentTree() end
 function GetPetTimeRemaining() end
 
 ---Gets the information for a petition being viewed.
----@return string petitionTypestring titlestring bodyTextnumber maxSigsstring originatorboolean isOriginatornumber minSigs
+---@return string petitionType, string title, string bodyText, number maxSigs, string originator, boolean isOriginator, number minSigs
 ---[View Documents](https://wow.gamepedia.com/API_GetPetitionInfo)
 function GetPetitionInfo() end
 
@@ -4964,7 +4972,7 @@ function GetPetitionInfo() end
 function GetPetitionNameInfo() end
 
 ---Returns physical screen size of game.
----@return number widthnumber height
+---@return number width, number height
 ---[View Documents](https://wow.gamepedia.com/API_GetPhysicalScreenSize)
 function GetPhysicalScreenSize() end
 
@@ -4981,7 +4989,7 @@ function GetPlayerFacing() end
 
 ---Returns basic information about another player from their GUID.
 ---@param guid string @ The GUID of the player you're querying.
----@return unknown izedClassstring englishClassunknown izedRacestring englishRacenumber sexstring namestring realm
+---@return unknown izedClass, string englishClass, unknown izedRace, string englishRace, number sex, string name, string realm
 ---[View Documents](https://wow.gamepedia.com/API_GetPlayerInfoByGUID)
 function GetPlayerInfoByGUID(guid) end
 
@@ -4996,7 +5004,7 @@ function GetPlayerTradeMoney() end
 
 ---Returns information about a spell on the possession bar.
 ---@param index number @ The slot of the possess bar to check, ascending from 1.
----@return string texturenumber spellIDboolean enabled
+---@return string texture, number spellID, boolean enabled
 ---[View Documents](https://wow.gamepedia.com/API_GetPossessInfo)
 function GetPossessInfo(index) end
 
@@ -5028,12 +5036,12 @@ function GetPrimarySpecialization() end
 
 ---Gets details on a profession from its index including name, icon, and skill level.
 ---@param index number @ The skill index number (can be found with API GetProfessions())
----@return string namestring iconnumber skillLevelnumber maxSkillLevelnumber numAbilitiesnumber spelloffsetnumber skillLinenumber skillModifiernumber specializationIndexnumber specializationOffset
+---@return string name, string icon, number skillLevel, number maxSkillLevel, number numAbilities, number spelloffset, number skillLine, number skillModifier, number specializationIndex, number specializationOffset
 ---[View Documents](https://wow.gamepedia.com/API_GetProfessionInfo)
 function GetProfessionInfo(index) end
 
 ---Returns spell tab indices of the player's current professions
----@return number prof1number prof2number archaeologynumber fishingnumber cooking
+---@return number prof1, number prof2, number archaeology, number fishing, number cooking
 ---[View Documents](https://wow.gamepedia.com/API_GetProfessions)
 function GetProfessions() end
 
@@ -5061,7 +5069,7 @@ function GetPvpPowerHealing() end
 ---@param specGroupIndex number @ ? - Index of active specialization group (GetActiveSpecGroup); if nil, the selected/available return values will always be false.
 ---@param isInspect boolean @ ? - If non-nil, returns information based on inspectedUnit.
 ---@param inspectUnit unknown
----@return number talentIDunknown nameunknown iconunknown selectedunknown availableunknown spellIDunknown unlockedunknown rowunknown columnunknown knownunknown grantedByAura
+---@return number talentID, unknown name, unknown icon, unknown selected, unknown available, unknown spellID, unknown unlocked, unknown row, unknown column, unknown known, unknown grantedByAura
 ---[View Documents](https://wow.gamepedia.com/API_GetPvpTalentInfoByID)
 function GetPvpTalentInfoByID(talentID, specGroupIndex, isInspect, inspectUnit) end
 
@@ -5085,7 +5093,7 @@ function GetQuestCurrencyID() end
 ---Returns information about a currency token rewarded from the quest currently being viewed in the quest info frame.
 ---@param itemType string @ The category of the currency to query. Currently reward is the only category in use for currencies.
 ---@param index number @ The index of the currency to query, in the range [1,GetNumRewardCurrencies()].
----@return string namestring texturenumber numItemsnumber quality
+---@return string name, string texture, number numItems, number quality
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestCurrencyInfo)
 function GetQuestCurrencyInfo(itemType, index) end
 
@@ -5105,7 +5113,7 @@ function GetQuestID() end
 ---Returns information about a quest's item rewards or requirements.
 ---@param type string @ type of the item to query. One of the following values:
 ---@param index number @ index of the item of the specified type to return information about, ascending from 1.
----@return string namestring texturenumber countnumber qualitynumber isUsable
+---@return string name, string texture, number count, number quality, number isUsable
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestItemInfo)
 function GetQuestItemInfo(type, index) end
 
@@ -5128,7 +5136,7 @@ function GetQuestLink(QuestID) end
 
 ---Returns a bunch of data about a quest reward choice from the quest log.
 ---@param itemNum number @ The item number to get info on
----@return string namestring texturenumber numItemsnumber qualityboolean isUsable
+---@return string name, string texture, number numItems, number quality, boolean isUsable
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestLogChoiceInfo)
 function GetQuestLogChoiceInfo(itemNum) end
 
@@ -5157,7 +5165,7 @@ function GetQuestLogItemLink(type, index) end
 ---Returns information about a quest objective.
 ---@param i number @ Index of the quest objective to query, ascending from 1 to GetNumQuestLeaderBoards(questIndex).
 ---@param questIndex unknown @ Optional Number - Index of the quest log entry to query, ascending from 1 to GetNumQuestLogEntries. If not provided or invalid, defaults to the currently selected quest (via SelectQuestLogEntry)
----@return string descriptionstring objectiveTypeboolean isCompleted
+---@return string description, string objectiveType, boolean isCompleted
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestLogLeaderBoard)
 function GetQuestLogLeaderBoard(i, questIndex) end
 
@@ -5170,7 +5178,7 @@ function GetQuestLogPortraitGiver() end
 function GetQuestLogPortraitTurnIn() end
 
 ---Returns the description and objectives required for the selected (the one highlighted in the quest log) quest.
----@return unknown questDescriptionunknown questObjectives
+---@return string questDescription, string questObjectives
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestLogQuestText)
 function GetQuestLogQuestText() end
 
@@ -5185,7 +5193,7 @@ function GetQuestLogRewardArtifactXP() end
 ---Provides information about a currency reward for the quest currently being viewed in the quest log, or of the provided questId.
 ---@param index number @ The index of the currency to query, in the range of [1,GetNumRewardCurrencies()]
 ---@param questId unknown
----@return string namestring texturenumber numItemsnumber currencyIdnumber quality
+---@return string name, string texture, number numItems, number currencyId, number quality
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestLogRewardCurrencyInfo)
 function GetQuestLogRewardCurrencyInfo(index, questId) end
 
@@ -5199,13 +5207,13 @@ function GetQuestLogRewardHonor() end
 
 ---GetQuestLogRewardInfo returns information about mandatory quest reward items.
 ---@param itemIndex number @ Index of the item reward to query, up to GetNumQuestLogRewards
----@param questID number @ Unique identifier for a quest.
----@return string itemNamestring itemTexturenumber numItemsnumber qualityboolean isUsablenumber itemIDnumber itemLevel
+---@param questID number @ ?Optional. Could be nil. - Unique identifier for a quest.
+---@return string itemName, string itemTexture, number numItems, number quality, boolean isUsable, number itemID, number itemLevel
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestLogRewardInfo)
 function GetQuestLogRewardInfo(itemIndex, questID) end
 
----GetQuestLogRewardMoney returns a number representing the amount of copper rewarded by a particular quest in the quest log.
----@param questID number @ Unique identifier for a quest.
+---Returns a number representing the amount of copper rewarded by a particular quest in the quest log.
+---@param questID number @ ?Optional. Could be nil. - Unique identifier for a quest.
 ---@return unknown money
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestLogRewardMoney)
 function GetQuestLogRewardMoney(questID) end
@@ -5217,7 +5225,7 @@ function GetQuestLogRewardSkillPoints() end
 ---Returns information about the spell reward of the current selected quest.
 ---@param rewardIndex number @ The index of the spell reward to get the details for
 ---@param questID number @ Unique QuestID for the quest to be queried.
----@return string texturestring nameboolean isTradeskillSpellboolean isSpellLearnedunknown hideSpellLearnTextboolean isBoostSpellnumber garrFollowerIDunknown genericUnlocknumber spellID
+---@return string texture, string name, boolean isTradeskillSpell, boolean isSpellLearned, unknown hideSpellLearnText, boolean isBoostSpell, number garrFollowerID, unknown genericUnlock, number spellID
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestLogRewardSpell)
 function GetQuestLogRewardSpell(rewardIndex, questID) end
 
@@ -5254,7 +5262,7 @@ function GetQuestMoneyToGet() end
 ---@param questID number @ Unique identifier of the quest.
 ---@param objectiveIndex unknown @ Index of the quest objective to query, ascending from 1 to GetNumQuestLeaderBoards(questIndex) or to numObjectives from GetTaskInfo(questID).
 ---@param Boolean unknown @ Required to actually obtain quest text.
----@return string textstring objectiveTypeboolean finished
+---@return string text, string objectiveType, boolean finished
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestObjectiveInfo)
 function GetQuestObjectiveInfo(questID, objectiveIndex, Boolean) end
 
@@ -5289,8 +5297,8 @@ function GetQuestProgressBarPercent(questID) end
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestResetTime)
 function GetQuestResetTime() end
 
----Completes the quest with the specified quest reward.
----@param itemChoice unknown @ The quest reward chosen
+---Completes the quest with the specified quest reward. Warning: Since making a choice here is irrevocable, use with caution.
+---@param itemChoice number @ The quest reward chosen
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestReward)
 function GetQuestReward(itemChoice) end
@@ -5313,7 +5321,7 @@ function GetQuestUiMapID() end
 
 ---Returns info about a Raid Finder dungeon by index. Limited by player level and other factors, so only Raid Finder dungeons listed in the LFG tool can be looked up.
 ---@param index number @ index of a Raid Finder dungeon, from 1 to GetNumRFDungeons()
----@return number IDstring namenumber typeIDnumber subtypeIDnumber minLevelnumber maxLevelnumber recLevelnumber minRecLevelnumber maxRecLevelnumber expansionLevelnumber groupIDstring textureFilenamenumber difficultynumber maxPlayersstring descriptionboolean isHolidaynumber bonusRepAmountnumber minPlayers
+---@return number ID, string name, number typeID, number subtypeID, number minLevel, number maxLevel, number recLevel, number minRecLevel, number maxRecLevel, number expansionLevel, number groupID, string textureFilename, number difficulty, number maxPlayers, string description, boolean isHoliday, number bonusRepAmount, number minPlayers
 ---[View Documents](https://wow.gamepedia.com/API_GetRFDungeonInfo)
 function GetRFDungeonInfo(index) end
 
@@ -5340,7 +5348,7 @@ function GetRaidProfileSavedPosition() end
 
 ---Gets information about a raid member.
 ---@param raidIndex number @ Index of raid member between 1 and MAX_RAID_MEMBERS (40). If you specify an index that is out of bounds, the function returns nil.
----@return string zoneboolean onlineboolean isDeadstring roleboolean isMLstring combatRole
+---@return string zone, boolean online, boolean isDead, string role, boolean isML, string combatRole
 ---[View Documents](https://wow.gamepedia.com/API_GetRaidRosterInfo)
 function GetRaidRosterInfo(raidIndex) end
 
@@ -5421,7 +5429,7 @@ function GetRecruitingGuildSettings() end
 function GetReleaseTimeRemaining() end
 
 ---Arguments none
----@return number repairAllCostboolean canRepair
+---@return number repairAllCost, boolean canRepair
 ---[View Documents](https://wow.gamepedia.com/API_GetRepairAllCost)
 function GetRepairAllCost() end
 
@@ -5430,12 +5438,12 @@ function GetRepairAllCost() end
 function GetResSicknessDuration() end
 
 ---Returns whether the player is in a rested (earning double XP for kills) or normal state.
----@return number idstring namenumber mult
+---@return number id, string name, number mult
 ---[View Documents](https://wow.gamepedia.com/API_GetRestState)
 function GetRestState() end
 
 ---Returns the cap on trial character level, money and profession skill for Starter Edition accounts.
----@return number rLevelnumber rMoneynumber profCap
+---@return number rLevel, number rMoney, number profCap
 ---[View Documents](https://wow.gamepedia.com/API_GetRestrictedAccountData)
 function GetRestrictedAccountData() end
 
@@ -5488,7 +5496,7 @@ function GetRewardSkillLineID() end
 function GetRewardSkillPoints() end
 
 ---Returns information about spell that you get as reward for completing quest currently in gossip frame.
----@return unknown textureunknown nameunknown isTradeskillSpellunknown isSpellLearned
+---@return unknown texture, unknown name, unknown isTradeskillSpell, unknown isSpellLearned
 ---[View Documents](https://wow.gamepedia.com/API_GetRewardSpell)
 function GetRewardSpell() end
 
@@ -5508,7 +5516,7 @@ function GetRewardXP() end
 
 ---Gets the cooldown information about a Death Knight's Rune
 ---@param id unknown @ A number between 1 and 6 denoting which rune to be queried.
----@return unknown startunknown durationunknown runeReady
+---@return unknown start, unknown duration, unknown runeReady
 ---[View Documents](https://wow.gamepedia.com/API_GetRuneCooldown)
 function GetRuneCooldown(id) end
 
@@ -5535,19 +5543,19 @@ function GetSavedInstanceChatLink(index) end
 ---Returns info about a specific encounter from a saved instance lockout.
 ---@param instanceIndex number @ Index from 1 to GetNumSavedInstances()
 ---@param encounterIndex number @ Index from 1 to the number of encounters in the instance. For multi-part raids, this includes bosses that are not in that raid section, so the first boss in the second wing of a Raid Finder raid could actually have an encounterIndex of '4'.
----@return string bossNamenumber fileDataIDboolean isKilledboolean unknown4
+---@return string bossName, number fileDataID, boolean isKilled, boolean unknown4
 ---[View Documents](https://wow.gamepedia.com/API_GetSavedInstanceEncounterInfo)
 function GetSavedInstanceEncounterInfo(instanceIndex, encounterIndex) end
 
 ---Returns information about an instance for which the player has saved lockout data.
 ---@param index number @ index of the saved instance, from 1 to GetNumSavedInstances()
----@return unknown nameunknown idunknown resetunknown difficultyunknown lockedunknown extendedunknown instanceIDMostSigunknown isRaidunknown maxPlayersunknown difficultyNameunknown numEncountersunknown encounterProgressunknown extendDisabled
+---@return unknown name, unknown id, unknown reset, unknown difficulty, unknown locked, unknown extended, unknown instanceIDMostSig, unknown isRaid, unknown maxPlayers, unknown difficultyName, unknown numEncounters, unknown encounterProgress, unknown extendDisabled
 ---[View Documents](https://wow.gamepedia.com/API_GetSavedInstanceInfo)
 function GetSavedInstanceInfo(index) end
 
 ---Returns information about the player's world boss loot lockout.
 ---@param index number @ Index of the world boss lockout to query, ascending from 1 to GetNumSavedWorldBosses().
----@return string namenumber worldBossIDnumber reset
+---@return string name, number worldBossID, number reset
 ---[View Documents](https://wow.gamepedia.com/API_GetSavedWorldBossInfo)
 function GetSavedWorldBossInfo(index) end
 
@@ -5567,17 +5575,17 @@ function GetSchoolString(schoolMask) end
 ---[View Documents](https://wow.gamepedia.com/API_GetScreenDPIScale)
 function GetScreenDPIScale() end
 
----Returns the height of the window in pixels.
+---Returns the height of the window in pixels. This value is affected by the UI's scale.
 ---@return number screenHeight
 ---[View Documents](https://wow.gamepedia.com/API_GetScreenHeight)
 function GetScreenHeight() end
 
 ---Returns a list of available screen resolutions
----@return unknown resolution1unknown resolution2unknown resolution3unknown ...
+---@return unknown resolution1, unknown resolution2, unknown resolution3, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetScreenResolutions)
 function GetScreenResolutions() end
 
----Returns the width of the window in pixels.
+---Returns the width of the window in pixels. This value is affected by the UI's scale.
 ---@return number screenWidth
 ---[View Documents](https://wow.gamepedia.com/API_GetScreenWidth)
 function GetScreenWidth() end
@@ -5591,7 +5599,7 @@ function GetScriptCPUUsage() end
 function GetSecondsUntilParentalControlsKick() end
 
 ---Returns the information for the selected race's current archaeology artifact.
----@return unknown artifactNameunknown artifactDescriptionunknown artifactRarityunknown artifactIconunknown hoverDescriptionunknown keystoneCountunknown bgTextureunknown spellID
+---@return unknown artifactName, unknown artifactDescription, unknown artifactRarity, unknown artifactIcon, unknown hoverDescription, unknown keystoneCount, unknown bgTexture, unknown spellID
 ---[View Documents](https://wow.gamepedia.com/API_GetSelectedArtifactInfo)
 function GetSelectedArtifactInfo() end
 
@@ -5614,7 +5622,7 @@ function GetSendMailCOD() end
 
 ---Returns information about an item attached in the send mail frame.
 ---@param index number @ The index of the attachment to query, in the range of [1,ATTACHMENTS_MAX_SEND]
----@return string namenumber itemIDstring texturenumber countnumber quality
+---@return string name, number itemID, string texture, number count, number quality
 ---[View Documents](https://wow.gamepedia.com/API_GetSendMailItem)
 function GetSendMailItem(index) end
 
@@ -5660,7 +5668,7 @@ function GetShapeshiftForm(flag) end
 
 ---Returns cooldown information for a specified form.
 ---@param index number @ Index of the desired form
----@return number startTimenumber durationnumber isActive
+---@return number startTime, number duration, number isActive
 ---[View Documents](https://wow.gamepedia.com/API_GetShapeshiftFormCooldown)
 function GetShapeshiftFormCooldown(index) end
 
@@ -5671,7 +5679,7 @@ function GetShapeshiftFormID() end
 
 ---Retrieves information about an available shapeshift form or similar ability.
 ---@param index number @ index, ascending from 1 to GetNumShapeshiftForms()
----@return string iconnumber activenumber castablenumber spellID
+---@return string icon, number active, number castable, number spellID
 ---[View Documents](https://wow.gamepedia.com/API_GetShapeshiftFormInfo)
 function GetShapeshiftFormInfo(index) end
 
@@ -5691,7 +5699,7 @@ function GetShieldBlock() end
 function GetSocketItemBoundTradeable() end
 
 ---Returns various information about the inventory item currently being socketed (i.e. socket UI is open for the item).
----@return string itemNamestring iconPathNamenumber itemQuality
+---@return string itemName, string iconPathName, number itemQuality
 ---[View Documents](https://wow.gamepedia.com/API_GetSocketItemInfo)
 function GetSocketItemInfo() end
 
@@ -5727,20 +5735,20 @@ function GetSpecialization(isInspect, isPet, specGroup) end
 ---@param isPet boolean @ ?Optional. Could be nil. - If true, query specialization information for the player's pet.
 ---@param inspectTarget unknown @ ? - Some unknown argument not used anywhere in Blizzard API in 6.2.
 ---@param sex number @ ?Optional. Could be nil. - Player's sex as returned by UnitSex.
----@return number idstring namestring descriptionstring iconstring rolenumber primaryStat
+---@return number id, string name, string description, string icon, string role, number primaryStat
 ---[View Documents](https://wow.gamepedia.com/API_GetSpecializationInfo)
 function GetSpecializationInfo(specIndex, isInspect, isPet, inspectTarget, sex) end
 
 ---Returns information about the specified specialization.
 ---@param specID number @ Specialization ID of the specialization to query, returned from GetInspectSpecialization.
----@return number idstring namestring descriptionstring iconstring rolestring class
+---@return number id, string name, string description, string icon, string role, string class
 ---[View Documents](https://wow.gamepedia.com/API_GetSpecializationInfoByID)
 function GetSpecializationInfoByID(specID) end
 
 ---Returns information about the specified specialization.
 ---@param classID number @ The ClassId of the class to which this specialization belongs, going from 1 to GetNumClasses().
 ---@param specNum number @ The number of the specialization to query, going from 1 to GetNumSpecializationsForClassID(classID).
----@return number specIDstring namestring descriptionnumber iconIDstring roleboolean isRecommendedboolean isAllowed
+---@return number specID, string name, string description, number iconID, string role, boolean isRecommended, boolean isAllowed
 ---[View Documents](https://wow.gamepedia.com/API_GetSpecializationInfoForClassID)
 function GetSpecializationInfoForClassID(classID, specNum) end
 
@@ -5778,7 +5786,7 @@ function GetSpecializationRoleByID(specID) end
 ---@param specIndex number @ index of the specialization to query, integer ascending from 1.
 ---@param isInspect number @ a truthy value to query information about the inspected unit; player information is returned otherwise.
 ---@param isPet number @ a truthy value to query information about a pet specialization; player information is returned otherwise.
----@return unknown spellID1unknown level1unknown spellID2unknown level2unknown ...
+---@return unknown spellID1, unknown level1, unknown spellID2, unknown level2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetSpecializationSpells)
 function GetSpecializationSpells(specIndex, isInspect, isPet) end
 
@@ -5793,7 +5801,7 @@ function GetSpeed() end
 ---Get information about a spell's Autocast.
 ---@param spellName_or_spellId unknown
 ---@param bookType string @ Either BOOKTYPE_SPELL (spell) or BOOKTYPE_PET (pet).
----@return number autocastablenumber autostate
+---@return number autocastable, number autostate
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellAutocast)
 function GetSpellAutocast(spellName_or_spellId, bookType) end
 
@@ -5803,7 +5811,7 @@ function GetSpellAvailableLevel() end
 
 ---Gives the (unmodified) cooldown and global cooldown of an ability in milliseconds.
 ---@param spellid number @ The spellid of your ability.
----@return number cooldownMSnumber gcdMS
+---@return number cooldownMS, number gcdMS
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellBaseCooldown)
 function GetSpellBaseCooldown(spellid) end
 
@@ -5821,14 +5829,14 @@ function GetSpellBonusHealing() end
 ---Retrieves information about a specific spellbook item.
 ---@param index number @ The index into the spellbook.
 ---@param bookType string @ Spell book type. Although intended to be BOOKTYPE_PET (pet) or BOOKTYPE_SPELL (spell), the game currently only tests if this value is equal to pet and treats any other value as spell.
----@return string skillTypenumber special
+---@return string skillType, number special
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellBookItemInfo)
 function GetSpellBookItemInfo(index, bookType) end
 
 ---Retrieves the spell name and spell rank for a spell in the player's spell book.
 ---@param spellName_or_slotIndex unknown
 ---@param bookType string @ Either BOOKTYPE_SPELL (spell) or BOOKTYPE_PET (pet).
----@return string spellNamestring spellSubName
+---@return string spellName, string spellSubName
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellBookItemName)
 function GetSpellBookItemName(spellName_or_slotIndex, bookType) end
 
@@ -5841,7 +5849,7 @@ function GetSpellBookItemTexture(spellName_or_index, bookType) end
 
 ---Returns information about the charges of a charge-accumulating player ability.
 ---@param spellId_or_spellName unknown
----@return number currentChargesnumber maxChargesnumber cooldownStartnumber cooldownDurationnumber chargeModRate
+---@return number currentCharges, number maxCharges, number cooldownStart, number cooldownDuration, number chargeModRate
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellCharges)
 function GetSpellCharges(spellId_or_spellName) end
 
@@ -5852,7 +5860,7 @@ function GetSpellConfirmationPromptsInfo() end
 ---Retrieves the cooldown data of the spell specified.
 ---@param spellName_or_spellID_or_slotID unknown
 ---@param bookType string @ spell book category, e.g. BOOKTYPE_SPELL (spell) or BOOKTYPE_PET (pet).
----@return unknown startnumber durationnumber enablednumber modRate
+---@return unknown start, number duration, number enabled, number modRate
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellCooldown)
 function GetSpellCooldown(spellName_or_spellID_or_slotID, bookType) end
 
@@ -5880,7 +5888,7 @@ function GetSpellHitModifier() end
 ---Returns information about a spell
 ---@param spellId_or_spellName unknown
 ---@param spellRank string @ Rank (or subtext) of a spell known to the player character, e.g. Pig for pig-transforming variant of [Polymorph].
----@return string nameunknown ranknumber iconnumber castTimenumber minRangenumber maxRangenumber spellId
+---@return string name, unknown rank, number icon, number castTime, number minRange, number maxRange, number spellId
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellInfo)
 function GetSpellInfo(spellId_or_spellName, spellRank) end
 
@@ -5891,14 +5899,14 @@ function GetSpellLevelLearned() end
 ---Returns a hyperlink for a spell.
 ---@param slot number @ Valid values are 1 through total number of spells in the spellbook on all pages and all tabs, ignoring empty slots.
 ---@param bookType string @ BOOKTYPE_SPELL or BOOKTYPE_PET depending on if you wish to query the player or pet spellbook.
----@return string linknumber spellID
+---@return string link, number spellID
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellLink)
 function GetSpellLink(slot, bookType) end
 
 ---Returns information about a loss-of-control cooldown affecting a spell.
 ---@param spellSlot number @ spell book slot index, ascending from 1.
 ---@param bookType_or_spellName_or_spellID unknown
----@return number startnumber duration
+---@return number start, number duration
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellLossOfControlCooldown)
 function GetSpellLossOfControlCooldown(spellSlot, bookType_or_spellName_or_spellID) end
 
@@ -5926,7 +5934,7 @@ function GetSpellSubtext() end
 
 ---Retrieves information about the specified line of spells
 ---@param tabIndex number @ The index of the tab, ascending from 1.
----@return string namestring texturenumber offsetnumber numEntriesboolean isGuildnumber offspecID
+---@return string name, string texture, number offset, number numEntries, boolean isGuild, number offspecID
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellTabInfo)
 function GetSpellTabInfo(tabIndex) end
 
@@ -5952,14 +5960,14 @@ function GetStablePetFoodTypes(index) end
 
 ---Returns information about a specific stabled pet.
 ---@param index number @ The index of the pet slot, 1 through 5 are the hunter's active pets, 6 through 25 are the hunter's stabled pets.
----@return string petIconstring petNamenumber petLevelstring petTypestring petTalents
+---@return string petIcon, string petName, number petLevel, string petType, string petTalents
 ---[View Documents](https://wow.gamepedia.com/API_GetStablePetInfo)
 function GetStablePetInfo(index) end
 
 ---Return the value of the requested Statistic.
 ---@param category number @ AchievementID of a statistic or statistic category.
 ---@param index number @ Entry within a statistic category, if applicable.
----@return string valueboolean skipstring id
+---@return string value, boolean skip, string id
 ---[View Documents](https://wow.gamepedia.com/API_GetStatistic)
 function GetStatistic(category, index) end
 
@@ -5982,7 +5990,7 @@ function GetSubZoneText() end
 function GetSuggestedGroupSize() end
 
 ---Returns information about the cooldown time of the RaF Summon Friend ability.
----@return number startnumber duration
+---@return number start, number duration
 ---[View Documents](https://wow.gamepedia.com/API_GetSummonFriendCooldown)
 function GetSummonFriendCooldown() end
 
@@ -6020,7 +6028,7 @@ function GetTalentLink() end
 ---@param specGroupIndex number @ Index of active specialization group (GetActiveSpecGroup)
 ---@param isInspect boolean @ ? - If non-nil, returns information based on inspectedUnit.
 ---@param inspectedUnit string @ ? - Inspected unitId.
----@return unknown tierAvailableunknown selectedTalentunknown tierUnlockLevel
+---@return unknown tierAvailable, unknown selectedTalent, unknown tierUnlockLevel
 ---[View Documents](https://wow.gamepedia.com/API_GetTalentTierInfo)
 function GetTalentTierInfo(tier, specGroupIndex, isInspect, inspectedUnit) end
 
@@ -6035,7 +6043,7 @@ function GetTargetTradeMoney() end
 
 ---Returns information about a bonus objective.
 ---@param questID number @ Unique identifier for the quest.
----@return boolean isInAreaboolean isOnMapnumber numObjectives
+---@return boolean isInArea, boolean isOnMap, number numObjectives
 ---[View Documents](https://wow.gamepedia.com/API_GetTaskInfo)
 function GetTaskInfo(questID) end
 
@@ -6069,7 +6077,7 @@ function GetText(token, gender, ordinal) end
 
 ---Returns RGB color values corresponding to a threat status returned by UnitThreatSituation. Added in Patch 3.0.
 ---@param statusIndex unknown
----@return number rnumber gnumber b
+---@return number r, number g, number b
 ---[View Documents](https://wow.gamepedia.com/API_GetThreatStatusColor)
 function GetThreatStatusColor(statusIndex) end
 
@@ -6094,7 +6102,7 @@ function GetTimeToWellRested() end
 
 ---Returns the name of a Title ID.
 ---@param titleId number @ Ranging from 1 to GetNumTitles. Not necessarily an index as there can be missing/skipped IDs in between.
----@return string nameboolean playerTitle
+---@return string name, boolean playerTitle
 ---[View Documents](https://wow.gamepedia.com/API_GetTitleName)
 function GetTitleName(titleId) end
 
@@ -6118,7 +6126,7 @@ function GetTotemCannotDismiss() end
 
 ---Returns information about totems
 ---@param index number @ index of the totem (Fire = 1 Earth = 2 Water = 3 Air = 4)
----@return unknown haveTotemunknown totemNameunknown startTimeunknown durationunknown icon
+---@return unknown haveTotem, unknown totemName, unknown startTime, unknown duration, unknown icon
 ---[View Documents](https://wow.gamepedia.com/API_GetTotemInfo)
 function GetTotemInfo(index) end
 
@@ -6129,13 +6137,13 @@ function GetTotemInfo(index) end
 function GetTotemTimeLeft(slot) end
 
 ---Returns a list of (up to 10) currently tracked achievements.
----@return unknown id1unknown id2unknown ...unknown idn
+---@return unknown id1, unknown id2, unknown ..., unknown idn
 ---[View Documents](https://wow.gamepedia.com/API_GetTrackedAchievements)
 function GetTrackedAchievements() end
 
 ---Returns information regarding the specified tracking id.
 ---@param id number @ tracking type index, ascending from 1 to GetNumTrackingTypes().
----@return string namenumber texturenumber activestring categorynumber nested
+---@return string name, number texture, number active, string category, number nested
 ---[View Documents](https://wow.gamepedia.com/API_GetTrackingInfo)
 function GetTrackingInfo(id) end
 
@@ -6151,7 +6159,7 @@ function GetTradePlayerItemLink(i) end
 
 ---Returns information about items in the target's trade window.
 ---@param index number @ the slot (1-7) to retrieve info from
----@return string namestring texturenumber quantitynumber qualityunknown isUsablestring enchant
+---@return string name, string texture, number quantity, number quality, unknown isUsable, string enchant
 ---[View Documents](https://wow.gamepedia.com/API_GetTradeTargetItemInfo)
 function GetTradeTargetItemInfo(index) end
 
@@ -6173,13 +6181,13 @@ function GetTrainerSelectionIndex() end
 ---Gets the name of a requirement for training a skill and whether the player meets the requirement.
 ---@param trainerIndex number @ Index of the trainer service to retrieve information about. Note that indices are affected by the trainer filter. (See GetTrainerServiceTypeFilter and SetTrainerServiceTypeFilter.)
 ---@param reqIndex number @ Index of the requirement to retrieve information about.
----@return string abilityboolean hasReq
+---@return string ability, boolean hasReq
 ---[View Documents](https://wow.gamepedia.com/API_GetTrainerServiceAbilityReq)
 function GetTrainerServiceAbilityReq(trainerIndex, reqIndex) end
 
 ---Returns the cost of the selected trainer service.
 ---@param index unknown @ The index number of a specific trainer service.
----@return unknown moneyCostunknown talentCostunknown professionCost
+---@return unknown moneyCost, unknown talentCost, unknown professionCost
 ---[View Documents](https://wow.gamepedia.com/API_GetTrainerServiceCost)
 function GetTrainerServiceCost(index) end
 
@@ -6197,7 +6205,7 @@ function GetTrainerServiceIcon(id) end
 
 ---Returns information about a trainer service.
 ---@param id unknown @ Index of the trainer service to retrieve information about. Note that indices are affected by the trainer filter. (See GetTrainerServiceTypeFilter and SetTrainerServiceTypeFilter.)
----@return unknown nameunknown rankunknown categoryunknown expanded
+---@return unknown name, unknown rank, unknown category, unknown expanded
 ---[View Documents](https://wow.gamepedia.com/API_GetTrainerServiceInfo)
 function GetTrainerServiceInfo(id) end
 
@@ -6225,7 +6233,7 @@ function GetTrainerServiceSkillLine(index) end
 
 ---Returns the name of the skill required, and the amount needed in that skill. Index is the selection index obtained by GetTrainerSelectionIndex().
 ---@param index unknown
----@return unknown skillNameunknown skillLevelunknown hasReq
+---@return unknown skillName, unknown skillLevel, unknown hasReq
 ---[View Documents](https://wow.gamepedia.com/API_GetTrainerServiceSkillReq)
 function GetTrainerServiceSkillReq(index) end
 
@@ -6281,7 +6289,7 @@ function GetUnitPowerBarInfoByID() end
 
 ---Needs summary.
 ---@param unitToken string @ UnitId
----@return string namestring tooltipstring cost
+---@return string name, string tooltip, string cost
 ---[View Documents](https://wow.gamepedia.com/API_GetUnitPowerBarStrings)
 function GetUnitPowerBarStrings(unitToken) end
 
@@ -6293,7 +6301,7 @@ function GetUnitPowerBarStringsByID() end
 ---@param unitToken string
 ---@param textureIndex number
 ---@param timerIndex number @ ?
----@return number texturenumber colorRnumber colorGnumber colorBnumber colorA
+---@return number texture, number colorR, number colorG, number colorB, number colorA
 ---[View Documents](https://wow.gamepedia.com/API_GetUnitPowerBarTextureInfo)
 function GetUnitPowerBarTextureInfo(unitToken, textureIndex, timerIndex) end
 
@@ -6307,7 +6315,7 @@ function GetUnitPowerModifier() end
 
 ---Returns a value representing the moving speed of a unit. Added in Patch 3.0.1.
 ---@param unit string @ unitId) - Unit to query the speed of. This has not been tested with all units but does work for player units.
----@return number currentSpeednumber runSpeednumber flightSpeednumber swimSpeed
+---@return number currentSpeed, number runSpeed, number flightSpeed, number swimSpeed
 ---[View Documents](https://wow.gamepedia.com/API_GetUnitSpeed)
 function GetUnitSpeed(unit) end
 
@@ -6344,7 +6352,7 @@ function GetVoidItemHyperlinkString(voidSlot) end
 ---Returns info about a Void Storage slot [1]
 ---@param tabIndex number @ Index ranging from 1 to 2
 ---@param slotIndex number @ Index ranging from 1 to 80 (VOID_STORAGE_MAX)
----@return number itemIDstring textureNameboolean lockedboolean recentDepositboolean isFilterednumber quality
+---@return number itemID, string textureName, boolean locked, boolean recentDeposit, boolean isFiltered, number quality
 ---[View Documents](https://wow.gamepedia.com/API_GetVoidItemInfo)
 function GetVoidItemInfo(tabIndex, slotIndex) end
 
@@ -6359,13 +6367,13 @@ function GetVoidTransferCost() end
 
 ---Returns info about the item being deposited into the Void Storage [1]
 ---@param slotIndex number @ Index ranging from 1 to 9 (VOID_DEPOSIT_MAX)
----@return number itemIDstring textureName
+---@return number itemID, string textureName
 ---[View Documents](https://wow.gamepedia.com/API_GetVoidTransferDepositInfo)
 function GetVoidTransferDepositInfo(slotIndex) end
 
 ---Returns info about the item being withdrawed from the Void Storage [1]
 ---@param slotIndex number @ Index ranging from 1 to 9 (VOID_WITHDRAW_MAX)
----@return number itemIDstring textureName
+---@return number itemID, string textureName
 ---[View Documents](https://wow.gamepedia.com/API_GetVoidTransferWithdrawalInfo)
 function GetVoidTransferWithdrawalInfo(slotIndex) end
 
@@ -6382,12 +6390,12 @@ function GetWarGameQueueStatus() end
 function GetWarGameTypeInfo() end
 
 ---Returns information about the faction that is currently being watched.
----@return string namenumber standingnumber minnumber maxnumber valuenumber factionID
+---@return string name, number standing, number min, number max, number value, number factionID
 ---[View Documents](https://wow.gamepedia.com/API_GetWatchedFactionInfo)
 function GetWatchedFactionInfo() end
 
 ---Returns information about the player's current temporary enchants, such as fishing lures or sharpening stones and weightstones produced by blacksmiths.
----@return number hasMainHandEnchantnumber mainHandExpirationnumber mainHandChargesnumber mainHandEnchantIDnumber hasOffHandEnchantnumber offHandExpirationnumber offHandChargesnumber offHandEnchantID
+---@return number hasMainHandEnchant, number mainHandExpiration, number mainHandCharges, number mainHandEnchantID, number hasOffHandEnchant, number offHandExpiration, number offHandCharges, number offHandEnchantID
 ---[View Documents](https://wow.gamepedia.com/API_GetWeaponEnchantInfo)
 function GetWeaponEnchantInfo() end
 
@@ -6397,7 +6405,7 @@ function GetWeaponEnchantInfo() end
 function GetWebTicket() end
 
 ---@param timerID unknown @ Use by blizzard as self.timerID by WorldStateChallangeModeFrame
----@return number unknownnumber elapsedTimenumber type
+---@return number unknown, number elapsedTime, number type
 ---[View Documents](https://wow.gamepedia.com/API_GetWorldElapsedTime)
 function GetWorldElapsedTime(timerID) end
 
@@ -6411,7 +6419,7 @@ function GetWorldMapActionButtonSpellInfo() end
 
 ---Get information regarding a world PvP zone (e.g. Wintergrasp or Tol Barad).
 ---@param index number @ the zone's index, from 1 to GetNumWorldPVPAreas()
----@return number pvpIDunknown izedNameboolean isActiveboolean canQueuenumber startTimeboolean canEnternumber minLevelnumber maxLevel
+---@return number pvpID, unknown izedName, boolean isActive, boolean canQueue, number startTime, boolean canEnter, number minLevel, number maxLevel
 ---[View Documents](https://wow.gamepedia.com/API_GetWorldPVPAreaInfo)
 function GetWorldPVPAreaInfo(index) end
 
@@ -6420,12 +6428,12 @@ function GetWorldPVPAreaInfo(index) end
 function GetWorldPVPQueueStatus() end
 
 ---Returns the number of XP gained from killing mobs until player goes from rest state to normal state.
----@return number retVal
+---@return number exhaustionThreshold
 ---[View Documents](https://wow.gamepedia.com/API_GetXPExhaustion)
 function GetXPExhaustion() end
 
 ---Returns PVP info for the current zone.
----@return string pvpTypeboolean isFFAstring faction
+---@return string pvpType, boolean isFFA, string faction
 ---[View Documents](https://wow.gamepedia.com/API_GetZonePVPInfo)
 function GetZonePVPInfo() end
 
@@ -6507,7 +6515,7 @@ function GuildDemote(playername) end
 ---[View Documents](https://wow.gamepedia.com/API_GuildDisband)
 function GuildDisband() end
 
----Prints information about the Guild you belong to in the following format: Guild: Guild created, players, accounts
+---Prints information about the Guild you belong to in the following format: Guild:  Guild created , players, accounts
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_GuildInfo)
 function GuildInfo() end
@@ -6587,7 +6595,7 @@ function HasAPEffectsSpellPower() end
 function HasAction(actionSlot) end
 
 ---Tests if the player has an alternate form and whether they are currently in that form. This is currently only useful for worgen players to determine if they have a human form or are in human form.
----@return boolean hasAlternateFormboolean inAlternateForm
+---@return boolean hasAlternateForm, boolean inAlternateForm
 ---[View Documents](https://wow.gamepedia.com/API_HasAlternateForm)
 function HasAlternateForm() end
 
@@ -6659,12 +6667,12 @@ function HasOverrideActionBar() end
 function HasPendingGlyphCast() end
 
 ---Returns how many abilities your pet has available.
----@return unknown hasPetSpellsstring petToken
+---@return unknown hasPetSpells, string petToken
 ---[View Documents](https://wow.gamepedia.com/API_HasPetSpells)
 function HasPetSpells() end
 
----Returns 1 if the player has a pet User Interface.
----@return unknown hasUIunknown isHunterPet
+---Returns True if the player has a pet User Interface.
+---@return boolean hasUI, boolean isHunterPet
 ---[View Documents](https://wow.gamepedia.com/API_HasPetUI)
 function HasPetUI() end
 
@@ -6717,12 +6725,12 @@ function InCinematic() end
 function InCombatLockdown() end
 
 ---Returns whether or not you are in a guild party.
----@return boolean inGroupnumber numGuildPresentnumber numGuildRequirednumber xpMultiplier
+---@return boolean inGroup, number numGuildPresent, number numGuildRequired, number xpMultiplier
 ---[View Documents](https://wow.gamepedia.com/API_InGuildParty)
 function InGuildParty() end
 
----InRepairMode()
----@return unknown repairMode
+---Lets you know if your cursor is in repair mode. When your cursor is in repair mode, you can click on equipped items as well as items in your inventory to repair them.
+---@return unknown inRepairMode
 ---[View Documents](https://wow.gamepedia.com/API_InRepairMode)
 function InRepairMode() end
 
@@ -6769,7 +6777,7 @@ function IsAchievementEligible(achievementID) end
 function IsActionInRange(actionSlot) end
 
 ---Used for checking if the player is inside an arena or if it's a rated match[1]
----@return boolean isArenaboolean isRegistered
+---@return boolean isArena, boolean isRegistered
 ---[View Documents](https://wow.gamepedia.com/API_IsActiveBattlefieldArena)
 function IsActiveBattlefieldArena() end
 
@@ -6789,7 +6797,7 @@ function IsAddOnLoadOnDemand(index_or_name) end
 
 ---Returns whether an addon has been loaded.
 ---@param index_or_name unknown
----@return number loadednumber finished
+---@return number loaded, number finished
 ---[View Documents](https://wow.gamepedia.com/API_IsAddOnLoaded)
 function IsAddOnLoaded(index_or_name) end
 
@@ -7094,8 +7102,8 @@ function IsGamePadCursorControlEnabled() end
 ---[View Documents](https://wow.gamepedia.com/API_IsGamePadFreelookEnabled)
 function IsGamePadFreelookEnabled() end
 
----This function checks to see if player is a guild master and returns the appropriate result.
----@return unknown guildleader
+---This function checks if you are the guild master or not.
+---@return boolean isGuildLeader
 ---[View Documents](https://wow.gamepedia.com/API_IsGuildLeader)
 function IsGuildLeader() end
 
@@ -7156,7 +7164,7 @@ function IsInGuild() end
 function IsInGuildGroup() end
 
 ---Checks whether the player is in an instance and the type of instance.
----@return number inInstancestring instanceType
+---@return number inInstance, string instanceType
 ---[View Documents](https://wow.gamepedia.com/API_IsInInstance)
 function IsInInstance() end
 
@@ -7205,12 +7213,12 @@ function IsInventoryItemProfessionBag() end
 ---[View Documents](https://wow.gamepedia.com/API_IsItemAction)
 function IsItemAction() end
 
----Returns if you are in range of the specified unit to use the specified item.
----@param itemName_or_itemLink unknown
----@param unit string @ which unit the range should be checked to
----@return unknown result
+---Returns whether the item is in usable range of the unit.
+---@param item string @ ItemLink, ID or Name - If using an item name, requires the item to be in your inventory. Item IDs and links don't have this requirement.
+---@param unit string @ ? : UnitId - Defaults to target
+---@return boolean inRange
 ---[View Documents](https://wow.gamepedia.com/API_IsItemInRange)
-function IsItemInRange(itemName_or_itemLink, unit) end
+function IsItemInRange(item, unit) end
 
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_IsJailersTowerLayerTimeLocked)
@@ -7402,8 +7410,8 @@ function IsPublicBuild() end
 ---[View Documents](https://wow.gamepedia.com/API_IsPvpTalentSpell)
 function IsPvpTalentSpell() end
 
----Returns true if a quest is possible to complete.
----@return void
+---Returns true if the currently loaded quest in the quest window is completable.
+---@return boolean isQuestCompletable
 ---[View Documents](https://wow.gamepedia.com/API_IsQuestCompletable)
 function IsQuestCompletable() end
 
@@ -7492,7 +7500,7 @@ function IsShiftKeyDown() end
 ---Returns whether a given spell is specific to a specialization and/or class.
 ---@param spellName_or_spellIndex unknown
 ---@param bookType string @ spell book type, e.g. BOOKTYPE_SPELL (spell) for player's spell book.
----@return string specstring class
+---@return string spec, string class
 ---[View Documents](https://wow.gamepedia.com/API_IsSpellClassOrSpec)
 function IsSpellClassOrSpec(spellName_or_spellIndex, bookType) end
 
@@ -7612,7 +7620,7 @@ function IsUnitModelReadyForUI(unitToken) end
 
 ---Determine if an action can be used (you have sufficient mana, reagents and the action is not on cooldown).
 ---@param slot number @ Action slot to query
----@return boolean isUsableboolean notEnoughMana
+---@return boolean isUsable, boolean notEnoughMana
 ---[View Documents](https://wow.gamepedia.com/API_IsUsableAction)
 function IsUsableAction(slot) end
 
@@ -7623,7 +7631,7 @@ function IsUsableItem() end
 ---Determines whether a spell can be used by the player character.
 ---@param spellName_or_spellID_or_spellIndex unknown
 ---@param bookType string @ Use the BOOKTYPE_SPELL constant if spellIndex refers to a spell in the player's spellbook or the BOOKTYPE_PET constant if the spellIndex refers to a spell in the pet's spellbook. Defaults to BOOKTYPE_SPELL.
----@return boolean usableboolean noMana
+---@return boolean usable, boolean noMana
 ---[View Documents](https://wow.gamepedia.com/API_IsUsableSpell)
 function IsUsableSpell(spellName_or_spellID_or_spellIndex, bookType) end
 
@@ -7735,11 +7743,11 @@ function JoinArena() end
 function JoinBattlefield(index, asGroup, isRated) end
 
 ---Joins the channel with the specified name. A player can be in a maximum of 10 chat channels.
----@param channelName string @ The name of the channel to join
----@param password string @ optional) - The channel password, nil if none.
----@param frameID number @ optional) - The chat frame ID number to add the channel to. Use Frame:GetID() to retrieve it for chat frame objects.
----@param hasVoice boolean @ nil) - Enable voice chat for this channel.
----@return number typestring name
+---@param channelName string @ The name of the channel to join. You can't use the - character in channelName.
+---@param password string @ ?Optional. Could be nil. - The channel password, nil if none.
+---@param frameID number @ ?Optional. Could be nil. - The chat frame ID number to add the channel to. Use Frame:GetID() to retrieve it for chat frame objects.
+---@param hasVoice boolean @ Enable voice chat for this channel.
+---@return number type, string name
 ---[View Documents](https://wow.gamepedia.com/API_JoinChannelByName)
 function JoinChannelByName(channelName, password, frameID, hasVoice) end
 
@@ -7752,7 +7760,7 @@ function JoinLFG() end
 ---@param password string @ optional) - The channel password, nil if none.
 ---@param frameID number @ optional) - The chat frame ID number to add the channel to. Use Frame:GetID() to retrieve it for chat frame objects.
 ---@param hasVoice boolean @ nil) - Enable voice chat for this channel.
----@return number typestring name
+---@return number type, string name
 ---[View Documents](https://wow.gamepedia.com/API_JoinPermanentChannel)
 function JoinPermanentChannel(channelName, password, frameID, hasVoice) end
 
@@ -7776,7 +7784,7 @@ function JoinSkirmish(arenaID, joinAsGroup) end
 ---@param password string @ optional) - The channel password, nil if none.
 ---@param frameID number @ optional) - The chat frame ID number to add the channel to. Use Frame:GetID() to retrieve it for chat frame objects.
 ---@param hasVoice boolean @ nil) - Enable voice chat for this channel.
----@return number typestring name
+---@return number type, string name
 ---[View Documents](https://wow.gamepedia.com/API_JoinTemporaryChannel)
 function JoinTemporaryChannel(channelName, password, frameID, hasVoice) end
 
@@ -7793,7 +7801,7 @@ function JumpOrAscendStart() end
 function KBArticle_BeginLoading(id, searchType) end
 
 ---Returns data for the current article.
----@return number idstring subjectstring subjectAltstring textstring keywordsnumber languageIdboolean isHot
+---@return number id, string subject, string subjectAlt, string text, string keywords, number languageId, boolean isHot
 ---[View Documents](https://wow.gamepedia.com/API_KBArticle_GetData)
 function KBArticle_GetData() end
 
@@ -7836,7 +7844,7 @@ function KBSetup_GetArticleHeaderCount() end
 
 ---Returns header information about an article.
 ---@param index number @ The articles index for that page.
----@return number idstring titleboolean isHotboolean isNew
+---@return number id, string title, boolean isHot, boolean isNew
 ---[View Documents](https://wow.gamepedia.com/API_KBSetup_GetArticleHeaderData)
 function KBSetup_GetArticleHeaderData(index) end
 
@@ -7847,7 +7855,7 @@ function KBSetup_GetCategoryCount() end
 
 ---Returns information about a category.
 ---@param index number @ Range from 1 to KBSetup_GetCategoryCount()
----@return number idstring caption
+---@return number id, string caption
 ---[View Documents](https://wow.gamepedia.com/API_KBSetup_GetCategoryData)
 function KBSetup_GetCategoryData(index) end
 
@@ -7858,7 +7866,7 @@ function KBSetup_GetLanguageCount() end
 
 ---Returns information about a language.
 ---@param index number @ Range from 1 to KBSetup_GetLanguageCount()
----@return number idstring caption
+---@return number id, string caption
 ---[View Documents](https://wow.gamepedia.com/API_KBSetup_GetLanguageData)
 function KBSetup_GetLanguageData(index) end
 
@@ -7871,7 +7879,7 @@ function KBSetup_GetSubCategoryCount(category) end
 ---Returns information about a subcategory.
 ---@param category unknown @ Intgeger - The category's index.
 ---@param index number @ Range from 1 to KBSetup_GetSubCategoryCount(category)
----@return number idstring caption
+---@return number id, string caption
 ---[View Documents](https://wow.gamepedia.com/API_KBSetup_GetSubCategoryData)
 function KBSetup_GetSubCategoryData(category, index) end
 
@@ -7937,7 +7945,7 @@ function LeaveBattlefield() end
 function LeaveChannelByLocalID() end
 
 ---Leaves the channel with the specified name.
----@param channelName unknown @ The name of the channel to leave
+---@param channelName string @ The name of the channel to leave
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_LeaveChannelByName)
 function LeaveChannelByName(channelName) end
@@ -7963,7 +7971,7 @@ function ListChannels() end
 
 ---Request the loading of an On-Demand AddOn.
 ---@param index_or_name unknown
----@return number loadedstring reason
+---@return number loaded, string reason
 ---[View Documents](https://wow.gamepedia.com/API_LoadAddOn)
 function LoadAddOn(index_or_name) end
 
@@ -8427,14 +8435,14 @@ function PlayMusic(musicfile_or_fileDataID) end
 ---@param channel string @ ?Optional. Could be nil. - The sound volume slider setting the sound should use, one of: Master, SFX, Music, Ambience, Dialog. Individual channels (except Master) have user-configurable volume settings and may be muted, preventing playback. Defaults to SFX if not specified.
 ---@param forceNoDuplicates unknown
 ---@param runFinishCallback boolean @ ?Optional. Could be nil. - Fires SOUNDKIT_FINISHED when sound is done, arg1 will be soundHandle given below. Defaults to false.
----@return boolean willPlaynumber soundHandle
+---@return boolean willPlay, number soundHandle
 ---[View Documents](https://wow.gamepedia.com/API_PlaySound)
 function PlaySound(soundKitID, channel, forceNoDuplicates, runFinishCallback) end
 
 ---Plays the specified audio file once.
 ---@param soundFile_or_soundFileID unknown
 ---@param channel string @ optional) - The sound volume slider setting the sound should use, one of: Master, SFX, Music, Ambience, Dialog. Individual channels (except Master) have user-configurable volume settings and may be muted, preventing playback. Defaults to the SFX if not specified.
----@return boolean willPlaynumber soundHandle
+---@return boolean willPlay, number soundHandle
 ---[View Documents](https://wow.gamepedia.com/API_PlaySoundFile)
 function PlaySoundFile(soundFile_or_soundFileID, channel) end
 
@@ -8602,7 +8610,7 @@ function QuestMapUpdateAllQuests() end
 
 ---Returns WorldMap POI icon information for the given quest.
 ---@param questId number @ you can get this from the quest link or from GetQuestLogTitle(questLogIndex).
----@return boolean completednumber posXnumber posYnumber objective
+---@return boolean completed, number posX, number posY, number objective
 ---[View Documents](https://wow.gamepedia.com/API_QuestPOIGetIconInfo)
 function QuestPOIGetIconInfo(questId) end
 
@@ -8992,20 +9000,20 @@ function SearchLFGGetEncounterResults() end
 function SearchLFGGetJoinedID() end
 
 ---Returns how many players listed in raid browser for selected LFG id.
----@return number numResultsnumber totalResults
+---@return number numResults, number totalResults
 ---[View Documents](https://wow.gamepedia.com/API_SearchLFGGetNumResults)
 function SearchLFGGetNumResults() end
 
 ---Returns information about the party player listed in raid browser.
 ---@param index number @ Index of the player to query, ascending from 1 to totalResults return value from SearchLFGGetNumResults.
 ---@param partyIndex number @ Index of the party player to query, ascending from 1 to partyMembers return value from SearchLFGGetResults.
----@return string namenumber levelunknown relationshipunknown classNamestring areaNamestring commentunknown isLeaderunknown isTankunknown isHealerunknown isDamagenumber bossKillsunknown specIDunknown isGroupLeaderunknown armorunknown spellDamageunknown plusHealingunknown CritMeleeunknown CritRangedunknown critSpellunknown mp5unknown mp5Combatunknown attackPowerunknown agilityunknown maxHealthunknown maxMananumber gearRatingunknown avgILevelunknown defenseRatingunknown dodgeRatingunknown BlockRatingunknown ParryRatingunknown HasteRatingunknown expertise
+---@return string name, number level, unknown relationship, unknown className, string areaName, string comment, unknown isLeader, unknown isTank, unknown isHealer, unknown isDamage, number bossKills, unknown specID, unknown isGroupLeader, unknown armor, unknown spellDamage, unknown plusHealing, unknown CritMelee, unknown CritRanged, unknown critSpell, unknown mp5, unknown mp5Combat, unknown attackPower, unknown agility, unknown maxHealth, unknown maxMana, number gearRating, unknown avgILevel, unknown defenseRating, unknown dodgeRating, unknown BlockRating, unknown ParryRating, unknown HasteRating, unknown expertise
 ---[View Documents](https://wow.gamepedia.com/API_SearchLFGGetPartyResults)
 function SearchLFGGetPartyResults(index, partyIndex) end
 
 ---Returns information about the player listed in raid browser.
 ---@param index number @ Index of the player to query, ascending from 1 to totalResults return value from SearchLFGGetNumResults.
----@return string namenumber levelstring areaNamestring classNamestring commentnumber partyMembersunknown statusunknown classunknown encountersTotalunknown encountersCompleteunknown isIneligibleunknown isLeaderunknown isTankunknown isHealerunknown isDamagenumber bossKillsunknown specIDunknown isGroupLeaderunknown armorunknown spellDamageunknown plusHealingunknown CritMeleeunknown CritRangedunknown critSpellunknown mp5unknown mp5Combatunknown attackPowerunknown agilityunknown maxHealthunknown maxMananumber gearRatingunknown avgILevelunknown defenseRatingunknown dodgeRatingunknown BlockRatingunknown ParryRatingunknown HasteRatingunknown expertise
+---@return string name, number level, string areaName, string className, string comment, number partyMembers, unknown status, unknown class, unknown encountersTotal, unknown encountersComplete, unknown isIneligible, unknown isLeader, unknown isTank, unknown isHealer, unknown isDamage, number bossKills, unknown specID, unknown isGroupLeader, unknown armor, unknown spellDamage, unknown plusHealing, unknown CritMelee, unknown CritRanged, unknown critSpell, unknown mp5, unknown mp5Combat, unknown attackPower, unknown agility, unknown maxHealth, unknown maxMana, number gearRating, unknown avgILevel, unknown defenseRating, unknown dodgeRating, unknown BlockRating, unknown ParryRating, unknown HasteRating, unknown expertise
 ---[View Documents](https://wow.gamepedia.com/API_SearchLFGGetResults)
 function SearchLFGGetResults(index) end
 
@@ -9026,7 +9034,7 @@ function SearchLFGSort() end
 
 ---Evaluates macro options in the string and returns the appropriate sub-string or nil
 ---@param options string @ a secure command options string to be parsed, e.g. [mod:alt] ALT is held down; [mod:ctrl] CTRL is held down, but ALT is not; neither ALT nor CTRL is held down.
----@return string resultstring target
+---@return string result, string target
 ---[View Documents](https://wow.gamepedia.com/API_SecureCmdOptionParse)
 function SecureCmdOptionParse(options) end
 
@@ -9214,8 +9222,8 @@ function SetCemeteryPreference() end
 function SetChannelOwner(channel, newowner) end
 
 ---Changes the password of the current channel.
----@param channelName unknown
----@param password unknown
+---@param channelName string @ The name of the channel.
+---@param password any @ The password to assign to the channel.
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_SetChannelPassword)
 function SetChannelPassword(channelName, password) end
@@ -9991,7 +9999,7 @@ function SpellCancelQueuedSpell() end
 ---Checks if the spell should be visible, depending on spellId and raid combat status
 ---@param spellId number @ The ID of the spell to check
 ---@param visType string @ either RAID_INCOMBAT if in combat, RAID_OUTOFCOMBAT otherwise
----@return boolean hasCustomboolean alwaysShowMineboolean showForMySpec
+---@return boolean hasCustom, boolean alwaysShowMine, boolean showForMySpec
 ---[View Documents](https://wow.gamepedia.com/API_SpellGetVisibilityInfo)
 function SpellGetVisibilityInfo(spellId, visType) end
 
@@ -10328,7 +10336,7 @@ function TaxiNodeName(index) end
 
 ---Returns the position of a flight point on the taxi map.
 ---@param index unknown
----@return unknown xunknown y
+---@return unknown x, unknown y
 ---[View Documents](https://wow.gamepedia.com/API_TaxiNodePosition)
 function TaxiNodePosition(index) end
 
@@ -10443,25 +10451,25 @@ function UnitAffectingCombat(unit) end
 
 ---Needs summary.
 ---@param unit string
----@return boolean isAlliedRaceboolean hasHeritageArmorUnlocked
+---@return boolean isAlliedRace, boolean hasHeritageArmorUnlocked
 ---[View Documents](https://wow.gamepedia.com/API_UnitAlliedRaceInfo)
 function UnitAlliedRaceInfo(unit) end
 
 ---Returns the armor statistics relevant to the specified target.
 ---@param unit string @ The unitId to get information from. Normally only works for player and pet, but also for target if the target is a beast upon which the hunter player has cast Beast Lore.
----@return number basenumber effectiveArmornumber armornumber posBuffnumber negBuff
+---@return unknown base, number effectiveArmor, number armor, unknown posBuff, unknown negBuff
 ---[View Documents](https://wow.gamepedia.com/API_UnitArmor)
 function UnitArmor(unit) end
 
 ---Returns the unit's melee attack power and modifiers.
 ---@param unit unknown @ UnitId - The unit to get information from. (Does not work for target - Possibly only player and pet)
----@return number basenumber posBuffnumber negBuff
+---@return number base, number posBuff, number negBuff
 ---[View Documents](https://wow.gamepedia.com/API_UnitAttackPower)
 function UnitAttackPower(unit) end
 
 ---Returns the unit's melee attack speed for each hand.
 ---@param unit unknown @ UnitId - The unit to get information from. (Verified for player and target)
----@return number mainSpeednumber offSpeed
+---@return number mainSpeed, number offSpeed
 ---[View Documents](https://wow.gamepedia.com/API_UnitAttackSpeed)
 function UnitAttackSpeed(unit) end
 
@@ -10476,7 +10484,7 @@ function UnitAura(unit, index, filter) end
 ---Needs summary.
 ---@param unit string
 ---@param slot number @ aura slot from UnitAuraSlots()
----@return unknown nameplateShowPersonalunknown spellIdunknown canApplyAuraunknown isBossDebuffunknown castByPlayerunknown nameplateShowAllunknown timeModunknown ...
+---@return unknown nameplateShowPersonal, unknown spellId, unknown canApplyAura, unknown isBossDebuff, unknown castByPlayer, unknown nameplateShowAll, unknown timeMod, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_UnitAuraBySlot)
 function UnitAuraBySlot(unit, slot) end
 
@@ -10485,7 +10493,7 @@ function UnitAuraBySlot(unit, slot) end
 ---@param filter string @ e.g. HELPFUL, HARMFUL|RAID
 ---@param maxSlots number
 ---@param continuationToken number
----@return number continuationTokennumber ...
+---@return number continuationToken, number ...
 ---[View Documents](https://wow.gamepedia.com/API_UnitAuraSlots)
 function UnitAuraSlots(unit, filter, maxSlots, continuationToken) end
 
@@ -10538,13 +10546,13 @@ function UnitCanPetBattle() end
 
 ---Returns information about the spell currently being cast by the specified unit.
 ---@param unit string @ The UnitId to query (e.g. player, party2, pet, target etc.)
----@return string namestring textstring texturenumber startTimeMSnumber endTimeMSboolean isTradeSkillstring castIDboolean notInterruptiblenumber spellId
+---@return string name, string text, string texture, number startTimeMS, number endTimeMS, boolean isTradeSkill, string castID, boolean notInterruptible, number spellId
 ---[View Documents](https://wow.gamepedia.com/API_UnitCastingInfo)
 function UnitCastingInfo(unit) end
 
 ---Returns information about the spell currently being channeled by the specified unit.
 ---@param unit string @ The unit to query (e.g. player, party2, pet, target etc.)
----@return string namestring textstring texturenumber startTimeMSnumber endTimeMSboolean isTradeSkillboolean notInterruptiblenumber spellId
+---@return string name, string text, string texture, number startTimeMS, number endTimeMS, boolean isTradeSkill, boolean notInterruptible, number spellId
 ---[View Documents](https://wow.gamepedia.com/API_UnitChannelInfo)
 function UnitChannelInfo(unit) end
 
@@ -10556,7 +10564,7 @@ function UnitChromieTimeID(unit) end
 
 ---Two functions provide the class of a specified unit:
 ---@param unitId string @ The UnitId of the unit to check (e.g. player or target)
----@return string classNamestring classFilenamenumber classId
+---@return string className, string classFilename, number classId
 ---[View Documents](https://wow.gamepedia.com/API_UnitClass)
 function UnitClass(unitId) end
 
@@ -10588,7 +10596,7 @@ function UnitCreatureType(unit) end
 
 ---Unit damage returns information about your current damage stats. Doesn't seem to return usable values for mobs, NPCs, or other players. The method returns 7 values, only some of which appear to be useful.
 ---@param unit string @ The unitId to get information for. (Likely only works for player and pet. Possibly for [Beast Lore]'d targets. -- unconfirmed)
----@return number lowDmgnumber hiDmgnumber offlowDmgnumber offhiDmgnumber posBuffnumber negBuffnumber percentmod
+---@return number lowDmg, number hiDmg, number offlowDmg, number offhiDmg, number posBuff, number negBuff, number percentmod
 ---[View Documents](https://wow.gamepedia.com/API_UnitDamage)
 function UnitDamage(unit) end
 
@@ -10600,13 +10608,13 @@ function UnitDebuff() end
 ---Returns detailed information about the threat status of one unit against another.
 ---@param unit string @ UnitId of the player or pet whose threat to request.
 ---@param mobUnit string @ UnitId of the NPC whose threat table to query.
----@return boolean isTankingnumber statusnumber scaledPercentagenumber rawPercentagenumber threatValue
+---@return boolean isTanking, number status, number scaledPercentage, number rawPercentage, number threatValue
 ---[View Documents](https://wow.gamepedia.com/API_UnitDetailedThreatSituation)
 function UnitDetailedThreatSituation(unit, mobUnit) end
 
 ---Returns the squared distance to a unit in your group
 ---@param unit string @ The unitId for the player in your group
----@return number distanceSquaredboolean checkedDistance
+---@return number distanceSquared, boolean checkedDistance
 ---[View Documents](https://wow.gamepedia.com/API_UnitDistanceSquared)
 function UnitDistanceSquared(unit) end
 
@@ -10623,13 +10631,13 @@ function UnitExists(unit) end
 
 ---Get the name of the faction (Horde/Alliance) a unit belongs to.
 ---@param unit string @ The UnitId of the unit to check (Tested with player, pet, party1, hostile target)
----@return string englishFactionunknown izedFaction
+---@return string englishFaction, unknown izedFaction
 ---[View Documents](https://wow.gamepedia.com/API_UnitFactionGroup)
 function UnitFactionGroup(unit) end
 
 ---Returns the player's (unit's) name and server.
 ---@param unit string @ unitId to query; the only intended value is player.
----@return unknown fullNamestring realm
+---@return unknown fullName, string realm
 ---[View Documents](https://wow.gamepedia.com/API_UnitFullName)
 function UnitFullName(unit) end
 
@@ -10766,7 +10774,7 @@ function UnitInRaid(unit) end
 
 ---Returns whether a unit is close to the player.
 ---@param unit string @ unitId) - unit to query; information is only available for members of the player's group.
----@return boolean inRangeboolean checkedRange
+---@return boolean inRange, boolean checkedRange
 ---[View Documents](https://wow.gamepedia.com/API_UnitInRange)
 function UnitInRange(unit) end
 
@@ -10872,11 +10880,12 @@ function UnitIsGhost(unit) end
 ---[View Documents](https://wow.gamepedia.com/API_UnitIsGroupAssistant)
 function UnitIsGroupAssistant(unit) end
 
----Returns true if the unit is the leader of a party or raid, false otherwise.
----@param unit_or_PlayerName unknown
+---Returns whether the unit is the leader of a party or raid.
+---@param unit string @ UnitId
+---@param partyCategory number @ ?
 ---@return boolean isLeader
 ---[View Documents](https://wow.gamepedia.com/API_UnitIsGroupLeader)
-function UnitIsGroupLeader(unit_or_PlayerName) end
+function UnitIsGroupLeader(unit, partyCategory) end
 
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_UnitIsInMyGuild)
@@ -10985,7 +10994,7 @@ function UnitLevel(unit) end
 
 ---Returns the name and realm of the specified unit.
 ---@param unit string @ The UnitId to query (e.g. player, party2, pet, target etc.)
----@return string namestring realm
+---@return string name, string realm
 ---[View Documents](https://wow.gamepedia.com/API_UnitName)
 function UnitName(unit) end
 
@@ -11041,7 +11050,7 @@ function UnitPlayerOrPetInRaid(unit) end
 
 ---Returns the position of a unit within the current world area. Does not work in raids, dungeons and competitive instances.
 ---@param unit string @ UnitId for which the position is returned. Does not work with all unit types. Works with player, partyN or raidN as unit type. In particular, it does not work on pets or any unit not in your group.
----@return number posYnumber posXnumber posZnumber instanceID
+---@return number posY, number posX, number posZ, number instanceID
 ---[View Documents](https://wow.gamepedia.com/API_UnitPosition)
 function UnitPosition(unit) end
 
@@ -11080,7 +11089,7 @@ function UnitPowerMax(unitToken, powerType, unmodified) end
 ---Returns a number corresponding to the power type (e.g., mana, rage or energy) of the specified unit.
 ---@param unit string @ unitId) - The unit whose power type to query.
 ---@param index number @ Optional value for classes with multiple powerTypes. If not specified, information about the first (currently active) power type will be returned.
----@return number powerTypestring powerTokennumber altRnumber altGnumber altB
+---@return number powerType, string powerToken, number altR, number altG, number altB
 ---[View Documents](https://wow.gamepedia.com/API_UnitPowerType)
 function UnitPowerType(unit, index) end
 
@@ -11104,19 +11113,19 @@ function UnitQuestTrivialLevelRangeScaling(unit) end
 
 ---Returns the race of the specified unit.
 ---@param unit string @ UnitId
----@return string raceNamestring raceFilenumber raceID
+---@return string raceName, string raceFile, number raceID
 ---[View Documents](https://wow.gamepedia.com/API_UnitRace)
 function UnitRace(unit) end
 
 ---Returns the unit's ranged attack power and modifiers.
 ---@param unit string @ The UnitId to get information from. (Likely only works for player and pet)
----@return number basenumber posBuffnumber negBuff
+---@return number base, number posBuff, number negBuff
 ---[View Documents](https://wow.gamepedia.com/API_UnitRangedAttackPower)
 function UnitRangedAttackPower(unit) end
 
 ---Returns the unit's ranged damage and speed.
 ---@param player unknown
----@return number speednumber lowDmgnumber hiDmgnumber posBuffnumber negBuffnumber percent
+---@return number speed, number lowDmg, number hiDmg, number posBuff, number negBuff, number percent
 ---[View Documents](https://wow.gamepedia.com/API_UnitRangedDamage)
 function UnitRangedDamage(player) end
 
@@ -11136,7 +11145,7 @@ function UnitRealmRelationship(unit) end
 ---Returns RGBA values for the color of the unit's selection (the outline around and the circle underneath a player character or an NPC).
 ---@param UnitId string @ The unit whose selection colour should be returned.
 ---@param useExtendedColors boolean @ optional) - If true, a more appropriate colour of the unit's selection will be returned. For instance, if used on a dead hostile target, the default return will red (hostile), but the extended return will be grey (dead).
----@return number rednumber greennumber bluenumber alpha
+---@return number red, number green, number blue, number alpha
 ---[View Documents](https://wow.gamepedia.com/API_UnitSelectionColor)
 function UnitSelectionColor(UnitId, useExtendedColors) end
 
@@ -11165,10 +11174,10 @@ function UnitSex(unit) end
 function UnitShouldDisplayName() end
 
 ---Returns the current spell haste percentage for a unit.
----@param unit_or_name unknown
+---@param unit string @ UnitId
 ---@return number spellHastePercent
 ---[View Documents](https://wow.gamepedia.com/API_UnitSpellHaste)
-function UnitSpellHaste(unit_or_name) end
+function UnitSpellHaste(unit) end
 
 ---Returns the amount of staggered damage on the unit.
 ---@param unit string @ unit to query the staggered damage of.
@@ -11179,7 +11188,7 @@ function UnitStagger(unit) end
 ---Returns info about one of the unit's stats (strength, agility, stamina, intellect, spirit).
 ---@param unit string @ The UnitId to get information from. (Only works for player and pet. Will work on target as long as it is equal to player)
 ---@param statID number @ An internal id corresponding to one of the stats.
----@return number statnumber effectiveStatnumber posBuffnumber negBuff
+---@return number stat, number effectiveStat, number posBuff, number negBuff
 ---[View Documents](https://wow.gamepedia.com/API_UnitStat)
 function UnitStat(unit, statID) end
 
@@ -11247,13 +11256,13 @@ function UnitWeaponAttackPower() end
 ---[View Documents](https://wow.gamepedia.com/API_UnitWidgetSet)
 function UnitWidgetSet(unit) end
 
----Return the current XP of a unit - only seems to work with player.
+---Return the current XP of a unit - only works if the unit is the player.
 ---@param unit string @ The UnitId to select as a target.
 ---@return number XP
 ---[View Documents](https://wow.gamepedia.com/API_UnitXP)
 function UnitXP(unit) end
 
----Return the max XP of a unit - only seems to work with player.
+---Return the max XP of a unit - only works if the unit is the player.
 ---@param unit string @ The UnitId to select as a target.
 ---@return number XP
 ---[View Documents](https://wow.gamepedia.com/API_UnitXPMax)

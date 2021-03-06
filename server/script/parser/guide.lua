@@ -1665,6 +1665,14 @@ local function stepRefOfGenericCrossTable(status, doc, typeName)
                                 if res.type == 'doc.type.table' then
                                     return res[where]
                                 end
+                                if res.type == 'doc.type.array' then
+                                    if where == 'key' then
+                                        return status.interface and status.interface.docType('integer')[1]
+                                    end
+                                    if where == 'value' then
+                                        return res.node
+                                    end
+                                end
                             end
                         end
                     end
@@ -1685,9 +1693,7 @@ local function stepRefOfGenericCrossTable(status, doc, typeName)
             end
         end
     end
-    return function (obj)
-        return obj
-    end
+    return nil
 end
 
 local function getIteratorArg(status, args, index)
@@ -1756,7 +1762,13 @@ local function stepRefOfGeneric(status, typeUnit, args, mode)
         if not callArg then
             goto CONTINUE
         end
-        appendValidGenericType(results, status, typeName, crossTable(callArg))
+        if crossTable then
+            callArg = crossTable(callArg)
+            if not callArg then
+                goto CONTINUE
+            end
+        end
+        appendValidGenericType(results, status, typeName, callArg)
         ::CONTINUE::
     end
     return results
@@ -1775,7 +1787,6 @@ function m.checkSameSimpleByDocType(status, doc, args)
             local pieceResult = stepRefOfGeneric(status, piece, args, 'def')
             for _, res in ipairs(pieceResult) do
                 results[#results+1] = res
-                status.hasGenericResult = true
             end
         else
             local pieceResult = stepRefOfDocType(status, piece, 'def')
@@ -2171,17 +2182,33 @@ local function checkSameSimpleAndMergeDocTypeFunctionReturns(status, results, so
 end
 
 function m.checkSameSimpleInCallInSameFile(status, func, args, index)
-    local results = {}
+    if not status.share.callResultsCache then
+        status.share.callResultsCache = {}
+    end
+    local cache = status.share.callResultsCache[func]
+    if not cache then
+        cache = {}
+        status.share.callResultsCache[func] = cache
+    end
+    local results = cache[index]
+    if results then
+        return results
+    end
+    results = {}
     if func.special then
         --return results
     end
     local newStatus = m.status(status)
     m.searchRefs(newStatus, func, 'def')
+    local hasDocReturn
     for _, def in ipairs(newStatus.results) do
-        local hasDocReturn = checkSameSimpleAndMergeDocTypeFunctionReturns(status, results, def, index)
-                        or   checkSameSimpleAndMergeFunctionReturnsByDoc(status, results, def, index, args)
-                        or   checkSameSimpleAndMergeDocFunctionReturn(status, results, def, index, args)
-        if not hasDocReturn then
+        hasDocReturn =   checkSameSimpleAndMergeDocTypeFunctionReturns(status, results, def, index)
+                    or   checkSameSimpleAndMergeFunctionReturnsByDoc(status, results, def, index, args)
+                    or   checkSameSimpleAndMergeDocFunctionReturn(status, results, def, index, args)
+                    or   hasDocReturn
+    end
+    if not hasDocReturn then
+        for _, def in ipairs(newStatus.results) do
             local value = m.getObjectValue(def) or def
             if value.type == 'function' then
                 local returns = value.returns
@@ -2195,6 +2222,8 @@ function m.checkSameSimpleInCallInSameFile(status, func, args, index)
                 end
             end
         end
+        -- generic cannot cache
+        cache[index] = results
     end
     return results
 end
@@ -3121,10 +3150,6 @@ function m.getRefCache(status, obj, mode)
     end
     status.share.cacheLock[mode][obj] = {}
     return nil, function ()
-        if status.hasGenericResult then
-            status.share.cacheLock[mode][obj] = nil
-            return
-        end
         sourceCache = {}
         local results = status.results
         for i = 1, #results do

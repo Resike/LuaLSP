@@ -243,6 +243,7 @@ proto.on('textDocument/didOpen', function (params)
     local doc   = params.textDocument
     local uri   = doc.uri
     local text  = doc.text
+    log.debug('didOpen', uri)
     files.open(uri)
     plugin.awaitReady()
     if not files.isOpen(uri) then
@@ -254,6 +255,7 @@ end)
 proto.on('textDocument/didClose', function (params)
     local doc   = params.textDocument
     local uri   = doc.uri
+    log.debug('didClose', uri)
     files.close(uri)
     if not files.isLua(uri) then
         files.remove(uri)
@@ -460,6 +462,7 @@ proto.on('textDocument/completion', function (params)
         local item = {
             label            = res.label,
             kind             = res.kind,
+            detail           = res.detail,
             deprecated       = res.deprecated,
             sortText         = ('%04d'):format(i),
             filterText       = res.filterText,
@@ -784,6 +787,42 @@ end)
 
 proto.on('$/didChangeVisibleRanges', function (params)
     files.setVisibles(params.uri, params.ranges)
+end)
+
+proto.on('$/status/click', function ()
+    do return end
+    local titleDiagnostic = '进行工作区诊断'
+    local titleRestart    = '重启语言服务'
+    local result = proto.awaitRequest('window/showMessageRequest', {
+        type    = define.MessageType.Info,
+        message = '点击',
+        actions = {
+            {
+                title = titleDiagnostic,
+            },
+            {
+                title = titleRestart,
+            },
+        },
+    })
+    if not result then
+        return
+    end
+    if result.title == titleDiagnostic then
+        local diagnostic = require 'provider.diagnostic'
+        diagnostic.diagnosticsAll()
+        proto.notify('window/showMessage', {
+            type     = define.MessageType.Info,
+            message  = '诊断完成',
+        })
+    end
+    if result.title == titleRestart then
+        proto.notify('$/command', {
+            command   = 'extension.lua.doc',
+            data      = 'en-us/51/manual.html',
+        })
+        --os.exit(true)
+    end
 end)
 
 -- Hint
