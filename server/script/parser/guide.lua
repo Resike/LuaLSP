@@ -105,7 +105,8 @@ m.childMap = {
     ['doc.type.typeliteral']  = {'node'},
     ['doc.type.arg']       = {'extends'},
     ['doc.overload']       = {'overload', 'comment'},
-    ['doc.see']            = {'name', 'field'},
+    ['doc.see']            = {'name', 'field', 'comment'},
+    ['doc.diagnostic']     = {'#names', 'comment'},
 }
 
 m.actionMap = {
@@ -636,15 +637,15 @@ end
 
 --- 获取偏移对应的坐标
 ---@param lines table
----@return integer {name = 'row'}
----@return integer {name = 'col'}
+---@return integer row
+---@return integer col
 function m.positionOf(lines, offset)
     if offset < 1 then
         return 0, 0
     end
     local lastLine = lines[#lines]
     if offset > lastLine.finish then
-        return #lines, lastLine.finish - lastLine.start + 1
+        return #lines, offset - lastLine.start
     end
     local min = 1
     local max = #lines

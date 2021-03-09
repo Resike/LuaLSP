@@ -1,25 +1,33 @@
-local define     = require 'proto.define'
-local files      = require 'files'
-local guide      = require 'parser.guide'
-local matchKey   = require 'core.matchkey'
-local vm         = require 'vm'
-local getLabel   = require 'core.hover.label'
-local getName    = require 'core.hover.name'
-local getArg     = require 'core.hover.arg'
-local getReturn  = require 'core.hover.return'
-local getDesc    = require 'core.hover.description'
-local getHover   = require 'core.hover'
-local config     = require 'config'
-local util       = require 'utility'
-local markdown   = require 'provider.markdown'
-local findSource = require 'core.find-source'
-local await      = require 'await'
-local parser     = require 'parser'
-local keyWordMap = require 'core.keyword'
-local workspace  = require 'workspace'
-local furi       = require 'file-uri'
-local rpath      = require 'workspace.require-path'
-local lang       = require 'language'
+local define       = require 'proto.define'
+local files        = require 'files'
+local guide        = require 'parser.guide'
+local matchKey     = require 'core.matchkey'
+local vm           = require 'vm'
+local getLabel     = require 'core.hover.label'
+local getName      = require 'core.hover.name'
+local getArg       = require 'core.hover.arg'
+local getReturn    = require 'core.hover.return'
+local getDesc      = require 'core.hover.description'
+local getHover     = require 'core.hover'
+local config       = require 'config'
+local util         = require 'utility'
+local markdown     = require 'provider.markdown'
+local findSource   = require 'core.find-source'
+local await        = require 'await'
+local parser       = require 'parser'
+local keyWordMap   = require 'core.keyword'
+local workspace    = require 'workspace'
+local furi         = require 'file-uri'
+local rpath        = require 'workspace.require-path'
+local lang         = require 'language'
+local lookBackward = require 'core.look-backward'
+
+local DiagnosticModes = {
+    'disable-next-line',
+    'disable-line',
+    'disable',
+    'enable',
+}
 
 local stackID = 0
 local stacks = {}
@@ -49,58 +57,6 @@ local function trim(str)
     return str:match '^%s*(%S+)%s*$'
 end
 
-local function isSpace(char)
-    if char == ' '
-    or char == '\n'
-    or char == '\r'
-    or char == '\t' then
-        return true
-    end
-    return false
-end
-
-local function skipSpace(text, offset)
-    for i = offset, 1, -1 do
-        local char = text:sub(i, i)
-        if not isSpace(char) then
-            return i
-        end
-    end
-    return 0
-end
-
-local function findWord(text, offset)
-    for i = offset, 1, -1 do
-        if not text:sub(i, i):match '[%w_]' then
-            if i == offset then
-                return nil
-            end
-            return text:sub(i+1, offset), i+1
-        end
-    end
-    return text:sub(1, offset), 1
-end
-
-local function findSymbol(text, offset)
-    for i = offset, 1, -1 do
-        local char = text:sub(i, i)
-        if isSpace(char) then
-            goto CONTINUE
-        end
-        if char == '.'
-        or char == ':'
-        or char == '('
-        or char == ','
-        or char == '=' then
-            return char, i
-        else
-            return nil
-        end
-        ::CONTINUE::
-    end
-    return nil
-end
-
 local function findNearestSource(ast, offset)
     local source
     guide.eachSourceContain(ast.ast, offset, function (src)
@@ -109,33 +65,10 @@ local function findNearestSource(ast, offset)
     return source
 end
 
-local function findTargetSymbol(text, offset, symbol)
-    offset = skipSpace(text, offset)
-    for i = offset, 1, -1 do
-        local char = text:sub(i - #symbol + 1, i)
-        if char == symbol then
-            return i - #symbol + 1
-        else
-            return nil
-        end
-        ::CONTINUE::
-    end
-    return nil
-end
-
-local function findAnyPos(text, offset)
-    for i = offset, 1, -1 do
-        if not isSpace(text:sub(i, i)) then
-            return i
-        end
-    end
-    return nil
-end
-
 local function findParent(ast, text, offset)
     for i = offset, 1, -1 do
         local char = text:sub(i, i)
-        if isSpace(char) then
+        if lookBackward.isSpace(char) then
             goto CONTINUE
         end
         local oop
@@ -150,7 +83,7 @@ local function findParent(ast, text, offset)
         else
             return nil, nil
         end
-        local anyPos = findAnyPos(text, i-1)
+        local anyPos = lookBackward.findAnyPos(text, i-1)
         if not anyPos then
             return nil, nil
         end
@@ -191,7 +124,7 @@ local function findParentInStringIndex(ast, text, offset)
 end
 
 local function buildFunctionSnip(source, oop)
-    local name = getName(source):gsub('^.-[$.:]', '')
+    local name = getName(source):gsub('^.+[$.:]', '')
     local defs = vm.getDefs(source, 0)
     local args = ''
     for _, def in ipairs(defs) do
@@ -703,7 +636,7 @@ end
 
 local function checkKeyWord(ast, text, start, word, hasSpace, afterLocal, results)
     local snipType = config.config.completion.keywordSnippet
-    local symbol = findSymbol(text, start - 1)
+    local symbol = lookBackward.findSymbol(text, start - 1)
     local isExp = symbol == '(' or symbol == ',' or symbol == '='
     for _, data in ipairs(keyWordMap) do
         local key = data[1]
@@ -732,7 +665,7 @@ local function checkKeyWord(ast, text, start, word, hasSpace, afterLocal, result
         if snipType == 'Both' or snipType == 'Replace' then
             local func = data[2]
             if func then
-                replaced = func(hasSpace, isExp, results)
+                replaced = func(hasSpace, isExp, results, text, start)
                 extra = true
             end
         end
@@ -745,7 +678,7 @@ local function checkKeyWord(ast, text, start, word, hasSpace, afterLocal, result
                     label = key,
                     kind  = define.CompletionItemKind.Keyword,
                 }
-                if extra then
+                if #results > 0 and extra then
                     table.insert(results, #results, item)
                 else
                     results[#results+1] = item
@@ -844,8 +777,8 @@ local function checkFunctionArgByDocParam(ast, word, start, results)
 end
 
 local function isAfterLocal(text, start)
-    local pos = skipSpace(text, start-1)
-    local word = findWord(text, pos)
+    local pos = lookBackward.skipSpace(text, start-1)
+    local word = lookBackward.findWord(text, pos)
     return word == 'local'
 end
 
@@ -1094,7 +1027,7 @@ local function checkEqualEnumLeft(ast, text, offset, source, results)
 end
 
 local function checkEqualEnum(ast, text, offset, results)
-    local start =  findTargetSymbol(text, offset, '=')
+    local start =  lookBackward.findTargetSymbol(text, offset, '=')
     if not start then
         return
     end
@@ -1104,7 +1037,7 @@ local function checkEqualEnum(ast, text, offset, results)
         start = start - 1
         eqOrNeq = true
     end
-    start = skipSpace(text, start - 1)
+    start = lookBackward.skipSpace(text, start - 1)
     local source = findNearestSource(ast, start)
     if not source then
         return
@@ -1179,8 +1112,8 @@ local function tryIndex(ast, text, offset, results)
 end
 
 local function tryWord(ast, text, offset, results)
-    local finish = skipSpace(text, offset)
-    local word, start = findWord(text, finish)
+    local finish = lookBackward.skipSpace(text, offset)
+    local word, start = lookBackward.findWord(text, finish)
     if not word then
         return nil
     end
@@ -1225,7 +1158,7 @@ local function tryWord(ast, text, offset, results)
 end
 
 local function trySymbol(ast, text, offset, results)
-    local symbol, start = findSymbol(text, offset)
+    local symbol, start = lookBackward.findSymbol(text, offset)
     if not symbol then
         return nil
     end
@@ -1467,6 +1400,7 @@ local function tryLuaDocCate(word, results)
         'meta',
         'version',
         'see',
+        'diagnostic',
     } do
         if matchKey(word, docType) then
             results[#results+1] = {
@@ -1568,6 +1502,35 @@ local function tryLuaDocBySource(ast, offset, source, results)
             end
         end
         return true
+    elseif source.type == 'doc.diagnostic' then
+        for _, mode in ipairs(DiagnosticModes) do
+            if matchKey(source.mode, mode) then
+                results[#results+1] = {
+                    label    = mode,
+                    kind     = define.CompletionItemKind.Enum,
+                    textEdit = {
+                        start   = source.start,
+                        finish  = source.start + #source.mode - 1,
+                        newText = mode,
+                    },
+                }
+            end
+        end
+        return true
+    elseif source.type == 'doc.diagnostic.name' then
+        for name in pairs(define.DiagnosticDefaultSeverity) do
+            if matchKey(source[1], name) then
+                results[#results+1] = {
+                    label = name,
+                    kind  = define.CompletionItemKind.Value,
+                    textEdit = {
+                        start   = source.start,
+                        finish  = source.start + #source[1] - 1,
+                        newText = name,
+                    },
+                }
+            end
+        end
     end
     return false
 end
@@ -1631,6 +1594,20 @@ local function tryLuaDocByErr(ast, offset, err, docState, results)
                     kind   = define.CompletionItemKind.Interface,
                 }
             end
+        end
+    elseif err.type == 'LUADOC_MISS_DIAG_MODE' then
+        for _, mode in ipairs(DiagnosticModes) do
+            results[#results+1] = {
+                label = mode,
+                kind  = define.CompletionItemKind.Enum,
+            }
+        end
+    elseif err.type == 'LUADOC_MISS_DIAG_NAME' then
+        for name in pairs(define.DiagnosticDefaultSeverity) do
+            results[#results+1] = {
+                label = name,
+                kind  = define.CompletionItemKind.Value,
+            }
         end
     end
 end
@@ -1743,7 +1720,7 @@ local function tryComment(ast, text, offset, results)
     if #results > 0 then
         return
     end
-    local word = findWord(text, offset)
+    local word = lookBackward.findWord(text, offset)
     local doc  = getLuaDoc(ast, offset)
     if not word then
         local comment = getComment(ast, offset)
@@ -1775,7 +1752,7 @@ local function makeCache(uri, offset, results)
         return
     end
     local text  = files.getText(uri)
-    local word = findWord(text, offset)
+    local word = lookBackward.findWord(text, offset)
     if not word or #word < 2 then
         cache.results = nil
         return
@@ -1792,7 +1769,7 @@ local function getCache(uri, offset)
         return nil
     end
     local text  = files.getText(uri)
-    local word = findWord(text, offset)
+    local word = lookBackward.findWord(text, offset)
     if not word then
         return nil
     end
@@ -1854,7 +1831,7 @@ local function completion(uri, offset)
             trySymbol(ast, text, offset, results)
         end
     else
-        local word = findWord(text, offset)
+        local word = lookBackward.findWord(text, offset)
         if word then
             checkCommon(nil, word, text, offset, results)
         end

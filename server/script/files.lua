@@ -193,6 +193,19 @@ function m.setText(uri, text, isTrust)
     end
 end
 
+function m.setRawText(uri, text)
+    if not text then
+        return
+    end
+    uri = getUriKey(uri)
+    local file = m.fileMap[uri]
+    file.text             = text
+    file.originText       = text
+    m.linesMap[uri]       = nil
+    m.originLinesMap[uri] = nil
+    m.astMap[uri]         = nil
+end
+
 --- 获取文件版本
 function m.getVersion(uri)
     uri = getUriKey(uri)
@@ -406,7 +419,7 @@ function m.compileAst(uri, text)
         end})
         return state
     else
-        log.error(err)
+        log.error('Compile failed:', m.getOriginUri(uri), err)
         return nil
     end
 end
@@ -540,7 +553,7 @@ function m.offset(uri, position, isFinish)
     local start  = guide.lineRange(lines, row)
     local offset
     if start <= 0 or start > #text then
-        offset = math.maxinteger
+        offset = #text + 1
     else
         offset = utf8.offset(text, position.character + 1, start) or #text
     end
@@ -690,12 +703,9 @@ end
 ---@param offset2 integer
 function m.range(uri, offset1, offset2)
     local range = {
-        start   = m.position(uri, offset1, false),
+        start   = m.position(uri, offset1 - 1, false),
         ['end'] = m.position(uri, offset2, true),
     }
-    if range.start.character > 0 then
-        range.start.character = range.start.character - 1
-    end
     return range
 end
 

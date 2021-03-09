@@ -279,15 +279,17 @@ proto.on('textDocument/didChange', function (params)
         else
             text = change.text
         end
+        files.setRawText(uri, text)
     end
+    files.setRawText(uri, '')
     files.setText(uri, text, true)
 end)
 
 proto.on('textDocument/hover', function (params)
     await.close 'hover'
     await.setID 'hover'
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_HOVER, 0.5)
+    workspace.awaitReady()
     local core = require 'core.hover'
     local doc    = params.textDocument
     local uri    = doc.uri
@@ -301,10 +303,7 @@ proto.on('textDocument/hover', function (params)
     end
     local md = markdown()
     md:add('lua', hover.label)
-    if  hover.label and #hover.label > 0
-    and hover.description and #hover.description > 0 then
-        md:add('md', "---")
-    end
+    md:splitLine()
     md:add('md',  hover.description)
     return {
         contents = {
@@ -316,8 +315,8 @@ proto.on('textDocument/hover', function (params)
 end)
 
 proto.on('textDocument/definition', function (params)
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_DEFINITION, 0.5)
+    workspace.awaitReady()
     local core   = require 'core.definition'
     local uri    = params.textDocument.uri
     if not files.exists(uri) then
@@ -345,8 +344,8 @@ proto.on('textDocument/definition', function (params)
 end)
 
 proto.on('textDocument/references', function (params)
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_REFERENCE, 0.5)
+    workspace.awaitReady()
     local core   = require 'core.reference'
     local uri    = params.textDocument.uri
     if not files.exists(uri) then
@@ -389,8 +388,8 @@ proto.on('textDocument/documentHighlight', function (params)
 end)
 
 proto.on('textDocument/rename', function (params)
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_RENAME, 0.5)
+    workspace.awaitReady()
     local core = require 'core.rename'
     local uri  = params.textDocument.uri
     if not files.exists(uri) then
@@ -433,8 +432,8 @@ proto.on('textDocument/prepareRename', function (params)
 end)
 
 proto.on('textDocument/completion', function (params)
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_COMPLETION, 0.5)
+    workspace.awaitReady()
     --log.info(util.dump(params))
     local core  = require 'core.completion'
     --log.debug('textDocument/completion')
@@ -561,8 +560,8 @@ proto.on('textDocument/signatureHelp', function (params)
     if not config.config.signatureHelp.enable then
         return nil
     end
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_SIGNATURE, 0.5)
+    workspace.awaitReady()
     local uri = params.textDocument.uri
     if not files.exists(uri) then
         return nil
@@ -602,12 +601,10 @@ proto.on('textDocument/signatureHelp', function (params)
 end)
 
 proto.on('textDocument/documentSymbol', function (params)
-    local core = require 'core.document-symbol'
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_SYMBOL, 0.5)
+    workspace.awaitReady()
+    local core = require 'core.document-symbol'
     local uri   = params.textDocument.uri
-    while not files.exists(uri) do
-        await.sleep(0.1)
-    end
 
     local symbols = core(uri)
     if not symbols then
@@ -683,12 +680,15 @@ proto.on('workspace/executeCommand', function (params)
     elseif command == 'lua.solve' then
         local core = require 'core.command.solve'
         return core(params.arguments[1])
+    elseif command == 'lua.jsonToLua' then
+        local core = require 'core.command.jsonToLua'
+        return core(params.arguments[1])
     end
 end)
 
 proto.on('workspace/symbol', function (params)
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_WS_SYMBOL, 0.5)
+    workspace.awaitReady()
     local core = require 'core.workspace-symbol'
 
     await.close('workspace/symbol')
@@ -720,14 +720,13 @@ end)
 
 
 proto.on('textDocument/semanticTokens/full', function (params)
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_SEMANTIC_FULL, 0.5)
+    workspace.awaitReady()
     local core = require 'core.semantic-tokens'
     local uri = params.textDocument.uri
     local text  = files.getText(uri)
-    while not text do
-        await.sleep(0.1)
-        text  = files.getText(uri)
+    if not text then
+        return nil
     end
     local results = core(uri, 0, #text)
     return {
@@ -736,13 +735,10 @@ proto.on('textDocument/semanticTokens/full', function (params)
 end)
 
 proto.on('textDocument/semanticTokens/range', function (params)
-    workspace.awaitReady()
     local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_SEMANTIC_RANGE, 0.5)
+    workspace.awaitReady()
     local core = require 'core.semantic-tokens'
     local uri = params.textDocument.uri
-    while not files.exists(uri) do
-        await.sleep(0.1)
-    end
     local start  = files.offsetOfWord(uri, params.range.start)
     local finish = files.offsetOfWord(uri, params.range['end'])
     local results = core(uri, start, finish)
@@ -823,6 +819,34 @@ proto.on('$/status/click', function ()
         })
         --os.exit(true)
     end
+end)
+
+proto.on('textDocument/onTypeFormatting', function (params)
+    local _ <close> = progress.create(lang.script.WINDOW_PROCESSING_TYPE_FORMATTING, 0.5)
+    workspace.awaitReady()
+    local ch     = params.ch
+    local uri    = params.textDocument.uri
+    if not files.exists(uri) then
+        return nil
+    end
+    local core   = require 'core.type-formatting'
+    local offset = files.offset(uri, params.position)
+    local edits  = core(uri, offset - 1, ch)
+    if #edits == 0 then
+        return nil
+    end
+    local tab = '\t'
+    if params.options.insertSpaces then
+        tab = (' '):rep(params.options.tabSize)
+    end
+    local results = {}
+    for i, edit in ipairs(edits) do
+        results[i] = {
+            range   = files.range(uri, edit.start, edit.finish),
+            newText = edit.text:gsub('\t', tab),
+        }
+    end
+    return results
 end)
 
 -- Hint

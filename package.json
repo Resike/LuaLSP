@@ -433,6 +433,17 @@
 							"scope": "resource",
 							"type": "string"
 						},
+						"unknown-diag-code": {
+							"default": "Any",
+							"description": "%config.diagnostics.unknown-diag-code%",
+							"enum": [
+								"Any",
+								"Opened",
+								"None"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
 						"unused-function": {
 							"default": "Opened",
 							"description": "%config.diagnostics.unused-function%",
@@ -821,6 +832,18 @@
 							"scope": "resource",
 							"type": "string"
 						},
+						"unknown-diag-code": {
+							"default": "Waiting",
+							"description": "%config.diagnostics.unknown-diag-code%",
+							"enum": [
+								"Error",
+								"Warning",
+								"Information",
+								"Hint"
+							],
+							"scope": "resource",
+							"type": "string"
+						},
 						"unused-function": {
 							"default": "Hint",
 							"description": "%config.diagnostics.unused-function%",
@@ -1006,7 +1029,7 @@
 				"Lua.runtime.special": {
 					"markdownDescription": "%config.runtime.special%",
 					"patternProperties": {
-						"": {
+						".*": {
 							"default": "require",
 							"enum": [
 								"_G",
@@ -1087,9 +1110,12 @@
 					"type": "boolean"
 				},
 				"Lua.workspace.library": {
+					"items": {
+						"type": "string"
+					},
 					"markdownDescription": "%config.workspace.library%",
 					"scope": "resource",
-					"type": "object"
+					"type": "array"
 				},
 				"Lua.workspace.maxPreload": {
 					"default": 1000,
@@ -1168,5 +1194,5 @@
 		"type": "git",
 		"url": "https://github.com/sumneko/lua-language-server"
 	},
-	"version": "1.17.4"
+	"version": "1.18.0"
 }
