@@ -126,6 +126,7 @@ local ConfigTemplate = {
         nonstandardSymbol = {{},        Str2Hash ';'},
         plugin            = {'.vscode/lua/plugin.lua', String},
         fileEncoding      = {'utf8',    String},
+        builtin           = {{},          Hash(String, String)},
     },
     diagnostics = {
         enable          = {true, Boolean},

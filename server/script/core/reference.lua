@@ -1,4 +1,4 @@
-local guide      = require 'parser.guide'
+local guide      = require 'core.guide'
 local files      = require 'files'
 local vm         = require 'vm'
 local findSource = require 'core.find-source'
@@ -43,6 +43,7 @@ local accept = {
     ['setglobal']   = true,
     ['getglobal']   = true,
     ['function']    = true,
+    ['...']         = true,
 
     ['doc.type.name']    = true,
     ['doc.class.name']   = true,

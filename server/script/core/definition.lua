@@ -1,4 +1,4 @@
-local guide      = require 'parser.guide'
+local guide      = require 'core.guide'
 local workspace  = require 'workspace'
 local files      = require 'files'
 local vm         = require 'vm'
@@ -43,6 +43,7 @@ local accept = {
     ['string']      = true,
     ['boolean']     = true,
     ['number']      = true,
+    ['...']         = true,
 
     ['doc.type.name']    = true,
     ['doc.class.name']   = true,

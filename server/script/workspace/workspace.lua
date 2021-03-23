@@ -129,6 +129,7 @@ function m.getNativeMatcher()
     end
 
     m.nativeMatcher = glob.gitignore(pattern, m.matchOption, globInteferFace)
+    m.nativeMatcher:setOption('root', m.path)
 
     m.nativeVersion = config.version
     return m.nativeMatcher
@@ -155,9 +156,7 @@ function m.getLibraryMatchers()
         if fs.exists(fs.path(path)) then
             local nPath = fs.absolute(fs.path(path)):string()
             local matcher = glob.gitignore(true, m.matchOption, globInteferFace)
-            if platform.OS == 'Windows' then
-                matcher:setOption 'ignoreCase'
-            end
+            matcher:setOption('root', path)
             log.debug('getLibraryMatchers', path, nPath)
             m.libraryMatchers[#m.libraryMatchers+1] = {
                 path    = nPath,
@@ -251,6 +250,7 @@ local function loadFileFactory(root, progressData, isLibrary)
                 end
             end)
         end
+        await.delay()
     end
 end
 
@@ -330,6 +330,10 @@ function m.findUrisByFilePath(path)
         return {}
     end
     local lpath = path:gsub('[/\\]+', '/')
+    if lpath:match('^[/\\]')
+    or lpath:match('^%a+%:') then
+        lpath = furi.encode(lpath)
+    end
     if platform.OS == 'Windows' then
         lpath = lpath:lower()
     end
@@ -342,6 +346,9 @@ function m.findUrisByFilePath(path)
     local results = {}
     local posts = {}
     for uri in files.eachFile() do
+        if platform.OS ~= 'Windows' then
+            uri = files.getOriginUri(uri)
+        end
         if not uri:find(lpath, 1, true) then
             goto CONTINUE
         end
@@ -416,9 +423,6 @@ function m.normalize(path)
     if platform.OS == 'Windows' then
         path = path:gsub('[/\\]+', '\\')
                    :gsub('[/\\]+$', '')
-                   :gsub('^%a+%:', function (str)
-                        return str:upper()
-                   end)
     else
         path = path:gsub('[/\\]+', '/')
                    :gsub('[/\\]+$', '')
@@ -471,14 +475,12 @@ function m.reload()
 end
 
 function m.awaitReload()
-    local rpath = require 'workspace.require-path'
     local plugin     = require 'plugin'
     m.ready = false
     m.hasHitMaxPreload = false
     files.flushAllLibrary()
     files.removeAllClosed()
     files.flushCache()
-    rpath.flush()
     plugin.init()
     m.awaitPreload()
     m.ready = true

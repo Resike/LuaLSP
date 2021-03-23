@@ -654,6 +654,7 @@ local Defs = {
     GetIndex = function (start, index, finish)
         local obj = {
             type   = 'getindex',
+            bstart = start,
             start  = start,
             finish = finish - 1,
             index  = index,
@@ -1016,6 +1017,14 @@ local Defs = {
         elseif name.type == 'getmethod' then
             name.type = 'setmethod'
             name.value = actions
+        elseif name.type == 'getindex' then
+            name.type = 'setfield'
+            name.value = actions
+            PushError {
+                type = 'INDEX_IN_FUNC_NAME',
+                start = name.bstart,
+                finish = name.finish,
+            }
         end
         name.range = actions.finish
         name.vstart = functionStart

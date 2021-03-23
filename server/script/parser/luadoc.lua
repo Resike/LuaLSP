@@ -1,10 +1,10 @@
 local m          = require 'lpeglabel'
 local re         = require 'parser.relabel'
 local lines      = require 'parser.lines'
-local guide      = require 'parser.guide'
+local guide      = require 'core.guide'
 
 local TokenTypes, TokenStarts, TokenFinishs, TokenContents
-local Ci, Offset, pushError, Ct, NextComment
+local Ci, Offset, pushError, Ct, NextComment, Lines
 local parseType
 local Parser = re.compile([[
 Main                <-  (Token / Sp)*
@@ -455,6 +455,7 @@ local function parseResume()
     return result
 end
 
+local LastType
 function parseType(parent)
     local result = {
         type    = 'doc.type',
@@ -543,22 +544,51 @@ function parseType(parent)
     result.finish = getFinish()
     result.firstFinish = result.finish
 
-    while true do
-        local nextComm = NextComment('peek')
-        if nextComm and nextComm.text:sub(1, 2) == '-|' then
-            NextComment()
-            local finishPos = nextComm.text:find('#', 3) or #nextComm.text
-            parseTokens(nextComm.text:sub(3, finishPos), nextComm.start + 1)
-            local resume = parseResume()
-            if resume then
-                resume.comment = nextComm.text:match('#%s*(.+)', 3)
-                result.resumes[#result.resumes+1] = resume
-                result.finish = resume.finish
+    local row = guide.positionOf(Lines, result.finish)
+
+    local function pushResume()
+        local comments
+        for i = 0, 100 do
+            local nextComm = NextComment(i,'peek')
+            if not nextComm then
+                return false
             end
-        else
-            break
+            local line = Lines[row + i + 1]
+            if line.finish < nextComm.start then
+                return false
+            end
+            if nextComm.text:sub(1, 2) == '-@' then
+                return false
+            else
+                if nextComm.text:sub(1, 2) == '-|' then
+                    NextComment(i)
+                    row = row + i + 1
+                    local finishPos = nextComm.text:find('#', 3) or #nextComm.text
+                    parseTokens(nextComm.text:sub(3, finishPos), nextComm.start + 1)
+                    local resume = parseResume()
+                    if resume then
+                        if comments then
+                            resume.comment = table.concat(comments, '\n')
+                        else
+                            resume.comment = nextComm.text:match('#%s*(.+)', 3)
+                        end
+                        result.resumes[#result.resumes+1] = resume
+                        result.finish = resume.finish
+                    end
+                    comments = nil
+                    return true
+                else
+                    if not comments then
+                        comments = {}
+                    end
+                    comments[#comments+1] = nextComm.text:sub(2)
+                end
+            end
         end
+        return false
     end
+
+    while pushResume() do end
 
     if #result.types == 0 and #result.enums == 0 and #result.resumes == 0 then
         pushError {
@@ -1103,6 +1133,47 @@ local function bindDocsBetween(sources, binded, bindSources, start, finish)
     end
 end
 
+local function bindParamAndReturnIndex(binded)
+    local func
+    for _, source in ipairs(binded[1].bindSources) do
+        if source.type == 'function' then
+            func = source
+            break
+        end
+    end
+    if not func then
+        return
+    end
+    if not func.args then
+        return
+    end
+    local paramIndex = 0
+    local parent = func.parent
+    if parent.type == 'setmethod' then
+        paramIndex = paramIndex + 1
+    end
+    local paramMap = {}
+    for _, param in ipairs(func.args) do
+        paramIndex = paramIndex + 1
+        if param[1] then
+            paramMap[param[1]] = paramIndex
+        end
+    end
+    local returnIndex = 0
+    for _, doc in ipairs(binded) do
+        if doc.type == 'doc.param' then
+            if doc.extends then
+                doc.extends.paramIndex = paramMap[doc.param[1]]
+            end
+        elseif doc.type == 'doc.return' then
+            for _, rtn in ipairs(doc.returns) do
+                returnIndex = returnIndex + 1
+                rtn.returnIndex = returnIndex
+            end
+        end
+    end
+end
+
 local function bindDoc(sources, lns, binded)
     if not binded then
         return
@@ -1124,10 +1195,10 @@ local function bindDoc(sources, lns, binded)
     if #bindSources == 0 then
         bindDocsBetween(sources, binded, bindSources, nstart, nfinish)
     end
+    bindParamAndReturnIndex(binded)
 end
 
 local function bindDocs(state)
-    local lns = lines(nil, state.lua)
     local sources = {}
     guide.eachSource(state.ast, function (src)
         if src.type == 'local'
@@ -1148,14 +1219,14 @@ local function bindDocs(state)
     end)
     local binded
     for _, doc in ipairs(state.ast.docs) do
-        if not isNextLine(lns, binded, doc) then
-            bindDoc(sources, lns, binded)
+        if not isNextLine(Lines, binded, doc) then
+            bindDoc(sources, Lines, binded)
             binded = {}
             state.ast.docs.groups[#state.ast.docs.groups+1] = binded
         end
         binded[#binded+1] = doc
     end
-    bindDoc(sources, lns, binded)
+    bindDoc(sources, Lines, binded)
 end
 
 return function (_, state)
@@ -1172,11 +1243,13 @@ return function (_, state)
 
     pushError = state.pushError
 
+    Lines = lines(nil, state.lua)
+
     local ci = 1
-    NextComment = function (peek)
-        local comment = comments[ci]
+    NextComment = function (offset, peek)
+        local comment = comments[ci + (offset or 0)]
         if not peek then
-            ci = ci + 1
+            ci = ci + 1 + (offset or 0)
         end
         return comment
     end
