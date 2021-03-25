@@ -4,12 +4,14 @@
 ---[View documents](http://www.lua.org/manual/5.1/manual.html#pdf-math)
 
 ---A value larger than any other numeric value.
----@field huge number
+---
 ---[View documents](http://www.lua.org/manual/5.1/manual.html#pdf-math.huge)
-
+---@field huge number
+---
 ---The value of *π*.
----@field pi number
+---
 ---[View documents](http://www.lua.org/manual/5.1/manual.html#pdf-math.pi)
+---@field pi number
 math = {}
 
 
