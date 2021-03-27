@@ -1253,10 +1253,13 @@
 					"type": "boolean"
 				},
 				"Lua.telemetry.enable": {
-					"default": true,
+					"default": null,
 					"markdownDescription": "%config.telemetry.enable%",
 					"scope": "resource",
-					"type": "boolean"
+					"type": [
+						"boolean",
+						"null"
+					]
 				},
 				"Lua.window.progressBar": {
 					"default": true,
@@ -1378,5 +1381,5 @@
 		"type": "git",
 		"url": "https://github.com/sumneko/lua-language-server"
 	},
-	"version": "1.19.1"
+	"version": "1.20.1"
 }

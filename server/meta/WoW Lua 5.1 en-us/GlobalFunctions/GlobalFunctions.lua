@@ -343,7 +343,7 @@ function BNSendVerifiedBattleTagInvite() end
 
 ---Sends a whisper to Battle.net friends.
 ---@param bnetAccountID number @ A unique numeric identifier for the friend during this session. You can get bnetAccountID from C_BattleNet.GetFriendAccountInfo()
----@param message unknown @ Message text. Must be less than 4096 bytes.
+---@param message string @ Message text. Must be less than 4096 bytes.
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_BNSendWhisper)
 function BNSendWhisper(bnetAccountID, message) end
@@ -378,11 +378,11 @@ function BNSetDND(bool) end
 function BNSetFriendFavoriteFlag(id, isFavorite) end
 
 ---Sets the Friend Note for a specific Battle.Net friend.
----@param ID unknown
+---@param bnetIDAccount number @ A unique numeric identifier for the friend's battle.net account during this session.
 ---@param noteText string @ The text you wish to set as the battle.net friend's new note.
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_BNSetFriendNote)
-function BNSetFriendNote(ID, noteText) end
+function BNSetFriendNote(bnetIDAccount, noteText) end
 
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_BNSetSelectedBlock)
@@ -475,8 +475,8 @@ function BuyReagentBank() end
 ---[View Documents](https://wow.gamepedia.com/API_BuyTrainerService)
 function BuyTrainerService(index) end
 
----API BuybackItem will buyback an item from a merchant if you have the merchant window open.
----@param slot unknown
+---Buyback an item from a merchant if you have the merchant window open.
+---@param slot number @ the slot from topleft to bottomright of the Merchant Buyback window.
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_BuybackItem)
 function BuybackItem(slot) end
@@ -862,22 +862,22 @@ function ChangeActionBarPage(actionBarPage) end
 function ChangeChatColor(channelname, red, green, blue) end
 
 ---Bans a player from the specified channel.
----@param channelName unknown @ The name of the channel to ban on
----@param playerName unknown @ The name of the player to ban
+---@param channelName string @ The name of the channel to ban on
+---@param playerName string @ The name of the player to ban
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_ChannelBan)
 function ChannelBan(channelName, playerName) end
 
 ---Invites the specified user to the channel.
----@param channelName unknown @ The name of the channel to invite to
----@param playerName unknown @ The name of the player to invite
+---@param channelName string @ The name of the channel to invite to
+---@param playerName string @ The name of the player to invite
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_ChannelInvite)
 function ChannelInvite(channelName, playerName) end
 
 ---Kicks a player from the specified channel.
----@param channelName unknown @ The name of the channel to kick from
----@param playerName unknown @ The name of the player to kick
+---@param channelName string @ The name of the channel to kick from
+---@param playerName string @ The name of the player to kick
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_ChannelKick)
 function ChannelKick(channelName, playerName) end
@@ -1947,6 +1947,7 @@ function FocusUnit(unit) end
 ---[View Documents](https://wow.gamepedia.com/API_FollowUnit)
 function FollowUnit(unit) end
 
+---Logs the player out immediately, even if outside a resting zone.
 ---@return void
 ---[View Documents](https://wow.gamepedia.com/API_ForceLogout)
 function ForceLogout() end
@@ -2520,7 +2521,7 @@ function GetBindingByKey(key) end
 
 ---Returns all keys currently bound to the command specified by command. This function is almost identical to GetBinding(index) except it takes the command name as an argument instead of the index and doesn't return the command name along with the key bindings.
 ---@param command unknown @ The name of the command to get key bindings for (e.g. MOVEFORWARD, TOGGLEFRIENDSTAB)
----@return unknown key1, unknown key2
+---@return string key1, string key2, unknown ...
 ---[View Documents](https://wow.gamepedia.com/API_GetBindingKey)
 function GetBindingKey(command) end
 
@@ -5262,7 +5263,7 @@ function GetQuestMoneyToGet() end
 ---@param questID number @ Unique identifier of the quest.
 ---@param objectiveIndex unknown @ Index of the quest objective to query, ascending from 1 to GetNumQuestLeaderBoards(questIndex) or to numObjectives from GetTaskInfo(questID).
 ---@param Boolean unknown @ Required to actually obtain quest text.
----@return string text, string objectiveType, boolean finished
+---@return string text, string objectiveType, boolean finished, number fulfilled, number required
 ---[View Documents](https://wow.gamepedia.com/API_GetQuestObjectiveInfo)
 function GetQuestObjectiveInfo(questID, objectiveIndex, Boolean) end
 
@@ -5828,17 +5829,17 @@ function GetSpellBonusHealing() end
 
 ---Retrieves information about a specific spellbook item.
 ---@param index number @ The index into the spellbook.
----@param bookType string @ Spell book type. Although intended to be BOOKTYPE_PET (pet) or BOOKTYPE_SPELL (spell), the game currently only tests if this value is equal to pet and treats any other value as spell.
+---@param bookType string @ BOOKTYPE_SPELL or BOOKTYPE_PET depending on if you wish to query the player or pet spellbook. Internally the game only tests if this value is equal to pet and treats any other string value as spell
 ---@return string skillType, number special
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellBookItemInfo)
 function GetSpellBookItemInfo(index, bookType) end
 
 ---Retrieves the spell name and spell rank for a spell in the player's spell book.
----@param spellName_or_slotIndex unknown
----@param bookType string @ Either BOOKTYPE_SPELL (spell) or BOOKTYPE_PET (pet).
----@return string spellName, string spellSubName
+---@param index number @ Spell book slot index. Valid values are 1 through total number of spells in the spell book on all pages and all tabs, ignoring empty slots.
+---@param bookType string @ BOOKTYPE_SPELL or BOOKTYPE_PET depending on if you wish to query the player or pet spellbook. Internally the game only tests if this value is equal to pet and treats any other string value as spell
+---@return string spellName, string spellSubName, number spellID
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellBookItemName)
-function GetSpellBookItemName(spellName_or_slotIndex, bookType) end
+function GetSpellBookItemName(index, bookType) end
 
 ---Returns the icon of a spell book entry.
 ---@param spellName_or_index unknown
@@ -5898,7 +5899,7 @@ function GetSpellLevelLearned() end
 
 ---Returns a hyperlink for a spell.
 ---@param slot number @ Valid values are 1 through total number of spells in the spellbook on all pages and all tabs, ignoring empty slots.
----@param bookType string @ BOOKTYPE_SPELL or BOOKTYPE_PET depending on if you wish to query the player or pet spellbook.
+---@param bookType string @ BOOKTYPE_SPELL or BOOKTYPE_PET depending on if you wish to query the player or pet spellbook. Internally the game only tests if this value is equal to pet and treats any other string value as spell
 ---@return string link, number spellID
 ---[View Documents](https://wow.gamepedia.com/API_GetSpellLink)
 function GetSpellLink(slot, bookType) end
@@ -7295,11 +7296,11 @@ function IsModifierKeyDown() end
 ---[View Documents](https://wow.gamepedia.com/API_IsMounted)
 function IsMounted() end
 
----Returns whether a particular mouse button is currently being held down.
----@param buttonName string @ identifier of the button to check, e.g LeftButton, RightButton, MiddleButton, BUTTON4
----@return number isDown
+---Returns whether a mouse button is being held down.
+---@param button string @ ? - Name of the button. If not passed, then it returns if any mouse button is pressed.
+---@return boolean isDown
 ---[View Documents](https://wow.gamepedia.com/API_IsMouseButtonDown)
-function IsMouseButtonDown(buttonName) end
+function IsMouseButtonDown(button) end
 
 ---For checking whether mouselook mode is currently active.
 ---@return void
@@ -11816,3 +11817,4 @@ function tremove(table, pos) end
 ---@return table table
 ---[View Documents](https://wow.gamepedia.com/API_wipe)
 function wipe(table) end
+
